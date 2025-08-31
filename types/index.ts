@@ -31,3 +31,22 @@ export interface CalendarEvent {
   };
 }
 
+export interface FlightDay {
+  date: Date;
+  dutyPeriod?: CalendarEvent; // Flight day event with on-duty/off-duty times
+  flights: CalendarEvent[];
+  groundTimes: CalendarEvent[];
+  turnarounds: CalendarEvent[];
+  taxi?: CalendarEvent;
+  standby: CalendarEvent[];
+}
+
+export interface RestPeriod {
+  startDate: Date; 
+  endDate: Date; 
+  duration: number; 
+  type: string;
+  hotelInfo?: string;
+  lastArrivalAirport?: string;
+}
+
