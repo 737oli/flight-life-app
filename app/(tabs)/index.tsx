@@ -1,43 +1,57 @@
+import EventDetailModal from "@/components/EventDetailModal";
+import { FlightDayCard } from "@/components/FlightDayCard";
+import { OffDayCard } from "@/components/OffDayCard";
+import { RestPeriodCard } from "@/components/RestPeriodCard";
 import Colors from "@/constants/Colors";
+import { mockEvents } from "@/data/events";
 import { CalendarEvent, FlightDay, RestPeriod } from "@/types";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-//mock data for testing
 
-// Function to group events into flight days
-const groupFlightDays = (events: CalendarEvent[]): any => {
-  // Filter out work events, excluding 'other' types and those with 'click' in the title
+export interface GroupedResult {
+  flightDays: { [key: string]: FlightDay };
+  offDays: { [key: string]: CalendarEvent };
+  restPeriods: RestPeriod[];
+  hotelPeriods: CalendarEvent[];       // keep for debugging/analytics
+  standbyPeriods: CalendarEvent[];     // expose since you collect it
+  allDays: Array<{
+    type: "flight" | "off";
+    date: Date;
+    data: FlightDay | CalendarEvent;
+  }>;
+  nonWorkEvents: CalendarEvent[];
+}
+
+export const groupFlightDays = (events: CalendarEvent[]): GroupedResult => {
+  // Work vs non-work
   const workEvents = events.filter(
-    (event) =>
-      event.calendar === "Work" &&
-      event.type !== "other" &&
-      !event.title.toLowerCase().includes("click")
+    (e) =>
+      e.calendar === "Work" &&
+      e.type !== "other" &&
+      !e.title.toLowerCase().includes("click")
   );
+  const nonWorkEvents = events.filter((e) => e.calendar !== "Work");
 
-  // non-work events can be ignored for flight day grouping
-  const nonWorkEvents = events.filter((event) => event.calendar !== "Work");
-
-  //group work events by date
+  // Buckets
   const flightDayGroups: { [key: string]: FlightDay } = {};
   const offDayGroups: { [key: string]: CalendarEvent } = {};
   const restPeriods: RestPeriod[] = [];
   const hotelPeriods: CalendarEvent[] = [];
   const standbyPeriods: CalendarEvent[] = [];
 
+  // Work-day grouping
   workEvents.forEach((event) => {
     const dateKey = event.start.toDateString();
+    const titleL = event.title.toLowerCase();
 
-    // Check for off days (LVEC or LVES in title) and group them separately
-    if (
-      event.title.toLowerCase().includes("LVEC") ||
-      event.title.toLowerCase().includes("LVES")
-    ) {
+    // Off days: LVEC/LVES
+    if (titleL.includes("lvec") || titleL.includes("lves")) {
       offDayGroups[dateKey] = event;
       return;
     }
 
-    // Initialize flight day group if not already present
+    // Init group
     if (!flightDayGroups[dateKey]) {
       flightDayGroups[dateKey] = {
         date: new Date(dateKey),
@@ -48,84 +62,66 @@ const groupFlightDays = (events: CalendarEvent[]): any => {
         standby: [],
       };
     }
-
     const group = flightDayGroups[dateKey];
 
-    // Categorize events into flights, ground times, turnarounds, and taxi
-    const normalizedTitle = event.title.toLowerCase();
-    if (event.type === "duty" && normalizedTitle.includes("flight day")) {
+    // Categorize
+    if (event.type === "duty" && titleL.includes("flight day")) {
       group.dutyPeriod = event;
     } else if (event.type === "flight") {
       group.flights.push(event);
-    } else if (
-      event.type === "duty" &&
-      event.title.toLowerCase().includes("grondtijd")
-    ) {
+    } else if (event.type === "duty" && titleL.includes("grondtijd")) {
       group.groundTimes.push(event);
-    } else if (
-      event.type === "duty" &&
-      event.title.toLowerCase().includes("omdraai")
-    ) {
+    } else if (event.type === "duty" && titleL.includes("omdraai")) {
       group.turnarounds.push(event);
     } else if (event.type === "taxi") {
       group.taxi = event;
-    } else if (
-      event.type === "layover" &&
-      event.title.toLowerCase().includes("hotel")
-    ) {
+    } else if (event.type === "layover" && titleL.includes("hotel")) {
       hotelPeriods.push(event);
-    } else if (
-      event.type === "duty" &&
-      event.title.toLowerCase().includes("sby_h")
-    ) {
+    } else if (event.type === "duty" && titleL.includes("sby_h")) {
       standbyPeriods.push(event);
+      group.standby.push(event);
     }
   });
 
-  //sort flights and ground times within each flight day
-  Object.values(flightDayGroups).forEach((group) => {
-    group.flights.sort((a, b) => a.start.getTime() - b.start.getTime());
-    group.groundTimes.sort((a, b) => a.start.getTime() - b.start.getTime());
-    group.turnarounds.sort((a, b) => a.start.getTime() - b.start.getTime());
+  // Sort inner arrays
+  Object.values(flightDayGroups).forEach((g) => {
+    const byStart = (a: CalendarEvent, b: CalendarEvent) =>
+      a.start.getTime() - b.start.getTime();
+    g.flights.sort(byStart);
+    g.groundTimes.sort(byStart);
+    g.turnarounds.sort(byStart);
   });
 
-  // Calculate rest periods between flight days
+  // Compute calculated rest periods between consecutive flight days
   const sortedFlightDays = Object.values(flightDayGroups).sort(
     (a, b) => a.date.getTime() - b.date.getTime()
   );
-  const minimumRestHours = 4; // Minimum rest period to consider
+  const MIN_REST_MINUTES = 4 * 60; // 4h
 
   for (let i = 0; i < sortedFlightDays.length - 1; i++) {
-    const currentDay = sortedFlightDays[i];
-    const nextDay = sortedFlightDays[i + 1];
+    const current = sortedFlightDays[i];
+    const next = sortedFlightDays[i + 1];
 
-    // Use duty period end time if available, otherwise use last flight end time
     const currentEnd =
-      currentDay.dutyPeriod?.end ||
-      (currentDay.flights.length > 0
-        ? currentDay.flights[currentDay.flights.length - 1].end
-        : currentDay.date);
+      current.dutyPeriod?.end ??
+      (current.flights.length
+        ? current.flights[current.flights.length - 1].end
+        : current.date);
 
-    // Use duty period start time if available, otherwise use first flight start time
     const nextStart =
-      nextDay.dutyPeriod?.start ||
-      (nextDay.flights.length > 0 ? nextDay.flights[0].start : nextDay.date);
+      next.dutyPeriod?.start ??
+      (next.flights.length ? next.flights[0].start : next.date);
 
     if (currentEnd && nextStart) {
-      const restDurationMinutes = nextStart.getTime() - currentEnd.getTime();
-      const restDurationHours = Math.floor(
-        restDurationMinutes / (1000 * 60 * 60)
-      );
-
-      //Only Show rest periods longer than X hours
-      if (restDurationHours >= minimumRestHours) {
-        const lastFlight = currentDay.flights[currentDay.flights.length - 1];
-        const lastArrivalAirport = lastFlight?.details?.arrival || "AMS";
-
+      const minutes =
+        (nextStart.getTime() - currentEnd.getTime()) / 60000;
+      if (minutes >= MIN_REST_MINUTES) {
+        const lastFlight = current.flights[current.flights.length - 1];
+        const lastArrivalAirport = lastFlight?.details?.arrival ?? "AMS";
         restPeriods.push({
           startDate: currentEnd,
           endDate: nextStart,
-          duration: restDurationHours,
+          duration: Math.round(minutes), // store minutes
           type: "rest",
           lastArrivalAirport,
         });
@@ -133,75 +129,85 @@ const groupFlightDays = (events: CalendarEvent[]): any => {
     }
   }
 
-  // Add hotel periods as rest periods, overriding any calculated rest periods on the same day
-  hotelPeriods.forEach((hotelEvent) => {
-    const durationMs = hotelEvent.end.getTime() - hotelEvent.start.getTime();
-    const durationHours = durationMs / (1000 * 60 * 60);
+  // Overlay hotel layovers as rest (and remove overlapping calculated rests)
+  hotelPeriods.forEach((hotel) => {
+    const hotelStart = hotel.start.getTime();
+    const hotelEnd = hotel.end.getTime();
+    const durationMinutes = Math.max(0, Math.round((hotelEnd - hotelStart) / 60000));
 
-    // Extract hotel information from event details
     const hotelInfo =
-      hotelEvent.description ||
-      hotelEvent.details?.hotel ||
-      hotelEvent.location;
+      hotel.description || hotel.details?.hotel || hotel.location;
 
-    // add hotel period as a rest period
-    restPeriods.push({
-      startDate: hotelEvent.start,
-      endDate: hotelEvent.end,
-      duration: durationHours,
-      type: "hotel",
-      hotelInfo,
-      lastArrivalAirport: hotelEvent.details?.arrival || "AMS",
-    });
-
-    // Remove any overlapping calculated rest periods
-    const hotelStart = hotelEvent.start.getTime();
-    const hotelEnd = hotelEvent.end.getTime();
+    // remove overlaps of type "rest"
     for (let i = restPeriods.length - 1; i >= 0; i--) {
-      const rest = restPeriods[i];
-      if (
-        rest.startDate.getTime() < hotelEnd &&
-        rest.endDate.getTime() > hotelStart &&
-        rest.type === "rest"
-      ) {
-        restPeriods.splice(i, 1);
-      }
+      const r = restPeriods[i];
+      const rStart = r.startDate.getTime();
+      const rEnd = r.endDate.getTime();
+      const overlaps =
+        rStart < hotelEnd && rEnd > hotelStart && r.type === "rest";
+      if (overlaps) restPeriods.splice(i, 1);
     }
 
-    // Sort rest periods by start date
-    restPeriods.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
-
-    // Create a combined list of flight days and off days
-    const allDays: Array<{
-      type: "flight" | "off";
-      date: Date;
-      data: FlightDay | CalendarEvent;
-    }> = []; // example: { type: 'flight', date: Date, data: FlightDay } or { type: 'off', date: Date, data: CalendarEvent }
-
-    // Add flight days
-    Object.values(flightDayGroups).forEach((flightDay) => {
-      allDays.push({ type: "flight", date: flightDay.date, data: flightDay });
+    restPeriods.push({
+      startDate: hotel.start,
+      endDate: hotel.end,
+      duration: durationMinutes,    // minutes
+      type: "hotel",
+      hotelInfo,
+      lastArrivalAirport: hotel.details?.arrival ?? "AMS",
     });
-
-    // Add off days
-    Object.values(offDayGroups).forEach((offDay) => {
-      allDays.push({ type: "off", date: offDay.start, data: offDay });
-    });
-
-    // Sort all days by date
-    allDays.sort((a, b) => a.date.getTime() - b.date.getTime());
-
-    return {
-      flightDays: flightDayGroups,
-      offDays: offDayGroups,
-      restPeriods,
-      allDays,
-      nonWorkEvents,
-    };
   });
+
+  // Build allDays (flight + off) and sort
+  const allDays: GroupedResult["allDays"] = [];
+  Object.values(flightDayGroups).forEach((fd) =>
+    allDays.push({ type: "flight", date: fd.date, data: fd })
+  );
+  Object.values(offDayGroups).forEach((off) =>
+    allDays.push({ type: "off", date: off.start, data: off })
+  );
+  allDays.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  return {
+    flightDays: flightDayGroups,
+    offDays: offDayGroups,
+    restPeriods: restPeriods.sort(
+      (a, b) => a.startDate.getTime() - b.startDate.getTime()
+    ),
+    hotelPeriods,
+    standbyPeriods,
+    allDays,
+    nonWorkEvents,
+  };
 };
 
+
 export default function HomeScreen() {
+  const grouped = groupFlightDays(mockEvents);
+  const [todayData, setTodayData] = useState<{ groupedData: GroupedResult }>({
+    groupedData: grouped,
+  });
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+
+  useEffect(() => {
+    // In a real app, fetch and set events here
+    const grouped = groupFlightDays(mockEvents);
+    setTodayData({ groupedData: grouped });
+  }, []);
+
+  const handleEventPress = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setModalVisible(true);
+    console.log("Pressed event:", event);
+  };
+
+  const handleRestPeriodPress = (rest: RestPeriod) => {
+    // Handle rest period press (e.g., show details)
+    console.log("Pressed rest period:", rest);
+  };
+
+  // Format date as "Monday, January 1, 2024"
   const formatDateTime = (date: Date) => {
     return date.toLocaleDateString("en-US", {
       weekday: "long",
@@ -289,6 +295,14 @@ export default function HomeScreen() {
           </View>
         )}
       </View>
+      <EventDetailModal
+        visible={modalVisible}
+        event={selectedEvent}
+        onClose={() => {
+          setModalVisible(false);
+          setSelectedEvent(null);
+        }}
+      />
     </ScrollView>
   );
 }

@@ -50,3 +50,10 @@ export interface RestPeriod {
   lastArrivalAirport?: string;
 }
 
+export interface TodayData {
+  groupedData: {
+    allDays,
+    restPeriods: [RestPeriod],
+  }
+};
+
