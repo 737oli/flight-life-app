@@ -1,5 +1,5 @@
 // this service will handle all time formatting needs
-import { CalendarEvent } from "@/types";
+import { FlightDuty, FlightEvent, GroundPeriod, OffDay, RestPeriod } from "@/types";
 
 // e.g., converting to local time, formatting for display, etc.
 export const formatDateTime = (date: Date) => {
@@ -15,8 +15,8 @@ export const formatDateTime = (date: Date) => {
   };
 
 // Format duration between two dates
-export const formatDuration = (event: CalendarEvent) => {
-    const durationMs = event.end.getTime() - event.start.getTime();
+export const formatDuration = (event: FlightEvent | OffDay | RestPeriod | GroundPeriod | FlightDuty) => {
+    const durationMs = event.endDate.getTime() - event.startDate.getTime();
     const hours = Math.floor(durationMs / (1000 * 60 * 60));
     const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
     
@@ -29,8 +29,11 @@ export const formatDuration = (event: CalendarEvent) => {
     }
   };
 
-  // Clean up and format description text
-export const formatDescription = (description: string) => {
-    // Description is already unescaped by the ICS parser, just format for display
-    return description.trim();
+  // Format time as HH:MM
+  export const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
   };

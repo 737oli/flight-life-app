@@ -1,7 +1,7 @@
 import Colors from '@/constants/Colors';
 import { getOpsDataForFlight, refreshMockOpsData } from '@/services/operationsData';
-import { formatDateTime, formatDescription, formatDuration } from '@/services/timeFormatting';
-import { CalendarEvent } from '@/types';
+import { formatDateTime, formatDuration } from '@/services/timeFormatting';
+import { FlightEvent, GroundPeriod, OffDay, TaxiEvent } from '@/types';
 import {
   AlertTriangle,
   CheckCircle,
@@ -25,7 +25,7 @@ import {
 
 interface EventDetailModalProps {
   visible: boolean;
-  event: CalendarEvent | null;
+  event: FlightEvent | GroundPeriod | OffDay | TaxiEvent | null;
   onClose: () => void;
 }
 
@@ -35,7 +35,15 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
 
   // Load flight ops data when event changes
   const loadFlightOps = React.useCallback(async () => {
-    if (!event?.details?.flightNumber || !event?.details?.departure || !event?.details?.arrival) {
+    if (
+      event?.type === "flight" &&
+      (
+        !('details' in event) ||
+        !event.details?.flightNumber ||
+        !event.details?.departure ||
+        !event.details?.arrival
+      )
+    ) {
       return;
     }
 
@@ -71,7 +79,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
 
   // When modal becomes visible for a flight event within 3 hours, load ops data
   React.useEffect(() => {
-    if (visible && event?.type === 'flight' && event.details?.flightNumber && isDepartingSoon(event.start)) {
+    if (visible && event?.details?.flightNumber && isDepartingSoon(event.start)) {
         loadFlightOps();
     } else {
       //reset ops data if not a flight or not departing soon
@@ -100,12 +108,9 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
     }
   };
 
-  // Determine calendar color
+  // Determine calendar color, needs to be changed to handle multiple types of calenders
   const getCalendarColor = () => {
-    switch (event.calendar) {
-      case 'Work': return Colors.light.tint;
-      default: return Colors.light.secondary;
-    }
+    return Colors.light.tint
   };
 
   // Check if the previous leg has arrived or enroute
@@ -122,11 +127,18 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
     }
   };
   
+  // Format walk time
   const formatWalkTime = (walkMins: number) => {
     return `Start walking in ${walkMins} min`;
   };
 
   const Icon = getIcon();
+
+  // Format description text (simple formatting)
+  const formatDescription = (description: string) => {
+    // Description is already unescaped by the ICS parser, just format for display
+    return description.trim();
+  };
 
 
     return (
@@ -153,7 +165,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             <View style={styles.headerText}>
               <Text style={styles.title}>{event.title}</Text>
               <Text style={[styles.calendar, { color: getCalendarColor() }]}>
-                {event.calendar}
+                Work
               </Text>
             </View>
           </View>
@@ -164,11 +176,11 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             <Text style={styles.sectionTitle}>Time & Duration</Text>
             <View style={styles.timeInfo}>
               <Text style={styles.timeLabel}>Start:</Text>
-              <Text style={styles.timeValue}>{formatDateTime(event.start)}</Text>
+              <Text style={styles.timeValue}>{formatDateTime(event.startDate)}</Text>
             </View>
             <View style={styles.timeInfo}>
               <Text style={styles.timeLabel}>End:</Text>
-              <Text style={styles.timeValue}>{formatDateTime(event.end)}</Text>
+              <Text style={styles.timeValue}>{formatDateTime(event.endDate)}</Text>
             </View>
             <View style={styles.timeInfo}>
               <Text style={styles.timeLabel}>Duration:</Text>
@@ -357,7 +369,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             </View>
           )}
           
-          {event.type === 'flight' && event.details?.flightNumber && !isDepartingSoon(event.start) && (
+          {event.type === 'flight' && event.details?.flightNumber && !isDepartingSoon(event.startDate) && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Flight Ops</Text>
               <Text style={styles.opsNotAvailable}>

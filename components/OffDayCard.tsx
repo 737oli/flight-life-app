@@ -1,32 +1,16 @@
 import Colors from '@/constants/Colors';
-import { CalendarEvent } from '@/types';
+import { formatDateTime, formatTime } from '@/services/timeFormatting';
+import { OffDay } from '@/types';
 import { Home } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface OffDayCardProps {
-  event: CalendarEvent;
+  event: OffDay;
   onPress?: () => void;
 }
 
 export function OffDayCard({ event, onPress }: OffDayCardProps) {
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-  };
-
-  // Format time as HH:MM
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-  };
-
   // Determine off day type based on title keywords
   const getOffDayType = () => {
     const title = event.title.toLowerCase();
@@ -41,7 +25,7 @@ export function OffDayCard({ event, onPress }: OffDayCardProps) {
 
   // Calculate duration in hours or days
   const getDuration = () => {
-    const durationMs = event.end.getTime() - event.start.getTime();
+    const durationMs = event.endDate.getTime() - event.startDate.getTime();
     const hours = Math.floor(durationMs / (1000 * 60 * 60));
     const days = Math.floor(hours / 24);
     
@@ -65,10 +49,10 @@ export function OffDayCard({ event, onPress }: OffDayCardProps) {
           <Home color={Colors.light.success} size={20} />
         </View>
         <View style={styles.content}>
-          <Text style={styles.dateText}>{formatDate(event.start)}</Text>
+          <Text style={styles.dateText}>{formatDateTime(event.startDate)}</Text>
           <Text style={styles.typeText}>{getOffDayType()}</Text>
           <Text style={styles.durationText}>
-            {formatTime(event.start)} - {formatTime(event.end)} • {getDuration()}
+            {formatTime(event.startDate)} - {formatTime(event.endDate)} • {getDuration()}
           </Text>
         </View>
         <View style={styles.badge}>

@@ -1,5 +1,7 @@
 import Colors from '@/constants/Colors';
-import { CalendarEvent, FlightDay } from '@/types';
+import { createGroundPeriod } from '@/services/calenderParser';
+import { setOpsDataForEvent } from '@/services/operationsData';
+import { FlightEvent, FlightDay, GroundPeriod } from '@/types';
 import { ChevronDown, ChevronUp, Crown, Plane, User, Users } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -7,14 +9,14 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface FlightDayCardProps {
   date: Date;
-  flights: CalendarEvent[];
-  onFlightPress?: (flight: CalendarEvent) => void;
+  flights: FlightEvent[];
+  onFlightPress?: (flight: FlightEvent) => void;
   flightDay?: FlightDay;
 }
 
 export function FlightDayCard({ date, flights, onFlightPress, flightDay }: FlightDayCardProps) {
     const [isExpanded, setExpanded] = React.useState(false);
-    const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null);
+    const [selectedEvent, setSelectedEvent] = React.useState<FlightEvent | null>(null);
     const [modalVisible, setModalVisible] = React.useState(false);
     const [flightOpsData, setFlightOpsData] = React.useState<Record<string, any>>({});
 
@@ -45,7 +47,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
     };
 
   // Handle a click on a flight to show details
-    const handleEventPress = (event: CalendarEvent) => {
+    const handleEventPress = (event: FlightEvent) => {
         if (onFlightPress) {
             onFlightPress(event);
         } else {
@@ -93,6 +95,31 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
             }
         }
     }
+
+    // Extract aircraft type from event details or description
+    const getAircraftType = (event: FlightEvent): string | undefined => {
+    // First check parsed aircraft from details
+    if (event.details?.aircraft) {
+      return event.details.aircraft;
+    }
+    
+    // Then check description for aircraft patterns
+    if (event.description) {
+      const lines = event.description.split(/\\n|\n/).filter(line => line.trim());
+      const aircraftLine = lines.find(line => 
+        /\b(B\d{3}|A\d{3}|E\d{3}(?:-E\d)?|[A-Z]\d{3}(?:-[A-Z]\d)?)\b/.test(line) &&
+        !line.includes('(') // Exclude crew member lines
+      );
+      if (aircraftLine) {
+        const match = aircraftLine.match(/\b(B\d{3}|A\d{3}|E\d{3}(?:-E\d)?|[A-Z]\d{3}(?:-[A-Z]\d)?)\b/);
+        return match?.[1];
+      }
+    }
+    
+    return undefined;
+  };
+
+    // Aircraft badge component
     const AircraftBadge = ({ aircraft }: { aircraft: string }) => (
         <View style={styles.aircraftBadge}>
         <Plane size={12} color={Colors.light.tint} style={styles.aircraftIcon} />
@@ -102,7 +129,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
 
     // Create a timeline of all events for the day
     const createTimeline = () => {
-        const timeline: { event: CalendarEvent; type: 'taxi' | 'flight' | 'ground' | 'turnaround' }[] = [];
+        const timeline: { event: FlightEvent | GroundPeriod; type: 'taxi' | 'flight' | 'ground' | 'turnaround' }[] = [];
 
         //Add Taxi if present
         if (flightDay?.taxi) {
@@ -111,6 +138,12 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
 
         // Add flights with ground times and turnarounds in between
         flights.forEach((flight, index) => {
+            // start with creating the first groundtime
+            if (index != 0 || index != flights.length - 1) {
+              const groundPeriod = createGroundPeriod(flights[index], flights[index - 1])
+              timeline.push({event: groundPerdiod, groundperiod.type})
+            }
+
             timeline.push({ event: flight, type: 'flight' });
 
             if (index < flights.length - 1) {
@@ -125,6 +158,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
                     timeline.push({ event: turnaround, type: 'turnaround' });
                 }
             }
+            
         });
 
         return timeline;
@@ -133,34 +167,17 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
     // Generate the timeline once
     const timeline = createTimeline();
 
-    // Format ground time and turnaround info
-    const formatGroundAndTurnaroundInfo = (event: CalendarEvent) : String => {
-        if (event.title.toLowerCase().includes('grondtijd')) {
-            const parts: string[] = [];
-        
-            if (event.details?.groundTime) {
-                parts.push(`Ground Time: ${event.details.groundTime}`);
-            }
-            if (event.details?.walkTime) {
-                parts.push(`Walk Time: ${event.details.walkTime}`);
-            }
-            if (event.details?.departureTime) {
-                parts.push(`Dep Time: ${event.details.departureTime}`);
-            }
-            if (parts.length > 0) {
-                return parts.join(' | ');
-            }
-        }
-        if (event.title.toLowerCase().includes('omdraai')) {
-            if (event.details?.turnaroundTime) {
-                return event.details.turnaroundTime;
-            } 
-        }
-        return event.title;
+    // Format ground time and turnaround info using event details if available
+    const formatGroundAndTurnaroundInfo = (event: GroundPeriod) : String => {
+      if (event.toWalk) {
+        return `Start Walking at ${event.walkTime}`;
+      } else {
+        return `Ground Time: ${event.duration}`;
+      }
     }
 
     // Format a line of meta information for a flight or event
-    const formatFlightMetaLine = (event: CalendarEvent) : String => {
+    const formatFlightMetaLine = (event: FlightEvent) : String => {
         const parts: string[] = [];
 
         // Add route
@@ -222,10 +239,22 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
         }
     };
 
-    //ops Data
+    // Fetch flight operations data when component mounts or date/flights change
+    React.useEffect(() => {
+        const fetchOpsData = async () => {
+            if (flights.length === 0) return;
+            const flightNumber = flights[0].details?.flightNumber || '';
+            if (!flightNumber) return;
+            await setOpsDataForEvent(flights[0]);
+        }
+        fetchOpsData();
+    }, [date, flights]);
+
+    // Determine if this is an off day
+    const isOffDay = flights.length === 0 && !flightDay?.dutyPeriod;
 
     // Display crew members
-    const CrewDisplay = ({ event}: { event: CalendarEvent }) => {
+    const CrewDisplay = ({ event}: { event: FlightEvent }) => {
         const crewMembers = parseCrewMembersInfo(event.description || '');
 
         if (crewMembers.length === 0) return null;
@@ -251,6 +280,29 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
         );
     };
 
+    // Flight operations badges
+    const FlightOpsBadges = ({ event }: { event: FlightEvent }) => {
+        return (
+          <View style={styles.opsBadgesContainer}>
+            {event.details?.ctot && (
+              <View style={styles.ctotBadgeSmall}>
+                <Text style={styles.ctotBadgeText}>CTOT: {event.details.ctot}</Text>
+              </View>
+            )}
+            {event.details?.registration && (
+              <View style={styles.registrationBadge}>
+                <Text style={styles.registrationText}>{event.details.registration}</Text>
+              </View>
+            )}
+            {event.details?.delay?.isDelayed && event.details.delay.newDepLocal && (
+              <View style={styles.delayBadgeSmall}>
+                <Text style={styles.delayBadgeText}>Delayed to {event.details.delay.newDepLocal}</Text> 
+              </View>
+            )}
+          </View>
+        );
+    };
+
     return (
       <View style={styles.container}>
         <TouchableOpacity
@@ -258,6 +310,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
           onPress={handleDayPress}
           activeOpacity={0.7}
         >
+          {/* Icon indicating flight day or off day */}
           <View style={styles.headerLeft}>
             <View style={styles.headerText}>
               <Text style={styles.dateText}>{formatDate(date)}</Text>
@@ -284,6 +337,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
           )}
         </TouchableOpacity>
 
+         {/*Expanded flight list*/}
         {isExpanded && timeline.length > 0 && (
           <View style={styles.flightsContainer}>
             {timeline.map((item, index) => (
@@ -298,6 +352,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
                   onPress={() => handleEventPress(item.event)}
                   activeOpacity={0.7}
                 >
+                  {/* Flight*/}
                   {item.type === "flight" ? (
                     <>
                       <View style={styles.flightHeader}>
@@ -310,8 +365,14 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
                         <Text style={styles.flightMeta}>
                           {formatFlightMetaLine(item.event)}
                         </Text>
-
+                        <View style={styles.badgesRow}>
+                          {getAircraftType(item.event) && (
+                            <AircraftBadge aircraft={getAircraftType(item.event)!} />
+                          )}
+                        </View>
                       </View>
+
+                      <FlightOpsBadges event={item.event} />
 
                       {item.event.location && (
                         <Text style={styles.flightLocation}>
@@ -323,6 +384,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
                     </>
                   ) : (
                     <>
+                    {/* Ground time or turnaround */}
                       <View style={styles.groundHeader}>
                         <Text style={styles.groundTitle}>
                           {item.type === "taxi"
@@ -331,6 +393,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
                         </Text>
                       </View>
 
+                      {/* Show taxi info if available */}
                       {item.type === "taxi" && (
                         <Text style={styles.taxiInfo}>
                           Pickup: {formatTime(item.event.start)} • Duration:{" "}

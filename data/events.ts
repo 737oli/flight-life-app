@@ -1,44 +1,46 @@
-import { CalendarEvent } from '@/types';
+import {
+  FlightDuty,
+  FlightEvent,
+  GroundPeriod,
+  OffDay,
+  RestPeriod,
+  TaxiEvent,
+} from "@/types";
 
 const at = (dayOffset: number, hh: number, mm: number) => {
-  const base = new Date();                 // today (your local TZ)
-  const d = new Date(base.getFullYear(), base.getMonth(), base.getDate(), 0, 0, 0, 0);
+  const base = new Date(); // today (your local TZ)
+  const d = new Date(
+    base.getFullYear(),
+    base.getMonth(),
+    base.getDate(),
+    0,
+    0,
+    0,
+    0
+  );
   d.setDate(d.getDate() + dayOffset);
   d.setHours(hh, mm, 0, 0);
   return d;
 };
 
 //mock data for testing
-export const mockEvents: CalendarEvent[] = [
-    {
-    id: "taxi-d0-1",
-    title: "Taxi Home → AMS P30",
-    start: at(0, 4, 35),
-    end:   at(0, 5, 15),
-    calendar: "Work",
-    type: "taxi",
-    source: "demo",
-    calendarId: "demo-work",
-    details: { walkTime: 12, departureTime: "04:35" },
-  },
+export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
   {
     id: "duty-d0",
     title: "Flight Day Duty",
-    start: at(0, 5, 15),
-    end:   at(0, 22, 15),
-    calendar: "Work",
     type: "duty",
-    source: "demo",
-    calendarId: "demo-work",
+    startDate: at(0, 5, 15),
+    endDate: at(0, 22, 15),
     details: {},
   },
 
   // Rotation 1
   {
     id: "kl1895",
+    type: "flight",
     title: "KL1895 AMS → GOT",
-    start: at(0, 6, 20),
-    end:   at(0, 7, 55),
+    startDate: at(0, 6, 20),
+    endDate: at(0, 7, 55),
     calendar: "Work",
     type: "flight",
     source: "demo",
@@ -56,13 +58,10 @@ export const mockEvents: CalendarEvent[] = [
   },
   {
     id: "kl1896",
-    title: "KL1896 GOT → AMS",
-    start: at(0, 8, 40),
-    end:   at(0, 10, 15),
-    calendar: "Work",
     type: "flight",
-    source: "demo",
-    calendarId: "demo-work",
+    title: "KL1896 GOT → AMS",
+    startDate: at(0, 8, 40),
+    endDate: at(0, 10, 15),
     details: {
       flightNumber: "KL 1896",
       route: "GOT-AMS",
@@ -71,20 +70,16 @@ export const mockEvents: CalendarEvent[] = [
       aircraft: "E90",
       registration: "PH-EZX",
       prevLegArr: { status: "arrived", actualArrLocal: "07:55" },
-      turnaroundTime: "00:45",
     },
   },
 
   // Rotation 2 (ends outstation)
   {
     id: "kl1955",
-    title: "KL1955 AMS → GDN",
-    start: at(0, 19, 5),
-    end:   at(0, 21, 0),
-    calendar: "Work",
     type: "flight",
-    source: "demo",
-    calendarId: "demo-work",
+    title: "KL1955 AMS → GDN",
+    startDate: at(0, 19, 5),
+    endDate: at(0, 21, 0),
     details: {
       flightNumber: "1955",
       route: "AMS-GDN",
@@ -99,47 +94,13 @@ export const mockEvents: CalendarEvent[] = [
     },
   },
 
-  // Hotel layover in GDN (overrides calculated rest)
-  {
-    id: "hotel-d0-gdn",
-    title: "Hotel — GDN Layover",
-    start: at(0, 21, 30),
-    end:   at(1, 8, 30), // next morning
-    calendar: "Work",
-    type: "layover",
-    source: "demo",
-    calendarId: "demo-work",
-    location: "Gdańsk",
-    description: "H1 GDN — Radisson Hotel & Suites",
-    details: {
-      hotel: "Radisson Hotel & Suites",
-      isOutstation: true,
-      arrival: "GDN",
-      groundTime: "11:00",
-    },
-  },
-
   // ---------- DAY 1 (Today +1) — GDN → AMS, then AMS → BHX → AMS ----------
   {
-    id: "duty-d1",
-    title: "Flight Day Duty",
-    start: at(1, 7, 50),
-    end:   at(1, 16, 40),
-    calendar: "Work",
-    type: "duty",
-    source: "demo",
-    calendarId: "demo-work",
-    details: {},
-  },
-  {
     id: "kl1956",
-    title: "KL1956 GDN → AMS",
-    start: at(1, 9, 10),
-    end:   at(1, 10, 55),
-    calendar: "Work",
     type: "flight",
-    source: "demo",
-    calendarId: "demo-work",
+    title: "KL1956 GDN → AMS",
+    startDate: at(1, 9, 10),
+    endDate: at(1, 10, 55),
     details: {
       flightNumber: "1956",
       route: "GDN-AMS",
@@ -152,13 +113,10 @@ export const mockEvents: CalendarEvent[] = [
   },
   {
     id: "kl1761",
-    title: "KL1761 AMS → BHX",
-    start: at(1, 12, 20),
-    end:   at(1, 13, 25),
-    calendar: "Work",
     type: "flight",
-    source: "demo",
-    calendarId: "demo-work",
+    title: "KL1761 AMS → BHX",
+    startDate: at(1, 12, 20),
+    endDate: at(1, 13, 25),
     details: {
       flightNumber: "1761",
       route: "AMS-BHX",
@@ -172,13 +130,10 @@ export const mockEvents: CalendarEvent[] = [
   },
   {
     id: "kl1762",
-    title: "KL1762 BHX → AMS",
-    start: at(1, 14, 15),
-    end:   at(1, 16, 0),
-    calendar: "Work",
     type: "flight",
-    source: "demo",
-    calendarId: "demo-work",
+    title: "KL1762 BHX → AMS",
+    startDate: at(1, 14, 15),
+    endDate: at(1, 16, 0),
     details: {
       flightNumber: "1762",
       route: "BHX-AMS",
@@ -186,32 +141,114 @@ export const mockEvents: CalendarEvent[] = [
       arrival: "AMS",
       aircraft: "E90",
       registration: "PH-EZX",
-      turnaroundTime: "00:50",
       isLateReturn: false,
     },
   },
+];
 
+export const MOCK_REST_PERIODS: RestPeriod[] = [
+  // Hotel layover in GDN (overrides calculated rest)
+  {
+    id: "hotel-d0-gdn",
+    type: "rest",
+    title: "Hotel — GDN Layover",
+    startDate: at(0, 21, 30),
+    endDate: at(1, 8, 30), // next morning
+    duration: 1,
+    location: "Gdańsk",
+    description: "H1 GDN — Radisson Hotel & Suites",
+    details: {
+      hotel: "Radisson Hotel & Suites",
+      isOutstation: true,
+      arrival: "GDN",
+    },
+  },
+];
+
+export const MOCK_TAXI_EVENTS: TaxiEvent[] = [
+  {
+    id: "taxi-d0-1",
+    type: "taxi",
+    title: "Taxi Home → AMS P30",
+    startDate: at(0, 4, 35),
+    endDate: at(0, 5, 15),
+  },
+];
+
+export const MOCK_OFF_DAYS: OffDay[] = [
   // ---------- DAY 2 (Today +2) — Off (Weekend start) ----------
   {
     id: "off-d2",
+    type: "off",
     title: "LVEC — Day Off",
-    start: at(2, 0, 0),
-    end:   at(2, 23, 59),
-    calendar: "Work",
-    type: "duty",                  // keep as 'duty' so your grouper can catch LVEC/LVES
-    source: "demo",
-    calendarId: "demo-work",
+    startDate: at(2, 0, 0),
+    endDate: at(2, 23, 59),
   },
 
   // ---------- DAY 3 (Today +3) — Off ----------
   {
     id: "off-d3",
+    type: "off",
     title: "LVES — Day Off",
-    start: at(3, 0, 0),
-    end:   at(3, 23, 59),
-    calendar: "Work",
+    startDate: at(3, 0, 0),
+    endDate: at(3, 23, 59),
+  },
+];
+
+export const MOCK_DUTY_DAYS: FlightDuty[] = [
+  {
+    id: "duty-d1",
     type: "duty",
-    source: "demo",
-    calendarId: "demo-work",
+    title: "Flight Day Duty",
+    startDate: at(1, 7, 50),
+    endDate: at(1, 16, 40),
+  },
+];
+
+export const MOCK_UP_GROUND_PERIODS: GroundPeriod[] = [
+  // Day 0: KL1895 (→07:55) → KL1896 (08:40) @ GOT → 45m, no walk
+  {
+    id: "gp-d0-got-0755-0840",
+    title: "Groundtime",
+    type: "groundPeriod",
+    startDate: at(0, 7, 55),
+    endDate: at(0, 8, 40),
+    duration: 45,
+    toWalk: false,
+  },
+
+  // Day 0: KL1896 (→10:15) → KL1955 (19:05) @ AMS → 530m, walk=40
+  {
+    id: "gp-d0-ams-1015-1905",
+    title: "Groundtime",
+    type: "groundPeriod",
+    startDate: at(0, 10, 15),
+    endDate: at(0, 19, 5),
+    duration: 530,
+    toWalk: true,
+    walkTime: 40,
+  },
+
+  // Day 1: KL1956 (→10:55) → KL1761 (12:20) @ AMS → 85m, walk=40
+  {
+    id: "gp-d1-ams-1055-1220",
+    title: "Groundtime",
+    type: "groundPeriod",
+    startDate: at(1, 10, 55),
+    endDate: at(1, 12, 20),
+    duration: 85,
+    toWalk: true,
+    walkTime: 40,
+  },
+
+  // Day 1: KL1761 (→13:25) → KL1762 (14:15) @ BHX → 50m, no walk
+  {
+    id: "gp-d1-bhx-1325-1415",
+    title: "Groundtime",
+    type: "groundPeriod",
+    startDate: at(1, 13, 25),
+    endDate: at(1, 14, 15),
+    duration: 50,
+    toWalk: false,
   },
 ];

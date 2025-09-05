@@ -1,14 +1,10 @@
-export interface CalendarEvent {
+export interface FlightEvent {
   id: string;
+  type: string; // flight
   title: string;
-  start: Date;
-  end: Date;
-  location?: string;
+  startDate: Date;
+  endDate: Date;
   description?: string;
-  calendar: 'Work';
-  type?: 'flight' | 'duty' | 'layover' |'other' | 'taxi';
-  source?: 'demo';
-  calendarId?: string;
   details?: {
     flightNumber?: string;
     aircraft?: string;
@@ -16,13 +12,10 @@ export interface CalendarEvent {
     isOutstation?: boolean;
     isEarlyDeparture?: boolean;
     isLateReturn?: boolean;
-    walkTime?: number; // minutes to walk to aircraft
     departureTime?: string; // time to get going (HH:MM)
     route?: string; // e.g., "BHX-AMS"
     departure?: string; // departure airport code
     arrival?: string; // arrival airport code
-    groundTime?: string; // ground time duration (HH:MM)
-    turnaroundTime?: string; // turnaround time duration (HH:MM)
     // Flight Ops fields
     ctot?: string;            // "08:32Z"
     registration?: string;    // "PH-EZX"
@@ -33,21 +26,64 @@ export interface CalendarEvent {
 
 export interface FlightDay {
   date: Date;
-  dutyPeriod?: CalendarEvent; // Flight day event with on-duty/off-duty times
-  flights: CalendarEvent[];
-  groundTimes: CalendarEvent[];
-  turnarounds: CalendarEvent[];
-  taxi?: CalendarEvent;
-  standby: CalendarEvent[];
+  dutyPeriod?: FlightDuty; // Flight day event with on-duty/off-duty times
+  flights: FlightEvent[];
+  groundPeriods?: GroundPeriod[];
+  taxi?: TaxiEvent;
+  standby?: FlightEvent[];
+}
+
+export interface FlightDuty {
+  id: string,
+  type: string; // duty
+  title: string,
+  startDate: Date,
+  endDate: Date
 }
 
 export interface RestPeriod {
+  id: string,
+  type: string; // rest
+  title: string;
+  location: string;
+  description: string;
   startDate: Date; 
   endDate: Date; 
   duration: number; 
-  type: string;
   hotelInfo?: string;
   lastArrivalAirport?: string;
+  details: {
+      hotel: "Radisson Hotel & Suites",
+      isOutstation: true,
+      arrival: "GDN",
+    },
+}
+
+export interface GroundPeriod {
+  id: string,
+  type: string; // ground
+  title: string;
+  startDate: Date; 
+  endDate: Date; 
+  duration: number; 
+  toWalk: boolean
+  walkTime?: number; // minutes to walk to aircraft
+}
+
+export interface TaxiEvent {
+    id: string,
+    type: string; // taxi
+    title: string,
+    startDate: Date; 
+    endDate: Date; 
+}
+
+export interface OffDay {
+  id : string,
+  type: string; // off
+  title: string,
+  startDate: Date; 
+  endDate: Date; 
 }
 
 export interface TodayData {
