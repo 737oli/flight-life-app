@@ -1,194 +1,194 @@
+import React, { useEffect, useState } from "react";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import EventDetailModal from "@/components/EventDetailModal";
 import { FlightDayCard } from "@/components/FlightDayCard";
 import { OffDayCard } from "@/components/OffDayCard";
 import { RestPeriodCard } from "@/components/RestPeriodCard";
-import Colors from "@/constants/Colors";
-import { fetchDutyDays, fetchFlightEvents, fetchGroundPeriods, fetchOffDays, fetchTaxiEvents } from "@/services/calenderParser";
-import { FlightDay, FlightDuty, FlightEvent, GroundPeriod, OffDay, RestPeriod, TaxiEvent } from "@/types";
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
 
+import Colors from '@/constants/Colors';
+import { fetchListOfFlightDayGroupsFrom } from "@/scripts/fetchFlightDayGroup";
+import { formatDateTime } from "@/services/timeFormatting";
 
-export interface GroupedResult {
+import type {
+  FlightDuty,
+  FlightEvent,
+  GroundPeriod,
+  OffDay,
+  RestPeriod,
+  TaxiEvent
+} from "@/types";
+
+/* ---------------- Types & tiny utils ---------------- */
+
+export interface FlightDay {
+  date: Date;
+  dutyPeriod?: FlightDuty; // Flight day event with on-duty/off-duty times
   flights: FlightEvent[];
-  taxi: TaxiEvent[];
-  offDays: OffDay[];
-  duties: FlightDuty[];
-  groundPeriods: GroundPeriod[];
-  all: (FlightEvent | TaxiEvent | OffDay | FlightDuty | GroundPeriod)[];
+  groundTimes: GroundPeriod[];
+  taxi?: TaxiEvent;
 }
 
-export const groupEvents = (allEvents: {
-  flightEvents: FlightEvent[];
-  taxiEvents: TaxiEvent[];
-  offDays: OffDay[];
-  dutyDays: FlightDuty[];
-  groundPeriods: GroundPeriod[];
-}): GroupedResult => {
-  const flights = allEvents.flightEvents ?? [];
-  const taxi = allEvents.taxiEvents ?? [];
-  const offDays = allEvents.offDays ?? [];
-  const duties = allEvents.dutyDays ?? [];
-  const groundPeriods = allEvents.groundPeriods ?? [];
+// utils/dates.ts
+export const dayISO = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate())
+    .toISOString()
+    .slice(0, 10);
 
-  // Flatten and sort all events by startDate
-  const all = [...flights, ...taxi, ...offDays, ...duties].sort(
-    (a, b) =>
-      new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+export const sortByDate = <T extends { date: Date }>(arr: T[]) =>
+  arr.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+const getDayEnd = (fd: FlightDay): Date | undefined =>
+  fd.dutyPeriod?.endDate ?? fd.flights[fd.flights.length - 1]?.endDate;
+
+function findNextAfter(
+  fd: FlightDay,
+  rests: RestPeriod[] = [],
+  offs: OffDay[] = [],
+  windowMin = 60
+): { rest?: RestPeriod; off?: OffDay } {
+  const end = getDayEnd(fd);
+  if (!end) return {};
+
+  // rest that starts within X minutes after day end
+  const rest = rests.find(
+    (r) => Math.abs((r.startDate.getTime() - end.getTime()) / 60000) <= windowMin
   );
+  if (rest) return { rest };
 
-  return { flights, taxi, offDays, duties, all, groundPeriods };
-};
+  // else, is next calendar day an off day?
+  const nextStart = new Date(end);
+  nextStart.setHours(0, 0, 0, 0);
+  nextStart.setDate(nextStart.getDate() + 1);
+  const nextEnd = new Date(nextStart);
+  nextEnd.setHours(23, 59, 59, 999);
 
+  const off = offs.find(
+    (o) =>
+      o.startDate.getTime() >= nextStart.getTime() &&
+      o.startDate.getTime() <= nextEnd.getTime()
+  );
+  return off ? { off } : {};
+}
 
+/* ---------------- Component ---------------- */
 
-export default function HomeScreen() {
-  const [todayData, setTodayData] = useState<{ groupedData: GroupedResult }>({
-    groupedData: {
-      flights: [],
-      taxi: [],
-      offDays: [],
-      duties: [],
-      groundPeriods: [],
-      all: [],
-    },
-  });
+export default function TodayScreen() {
+  // Core data
+  const [flightDays, setFlightDays] = useState<FlightDay[]>([]);
+  // If/when you wire these fetchers, fill them. For now, keep empty arrays.
+  const [restPeriods, setRestPeriods] = useState<RestPeriod[]>([]);
+  const [offDays, setOffDays] = useState<OffDay[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Modal selection (single, simple)
   const [modalVisible, setModalVisible] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<FlightEvent | null>(null);
+  const [selected, setSelected] = useState<
+    FlightEvent | GroundPeriod | TaxiEvent | FlightDuty | RestPeriod | OffDay | null
+  >(null);
 
   useEffect(() => {
-    // In a real app, fetch and set events here
-    const fetchData = async () => {
-      const flightEvents = await fetchFlightEvents();
-      const offDays = await fetchOffDays();
-      const dutyDays = await fetchDutyDays();
-      const taxiEvents = await fetchTaxiEvents();
-      const groundPeriods = await fetchGroundPeriods();
+    const load = async () => {
+      setLoading(true);
 
-      const allEvents = {
-        flightEvents: flightEvents,
-        offDays: offDays,
-        dutyDays: dutyDays,
-        taxiEvents: taxiEvents,
-        groundPeriods: groundPeriods
-      };
+      // Start day = today @ 00:00
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
 
-      const groupAllEvents = groupEvents(allEvents);
+      // Fetch N days including the start day
+      const DAYS = 14;
+      const days = await fetchListOfFlightDayGroupsFrom(start, DAYS);
+      setFlightDays(sortByDate(days));
 
-      setTodayData({ groupedData: groupAllEvents });
+      // If you have fetchers for these, populate them here:
+      // setRestPeriods(await fetchRestPeriods());
+      // setOffDays(await fetchOffDays());
+
+      setLoading(false);
     };
 
-    fetchData();
+    load();
   }, []);
 
-  const handleEventPress = (event: FlightEvent) => {
-    setSelectedEvent(event);
+  const handlePress = (item: any) => {
+    setSelected(item);
     setModalVisible(true);
-    console.log("Pressed event:", event);
-  };
-
-  const handleRestPeriodPress = (rest: RestPeriod) => {
-    // Handle rest period press (e.g., show details)
-    console.log("Pressed rest period:", rest);
-  };
-
-  // Format date as "Monday, January 1, 2024"
-  const formatDateTime = (date: Date) => {
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
   };
 
   return (
-    <ScrollView style={styles.scrollView}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Today</Text>
-        <Text style={styles.date}>{formatDateTime(new Date())}</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Today</Text>
+          <Text style={styles.date}>{formatDateTime(new Date())}</Text>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Schedule</Text>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Schedule</Text>
 
-        {/* Combined Schedule */}
-        {todayData.groupedData.length > 0 ? (
-          <View>
-            {todayData.groupedData.allDays.map((dayItem, index) => {
-              if (dayItem.type === "off") {
-                return (
-                  <OffDayCard
-                    key={`off-${dayItem.date.toDateString()}`}
-                    event={dayItem.data as FlightEvent}
-                    onPress={() =>
-                      handleEventPress(dayItem.data as FlightEvent)
-                    }
-                  />
-                );
-              } else {
-                const flightDay = dayItem.data as FlightDay;
-                const restPeriod = todayData.groupedData.restPeriods.find(
-                  (rest) => {
-                    const dayEndTime =
-                      flightDay.dutyPeriod?.end ||
-                      flightDay.flights[flightDay.flights.length - 1]?.end;
-                    if (!dayEndTime) return false;
-
-                    // Check if rest period starts around the same time as this day ends
-                    const timeDiff = Math.abs(
-                      rest.startDate.getTime() - dayEndTime.getTime()
-                    );
-                    return timeDiff < 60 * 60 * 1000; // Within 1 hour
-                  }
-                );
+          {loading ? null : flightDays.length > 0 ? (
+            <View>
+              {flightDays.map((flightDay) => {
+                const next = findNextAfter(flightDay, restPeriods, offDays);
 
                 return (
-                  <View key={`flight-${flightDay.date.toDateString()}`}>
+                  <View key={`flight-${flightDay.date.toISOString()}`}>
                     <FlightDayCard
                       date={flightDay.date}
                       flights={flightDay.flights}
-                      onFlightPress={handleEventPress}
+                      groundTimes={flightDay.groundTimes}
+                      taxi={flightDay.taxi}
+                      onFlightPress={handlePress}
                       flightDay={flightDay}
                     />
-                    {restPeriod && (
+
+                    {next.rest && (
                       <RestPeriodCard
-                        startDate={restPeriod.startDate}
-                        endDate={restPeriod.endDate}
-                        duration={restPeriod.duration}
-                        type={restPeriod.type}
-                        hotelInfo={restPeriod.hotelInfo}
-                        lastArrivalAirport={restPeriod.lastArrivalAirport}
-                        isOutstation={restPeriod.lastArrivalAirport !== "AMS"}
+                        startDate={next.rest.startDate}
+                        endDate={next.rest.endDate}
+                        duration={next.rest.duration}
+                        type={next.rest.type}
+                        hotelInfo={next.rest.hotelInfo}
+                        lastArrivalAirport={next.rest.lastArrivalAirport}
+                        isOutstation={next.rest.lastArrivalAirport !== "AMS"}
                         outstationCode={
-                          restPeriod.lastArrivalAirport !== "AMS"
-                            ? restPeriod.lastArrivalAirport
+                          next.rest.lastArrivalAirport !== "AMS"
+                            ? next.rest.lastArrivalAirport
                             : undefined
                         }
-                        onPress={() => handleRestPeriodPress(restPeriod)}
+                        onPress={() => handlePress(next.rest!)}
+                      />
+                    )}
+
+                    {!next.rest && next.off && (
+                      <OffDayCard
+                        event={next.off}
+                        onPress={() => handlePress(next.off!)}
                       />
                     )}
                   </View>
                 );
-              }
-            })}
-          </View>
-        ) : (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No flights scheduled</Text>
-            <Text style={styles.emptySubtext}>Enjoy your time off! ✈️</Text>
-          </View>
-        )}
-      </View>
+              })}
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No flights scheduled</Text>
+              <Text style={styles.emptySubtext}>Enjoy your time off! ✈️</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
+
       <EventDetailModal
         visible={modalVisible}
-        event={selectedEvent}
+        event={selected}
         onClose={() => {
           setModalVisible(false);
-          setSelectedEvent(null);
+          setSelected(null);
         }}
       />
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 

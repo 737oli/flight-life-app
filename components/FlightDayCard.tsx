@@ -1,17 +1,26 @@
 import Colors from '@/constants/Colors';
 import { createGroundPeriod } from '@/services/calenderParser';
 import { setOpsDataForEvent } from '@/services/operationsData';
-import { FlightEvent, FlightDay, GroundPeriod } from '@/types';
+import { FlightEvent, GroundPeriod, FlightDuty, TaxiEvent } from '@/types';
 import { ChevronDown, ChevronUp, Crown, Plane, User, Users } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
+interface FlightDay {
+  date: Date;
+  dutyPeriod?: FlightDuty; // Flight day event with on-duty/off-duty times
+  flights: FlightEvent[];
+  groundTimes: GroundPeriod[];
+  taxi?: TaxiEvent;
+}
 
 interface FlightDayCardProps {
   date: Date;
   flights: FlightEvent[];
   onFlightPress?: (flight: FlightEvent) => void;
-  flightDay?: FlightDay;
+  flightDay?: FlightDay
+  groundTimes: GroundPeriod[];
+  taxi?: TaxiEvent;
 }
 
 export function FlightDayCard({ date, flights, onFlightPress, flightDay }: FlightDayCardProps) {
@@ -141,7 +150,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
             // start with creating the first groundtime
             if (index != 0 || index != flights.length - 1) {
               const groundPeriod = createGroundPeriod(flights[index], flights[index - 1])
-              timeline.push({event: groundPerdiod, groundperiod.type})
+              timeline.push({event: groundPeriod, groundperiod.type})
             }
 
             timeline.push({ event: flight, type: 'flight' });

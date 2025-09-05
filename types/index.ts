@@ -24,15 +24,6 @@ export interface FlightEvent {
   };
 }
 
-export interface FlightDay {
-  date: Date;
-  dutyPeriod?: FlightDuty; // Flight day event with on-duty/off-duty times
-  flights: FlightEvent[];
-  groundPeriods?: GroundPeriod[];
-  taxi?: TaxiEvent;
-  standby?: FlightEvent[];
-}
-
 export interface FlightDuty {
   id: string,
   type: string; // duty
@@ -85,11 +76,3 @@ export interface OffDay {
   startDate: Date; 
   endDate: Date; 
 }
-
-export interface TodayData {
-  groupedData: {
-    allDays,
-    restPeriods: [RestPeriod],
-  }
-};
-

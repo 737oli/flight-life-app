@@ -1,5 +1,5 @@
 // This file will be used to parse calender events from a pdf or other sources
-import { MOCK_DUTY_DAYS, MOCK_FLIGHT_EVENTS, MOCK_OFF_DAYS, MOCK_TAXI_EVENTS, MOCK_UP_GROUND_PERIODS } from "@/data/events";
+import { MOCK_DUTY_DAYS, MOCK_FLIGHT_EVENTS, MOCK_OFF_DAYS, MOCK_REST_PERIODS, MOCK_TAXI_EVENTS, MOCK_UP_GROUND_PERIODS } from "@/data/events";
 import { FlightEvent, GroundPeriod } from "@/types";
 
 // calculate the walk time to the aircraft, if in AMS
@@ -68,6 +68,12 @@ export const fetchDutyDays = async () => {
     await new Promise(resolve => setTimeout(resolve, 500));
 
     return MOCK_DUTY_DAYS;
+}
+
+export const fetchRestPeriods = async () => {
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    return MOCK_REST_PERIODS;
 }
 
 
