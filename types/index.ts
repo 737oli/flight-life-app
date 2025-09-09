@@ -56,7 +56,6 @@ export interface GroundPeriod {
   title: string;
   startDate: Date; 
   endDate: Date; 
-  duration: number; 
   toWalk: boolean
   walkTime?: number; // minutes to walk to aircraft
 }
@@ -75,4 +74,12 @@ export interface OffDay {
   title: string,
   startDate: Date; 
   endDate: Date; 
+}
+
+export interface FlightDay {
+  date: Date;
+  dutyPeriod: FlightDuty; // Flight day event with on-duty/off-duty times
+  flights: FlightEvent[];
+  groundTimes: GroundPeriod[];
+  taxi?: TaxiEvent;
 }

@@ -1,12 +1,12 @@
 // src/services/typeGuards.ts
 import type {
-    FlightDay,
-    FlightDuty,
-    FlightEvent,
-    GroundPeriod,
-    OffDay,
-    RestPeriod,
-    TaxiEvent,
+  FlightDay,
+  FlightDuty,
+  FlightEvent,
+  GroundPeriod,
+  OffDay,
+  RestPeriod,
+  TaxiEvent,
 } from "@/types";
 
 // --- small shared helpers ---
@@ -27,7 +27,7 @@ export const isRestPeriod = (e: any): e is RestPeriod =>
   hasType(e) && e.type === "rest" && hasDates(e);
 
 export const isGroundPeriod = (e: any): e is GroundPeriod =>
-  hasType(e) && e.type === "ground" && hasDates(e);
+  hasType(e) && e.type === "groundPeriod" && hasDates(e);
 
 export const isTaxiEvent = (e: any): e is TaxiEvent =>
   hasType(e) && e.type === "taxi" && hasDates(e);

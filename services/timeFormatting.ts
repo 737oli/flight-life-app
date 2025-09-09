@@ -2,7 +2,7 @@
 import { FlightDuty, FlightEvent, GroundPeriod, OffDay, RestPeriod } from "@/types";
 
 // e.g., converting to local time, formatting for display, etc.
-export const formatDateTime = (date: Date) => {
+export const formatDateAndTime = (date: Date) => {
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -11,6 +11,15 @@ export const formatDateTime = (date: Date) => {
       hour: '2-digit',
       minute: '2-digit',
       hour12: false,
+    });
+  };
+
+export const formatDateOnly = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     });
   };
 
@@ -36,4 +45,10 @@ export const formatDuration = (event: FlightEvent | OffDay | RestPeriod | Ground
       minute: '2-digit',
       hour12: false,
     });
+  };
+
+  export const FormatDurationInHoursAndMinutes = (duration: number) => {
+    const hours = Math.floor(duration / 60);
+    const minutes = duration % 60;
+    return { hours, minutes };
   };

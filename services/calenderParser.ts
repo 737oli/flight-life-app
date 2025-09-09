@@ -41,37 +41,37 @@ export const createGroundPeriod = (nextFlight: FlightEvent, prevFlight: FlightEv
 }
 
 export const fetchGroundPeriods = async() => {
-     await new Promise(resolve => setTimeout(resolve, 500));
+     await new Promise(resolve => setTimeout(resolve, 1));
 
     return MOCK_UP_GROUND_PERIODS;
 }
 
 export const fetchFlightEvents = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1));
 
     return MOCK_FLIGHT_EVENTS;
 }
 
 export const fetchTaxiEvents = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1));
 
     return MOCK_TAXI_EVENTS;
 }
 
 export const fetchOffDays = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1));
 
     return MOCK_OFF_DAYS;
 }
 
 export const fetchDutyDays = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1));
 
     return MOCK_DUTY_DAYS;
 }
 
 export const fetchRestPeriods = async () => {
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 1));
 
     return MOCK_REST_PERIODS;
 }

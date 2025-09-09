@@ -1,18 +1,11 @@
 import Colors from '@/constants/Colors';
-import { createGroundPeriod } from '@/services/calenderParser';
 import { setOpsDataForEvent } from '@/services/operationsData';
-import { FlightEvent, GroundPeriod, FlightDuty, TaxiEvent } from '@/types';
+import { formatDateOnly, formatDuration, formatTime, } from '@/services/timeFormatting';
+import { isFlightDuty, isFlightEvent, isGroundPeriod, isTaxiEvent } from '@/services/typeGuards';
+import { FlightDay, FlightDuty, FlightEvent, GroundPeriod, TaxiEvent } from '@/types';
 import { ChevronDown, ChevronUp, Crown, Plane, User, Users } from 'lucide-react-native';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
-interface FlightDay {
-  date: Date;
-  dutyPeriod?: FlightDuty; // Flight day event with on-duty/off-duty times
-  flights: FlightEvent[];
-  groundTimes: GroundPeriod[];
-  taxi?: TaxiEvent;
-}
 
 interface FlightDayCardProps {
   date: Date;
@@ -21,42 +14,19 @@ interface FlightDayCardProps {
   flightDay?: FlightDay
   groundTimes: GroundPeriod[];
   taxi?: TaxiEvent;
+  dutyPeriod: FlightDuty;
 }
 
-export function FlightDayCard({ date, flights, onFlightPress, flightDay }: FlightDayCardProps) {
+export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundTimes, taxi, dutyPeriod }: FlightDayCardProps) {
     const [isExpanded, setExpanded] = React.useState(false);
-    const [selectedEvent, setSelectedEvent] = React.useState<FlightEvent | null>(null);
     const [modalVisible, setModalVisible] = React.useState(false);
     const [flightOpsData, setFlightOpsData] = React.useState<Record<string, any>>({});
-
-    // format date as "Monday, January 1"
-    const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-    };
-
-    // format time as "14:30"
-    const formatTime = (date: Date) => {
-        return date.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-        });
-    };
-
-    // format duration
-    const formatDuration = (start: Date, end: Date) => {
-        const durationMs = end.getTime() - start.getTime();
-        const hours = Math.floor(durationMs / (1000 * 60 * 60));
-        const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
-        return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-    };
+    const [selectedEvent, setSelectedEvent] = React.useState<
+      FlightEvent | GroundPeriod | TaxiEvent | FlightDuty | null
+    >(null);
 
   // Handle a click on a flight to show details
-    const handleEventPress = (event: FlightEvent) => {
+    const handleEventPress = (event: FlightEvent | GroundPeriod | TaxiEvent) => {
         if (onFlightPress) {
             onFlightPress(event);
         } else {
@@ -78,32 +48,6 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
     const handleToggleExpand = () => {
         setExpanded(!isExpanded);
     };
-
-    // get the duty times
-    const getDutyTimes = () => {
-        if (flightDay?.dutyPeriod) {
-        return `${formatTime(flightDay.dutyPeriod.start)} - ${formatTime(flightDay.dutyPeriod.end)}`;
-        }
-        if (flights.length > 0) {
-        return `${formatTime(flights[0].start)} - ${formatTime(flights[flights.length - 1].end)}`;
-        }
-        return '';
-    };
-
-
-    // Determine flight day type
-    const getFlightDayType = () => {
-        if (flightDay?.dutyPeriod) {
-            const title = flightDay.dutyPeriod.title.toLowerCase();
-            if (title.includes('tstr') || title.includes("tsdoh")) {
-                return "Simulator Session";
-            } else if (title.includes('sby')) {
-                return "Standby Duty";
-            } else {
-                return "Flight Day";
-            }
-        }
-    }
 
     // Extract aircraft type from event details or description
     const getAircraftType = (event: FlightEvent): string | undefined => {
@@ -138,52 +82,46 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
 
     // Create a timeline of all events for the day
     const createTimeline = () => {
-        const timeline: { event: FlightEvent | GroundPeriod; type: 'taxi' | 'flight' | 'ground' | 'turnaround' }[] = [];
+        const timeline: (FlightEvent | GroundPeriod | TaxiEvent)[] = [];
+        let dutyStart: Date | null = null;
+        let dutyEnd: Date | null = null;
 
-        //Add Taxi if present
-        if (flightDay?.taxi) {
-            timeline.push({ event: flightDay.taxi, type: 'taxi' });
+        // If duty period exists, set start and end
+        if (isFlightDuty(dutyPeriod)) {
+            dutyStart = dutyPeriod.startDate;
+            dutyEnd = dutyPeriod.endDate;
         }
 
-        // Add flights with ground times and turnarounds in between
-        flights.forEach((flight, index) => {
-            // start with creating the first groundtime
-            if (index != 0 || index != flights.length - 1) {
-              const groundPeriod = createGroundPeriod(flights[index], flights[index - 1])
-              timeline.push({event: groundPeriod, groundperiod.type})
+        // Add taxi if within duty period
+        if (taxi) {
+            timeline.push(taxi);
+        }
+
+        // Add flights and ground times within duty period if defined
+        flights.forEach(flight => {
+          //check if not flightduty
+            if ((!dutyStart || flight.startDate >= dutyStart) && (!dutyEnd || flight.endDate <= dutyEnd)) {
+                timeline.push(flight);
             }
-
-            timeline.push({ event: flight, type: 'flight' });
-
-            if (index < flights.length - 1) {
-                // Find ground time between this flight and the next
-                const nextFlight = flights[index + 1];
-                const groundTime = flightDay?.groundTimes.find(gt => gt.start >= flight.end && gt.end <= nextFlight.start);
-                const turnaround = flightDay?.turnarounds.find(tr => tr.start >= flight.end && tr.end <= nextFlight.start);
-
-                if (groundTime) {
-                    timeline.push({ event: groundTime, type: 'ground' });
-                } else if (turnaround) {
-                    timeline.push({ event: turnaround, type: 'turnaround' });
-                }
-            }
-            
         });
+
+        // Add ground times within duty period if defined
+        groundTimes.forEach(ground => {
+            if ((!dutyStart || ground.startDate >= dutyStart) && (!dutyEnd || ground.endDate <= dutyEnd)) {
+                timeline.push(ground);
+            }
+        });
+
+        // Sort timeline by start date
+        timeline.sort((a, b) => a.startDate.getTime() - b.startDate.getTime());
 
         return timeline;
     }
 
     // Generate the timeline once
     const timeline = createTimeline();
+    console.log(timeline);
 
-    // Format ground time and turnaround info using event details if available
-    const formatGroundAndTurnaroundInfo = (event: GroundPeriod) : String => {
-      if (event.toWalk) {
-        return `Start Walking at ${event.walkTime}`;
-      } else {
-        return `Ground Time: ${event.duration}`;
-      }
-    }
 
     // Format a line of meta information for a flight or event
     const formatFlightMetaLine = (event: FlightEvent) : String => {
@@ -196,7 +134,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
         }
 
         // Add times
-        const timeRange = `${formatTime(event.start)} - ${formatTime(event.end)}`;
+        const timeRange = `${formatTime(event.startDate)} - ${formatTime(event.endDate)}`;
         parts.push(timeRange);
 
         return parts.join(' | ');
@@ -312,6 +250,26 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
         );
     };
 
+    // Format ground time and turnaround info using event details if available
+    const formatGroundTimeInfo = (event: GroundPeriod) => {
+      //convert duration from minutes to hours and minutes
+      const parts: string[] = [];
+      parts.push(`Ground Time: ${formatDuration(event)}`);
+      if (event.toWalk) {
+        
+        if (event.walkTime) {
+          parts.push(`Walk: ${event.walkTime}m`);
+          const leaveTime = new Date(event.startDate.getTime() - event.walkTime * 60000);
+          parts.push(`Leave: ${formatTime(leaveTime)}`);
+        }
+        if (parts.length > 0) {
+          return parts.join(' • ');
+        }
+      }
+
+    return parts;
+  };
+
     return (
       <View style={styles.container}>
         <TouchableOpacity
@@ -322,9 +280,10 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
           {/* Icon indicating flight day or off day */}
           <View style={styles.headerLeft}>
             <View style={styles.headerText}>
-              <Text style={styles.dateText}>{formatDate(date)}</Text>
+              <Text style={styles.dateText}>{formatDateOnly(date)}</Text>
               <Text style={styles.flightCount}>
-                {getFlightDayType()} • {getDutyTimes()}
+                
+                Duty Period • {formatTime(dutyPeriod.startDate)} {formatTime(dutyPeriod.endDate)}
               </Text>
               <Text style={styles.flightSubtext}>
                 {flights.length} flight{flights.length !== 1 ? "s" : ""}
@@ -350,65 +309,72 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay }: Fligh
         {isExpanded && timeline.length > 0 && (
           <View style={styles.flightsContainer}>
             {timeline.map((item, index) => (
-              <View key={`${item.event.id}-${index}`}>
+              <View key={`${item.id}-${index}`}>
                 <TouchableOpacity
                   style={[
                     styles.flightItem,
-                    item.type === "flight"
+                    isFlightEvent(item)
                       ? styles.flightItemFlight
                       : styles.flightItemOther,
                   ]}
-                  onPress={() => handleEventPress(item.event)}
+                  onPress={() => handleEventPress(item)}
                   activeOpacity={0.7}
                 >
-                  {/* Flight*/}
-                  {item.type === "flight" ? (
+
+                  {/* Taxi event display */}
+                  {isTaxiEvent(item) && (
+                    <>
+                      <View style={styles.groundHeader}>
+                        <Text style={styles.flightTitle}>
+                          Taxi
+                        </Text>
+                        <Text style={styles.groundTitle}>
+                          Pickup: {formatTime(item.startDate)} • Duration: {formatDuration(item)}
+                        </Text>
+                      </View>
+                    </>
+                  )}
+
+                  {/* Ground period display */}
+                  {isGroundPeriod(item) && (
+                    <>
+                      <View style={styles.groundHeader}>
+                        <Text style={styles.groundTitle}>
+                          {formatGroundTimeInfo(item)}
+                        </Text>
+                      </View>
+                    </>
+                  )}
+
+                  {/* Flight event display */}
+                  {isFlightEvent(item) && (
                     <>
                       <View style={styles.flightHeader}>
                         <Text style={styles.flightTitle}>
-                          {item.event.details?.flightNumber || item.event.title}
+                          {item.details?.flightNumber || item.title}
                         </Text>
                       </View>
 
                       <View style={styles.flightMetaLine}>
                         <Text style={styles.flightMeta}>
-                          {formatFlightMetaLine(item.event)}
+                          {formatFlightMetaLine(item)}
                         </Text>
                         <View style={styles.badgesRow}>
-                          {getAircraftType(item.event) && (
-                            <AircraftBadge aircraft={getAircraftType(item.event)!} />
+                          {getAircraftType(item) && (
+                            <AircraftBadge aircraft={getAircraftType(item)!} />
                           )}
                         </View>
                       </View>
 
-                      <FlightOpsBadges event={item.event} />
+                      <FlightOpsBadges event={item} />
 
-                      {item.event.location && (
+                      {item.details?.departure && (
                         <Text style={styles.flightLocation}>
-                          {item.event.location}
+                          {item.details?.departure}
                         </Text>
                       )}
 
-                      <CrewDisplay event={item.event} />
-                    </>
-                  ) : (
-                    <>
-                    {/* Ground time or turnaround */}
-                      <View style={styles.groundHeader}>
-                        <Text style={styles.groundTitle}>
-                          {item.type === "taxi"
-                            ? "Taxi"
-                            : formatGroundAndTurnaroundInfo(item.event)}
-                        </Text>
-                      </View>
-
-                      {/* Show taxi info if available */}
-                      {item.type === "taxi" && (
-                        <Text style={styles.taxiInfo}>
-                          Pickup: {formatTime(item.event.start)} • Duration:{" "}
-                          {formatDuration(item.event.start, item.event.end)}
-                        </Text>
-                      )}
+                      <CrewDisplay event={item} />
                     </>
                   )}
                 </TouchableOpacity>

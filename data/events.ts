@@ -25,15 +25,6 @@ const at = (dayOffset: number, hh: number, mm: number) => {
 
 //mock data for testing
 export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
-  {
-    id: "duty-d0",
-    title: "Flight Day Duty",
-    type: "duty",
-    startDate: at(0, 5, 15),
-    endDate: at(0, 22, 15),
-    details: {},
-  },
-
   // Rotation 1
   {
     id: "kl1895",
@@ -81,7 +72,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
     startDate: at(0, 19, 5),
     endDate: at(0, 21, 0),
     details: {
-      flightNumber: "1955",
+      flightNumber: "KL1955",
       route: "AMS-GDN",
       departure: "AMS",
       arrival: "GDN",
@@ -102,7 +93,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
     startDate: at(1, 9, 10),
     endDate: at(1, 10, 55),
     details: {
-      flightNumber: "1956",
+      flightNumber: "KL1956",
       route: "GDN-AMS",
       departure: "GDN",
       arrival: "AMS",
@@ -118,7 +109,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
     startDate: at(1, 12, 20),
     endDate: at(1, 13, 25),
     details: {
-      flightNumber: "1761",
+      flightNumber: "KL1761",
       route: "AMS-BHX",
       departure: "AMS",
       arrival: "BHX",
@@ -135,7 +126,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
     startDate: at(1, 14, 15),
     endDate: at(1, 16, 0),
     details: {
-      flightNumber: "1762",
+      flightNumber: "KL1762",
       route: "BHX-AMS",
       departure: "BHX",
       arrival: "AMS",
@@ -196,6 +187,13 @@ export const MOCK_OFF_DAYS: OffDay[] = [
 ];
 
 export const MOCK_DUTY_DAYS: FlightDuty[] = [
+    {
+    id: "duty-d0",
+    title: "Flight Day Duty",
+    type: "duty",
+    startDate: at(0, 5, 15),
+    endDate: at(0, 22, 15),
+  },
   {
     id: "duty-d1",
     type: "duty",
@@ -213,7 +211,6 @@ export const MOCK_UP_GROUND_PERIODS: GroundPeriod[] = [
     type: "groundPeriod",
     startDate: at(0, 7, 55),
     endDate: at(0, 8, 40),
-    duration: 45,
     toWalk: false,
   },
 
@@ -223,8 +220,7 @@ export const MOCK_UP_GROUND_PERIODS: GroundPeriod[] = [
     title: "Groundtime",
     type: "groundPeriod",
     startDate: at(0, 10, 15),
-    endDate: at(0, 19, 5),
-    duration: 530,
+    endDate: at(0, 12, 5),
     toWalk: true,
     walkTime: 40,
   },
@@ -236,7 +232,6 @@ export const MOCK_UP_GROUND_PERIODS: GroundPeriod[] = [
     type: "groundPeriod",
     startDate: at(1, 10, 55),
     endDate: at(1, 12, 20),
-    duration: 85,
     toWalk: true,
     walkTime: 40,
   },
@@ -248,7 +243,6 @@ export const MOCK_UP_GROUND_PERIODS: GroundPeriod[] = [
     type: "groundPeriod",
     startDate: at(1, 13, 25),
     endDate: at(1, 14, 15),
-    duration: 50,
     toWalk: false,
   },
 ];

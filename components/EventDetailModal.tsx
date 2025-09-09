@@ -1,6 +1,7 @@
 import Colors from '@/constants/Colors';
 import { getOpsDataForFlight, refreshMockOpsData } from '@/services/operationsData';
-import { formatDateTime, formatDuration } from '@/services/timeFormatting';
+import { formatDateOnly, formatDuration } from '@/services/timeFormatting';
+import { isFlightEvent } from '@/services/typeGuards';
 import { FlightEvent, GroundPeriod, OffDay, TaxiEvent } from '@/types';
 import {
   AlertTriangle,
@@ -36,7 +37,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
   // Load flight ops data when event changes
   const loadFlightOps = React.useCallback(async () => {
     if (
-      event?.type === "flight" &&
+      isFlightEvent(event) &&
       (
         !('details' in event) ||
         !event.details?.flightNumber ||
@@ -50,16 +51,18 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
     setLoadingOps(true);
 
     // Fetch ops data
-    try {
+    if (isFlightEvent(event) && event?.details?.flightNumber) {
+      try {
       const ops = await getOpsDataForFlight(
-        { flightNumber: event.details.flightNumber, date: event.start }
+        { flightNumber: event.details?.flightNumber, date: event.startDate }
       );
-      setFlightOps(ops);
+        setFlightOps(ops);
     } catch (error) {
-      console.error("Error loading flight ops:", error);
-      setFlightOps(null);
+        console.error("Error loading flight ops:", error);
+        setFlightOps(null);
     } finally {
-      setLoadingOps(false);
+        setLoadingOps(false);
+    }
     }
   }, [event]);
 
@@ -79,7 +82,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
 
   // When modal becomes visible for a flight event within 3 hours, load ops data
   React.useEffect(() => {
-    if (visible && event?.details?.flightNumber && isDepartingSoon(event.start)) {
+    if (visible && isFlightEvent(event) && event?.details?.flightNumber && isDepartingSoon(event.startDate)) {
         loadFlightOps();
     } else {
       //reset ops data if not a flight or not departing soon
@@ -176,11 +179,11 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             <Text style={styles.sectionTitle}>Time & Duration</Text>
             <View style={styles.timeInfo}>
               <Text style={styles.timeLabel}>Start:</Text>
-              <Text style={styles.timeValue}>{formatDateTime(event.startDate)}</Text>
+              <Text style={styles.timeValue}>{formatDateOnly(event.startDate)}</Text>
             </View>
             <View style={styles.timeInfo}>
               <Text style={styles.timeLabel}>End:</Text>
-              <Text style={styles.timeValue}>{formatDateTime(event.endDate)}</Text>
+              <Text style={styles.timeValue}>{formatDateOnly(event.endDate)}</Text>
             </View>
             <View style={styles.timeInfo}>
               <Text style={styles.timeLabel}>Duration:</Text>
@@ -188,16 +191,8 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             </View>
           </View>
 
-          {event.location && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Location</Text>
-              <Text style={styles.locationText}>{event.location}</Text>
-            </View>
-          )}
 
-
-
-          {event.type === 'flight' && event.details?.flightNumber && isDepartingSoon(event.start) && (
+          {isFlightEvent(event) && event.details?.flightNumber && isDepartingSoon(event.startDate) && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Flight Ops (beta)</Text>
@@ -369,7 +364,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             </View>
           )}
           
-          {event.type === 'flight' && event.details?.flightNumber && !isDepartingSoon(event.startDate) && (
+          {isFlightEvent(event) && event.details?.flightNumber && !isDepartingSoon(event.startDate) && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Flight Ops</Text>
               <Text style={styles.opsNotAvailable}>
@@ -378,7 +373,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             </View>
           )}
           
-          {event.details && (
+          {isFlightEvent(event) && event.details && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Flight Details</Text>
               {event.details.flightNumber && (
@@ -417,7 +412,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             </View>
           )}
 
-          {event.description && (
+          {isFlightEvent(event) && event.description && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Notes</Text>
               <Text style={styles.descriptionText}>

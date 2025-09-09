@@ -1,4 +1,4 @@
-import type { FlightDuty, FlightEvent, GroundPeriod, TaxiEvent } from "@/types";
+import type { FlightDay, FlightDuty, FlightEvent, GroundPeriod, TaxiEvent } from "@/types";
 
 import {
   fetchDutyDays,
@@ -6,14 +6,6 @@ import {
   fetchGroundPeriods,
   fetchTaxiEvents,
 } from "@/services/calenderParser";
-
-interface FlightDay {
-  date: Date;
-  dutyPeriod?: FlightDuty; // Flight day event with on-duty/off-duty times
-  flights: FlightEvent[];
-  groundTimes: GroundPeriod[];
-  taxi?: TaxiEvent;
-}
 
 // --- date helpers ---
 const startOfDay = (d: Date) =>
@@ -72,8 +64,14 @@ export async function fetchFlightDayGroup(
   // choose the first duty (if multiple, you can change to keep array later)
   const dutyPeriod = duties[0];
 
-  // choose the earliest taxi (if multiple)
-  const taxi = taxis[0];
+  
+  // make sure the day of the taxi event is the same as the day of the flightduty
+  const taxi = taxis.find(t => {
+    if (!dutyPeriod) return false;
+    return (t.startDate.getFullYear() === dutyPeriod.startDate.getFullYear() &&
+      t.startDate.getMonth() === dutyPeriod.startDate.getMonth() &&
+      t.startDate.getDate() === dutyPeriod.startDate.getDate());
+  });
 
   const flightDay: FlightDay = {
     date: dayStart,

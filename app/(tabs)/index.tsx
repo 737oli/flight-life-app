@@ -9,9 +9,10 @@ import { RestPeriodCard } from "@/components/RestPeriodCard";
 
 import Colors from '@/constants/Colors';
 import { fetchListOfFlightDayGroupsFrom } from "@/scripts/fetchFlightDayGroup";
-import { formatDateTime } from "@/services/timeFormatting";
+import { formatDateOnly } from "@/services/timeFormatting";
 
 import type {
+  FlightDay,
   FlightDuty,
   FlightEvent,
   GroundPeriod,
@@ -20,15 +21,6 @@ import type {
   TaxiEvent
 } from "@/types";
 
-/* ---------------- Types & tiny utils ---------------- */
-
-export interface FlightDay {
-  date: Date;
-  dutyPeriod?: FlightDuty; // Flight day event with on-duty/off-duty times
-  flights: FlightEvent[];
-  groundTimes: GroundPeriod[];
-  taxi?: TaxiEvent;
-}
 
 // utils/dates.ts
 export const dayISO = (d: Date) =>
@@ -75,9 +67,7 @@ function findNextAfter(
 /* ---------------- Component ---------------- */
 
 export default function TodayScreen() {
-  // Core data
   const [flightDays, setFlightDays] = useState<FlightDay[]>([]);
-  // If/when you wire these fetchers, fill them. For now, keep empty arrays.
   const [restPeriods, setRestPeriods] = useState<RestPeriod[]>([]);
   const [offDays, setOffDays] = useState<OffDay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,6 +89,7 @@ export default function TodayScreen() {
       // Fetch N days including the start day
       const DAYS = 14;
       const days = await fetchListOfFlightDayGroupsFrom(start, DAYS);
+
       setFlightDays(sortByDate(days));
 
       // If you have fetchers for these, populate them here:
@@ -121,7 +112,7 @@ export default function TodayScreen() {
       <ScrollView style={styles.scrollView}>
         <View style={styles.header}>
           <Text style={styles.title}>Today</Text>
-          <Text style={styles.date}>{formatDateTime(new Date())}</Text>
+          <Text style={styles.date}>{formatDateOnly(new Date())}</Text>
         </View>
 
         <View style={styles.section}>
@@ -140,7 +131,7 @@ export default function TodayScreen() {
                       groundTimes={flightDay.groundTimes}
                       taxi={flightDay.taxi}
                       onFlightPress={handlePress}
-                      flightDay={flightDay}
+                      dutyPeriod={flightDay.dutyPeriod}
                     />
 
                     {next.rest && (
