@@ -1,50 +1,191 @@
-# Welcome to your Expo app 👋
+# Flight Life App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An Expo + React Native application scaffolded with Expo Router and TypeScript. This project targets iOS, Android, and Web with a single codebase, using file‑based routing, modern React Native architecture, and a modular structure for components, services, and shared types.
 
-## Get started
+- Platforms: iOS, Android, Web
+- Routing: [Expo Router](https://expo.dev/router) (typed routes enabled)
+- Language: TypeScript
+- React Native: 0.79
+- React: 19
+- Expo SDK: 53
+- Deep linking scheme: `flightlifeapp`
+- New Architecture: enabled
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- Universal app (iOS/Android/Web) via Expo and React Native Web
+- File-based routing with Expo Router (typed routes enabled)
+- Navigation powered by React Navigation
+- UI polish with `expo-blur`, `expo-haptics`, and `expo-image`
+- In-app browser with `expo-web-browser`
+- Web content rendering with `react-native-webview`
+- Strict typing with TypeScript
+- Linting via ESLint (Expo config)
 
-2. Start the app
+## Quick Start
 
-   ```bash
-   npx expo start
-   ```
+### Prerequisites
 
-In the output, you'll find options to open the app in a
+- Node.js 18+ (LTS recommended)
+- npm or yarn (examples use npm)
+- Xcode (macOS) for iOS simulator builds
+- Android Studio for Android emulator builds
+- Expo Go app (optional) for device testing
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### Installation
 
 ```bash
-npm run reset-project
+# Install dependencies
+npm install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Development
 
-## Learn more
+```bash
+# Start the dev server (choose platform in the Expo UI)
+npm run start
 
-To learn more about developing your project with Expo, look at the following resources:
+# iOS simulator
+npm run ios
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+# Android emulator
+npm run android
 
-## Join the community
+# Web (React Native Web)
+npm run web
+```
 
-Join our community of developers creating universal apps.
+If you run into iOS build issues locally, ensure pods are installed:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npx pod-install
+```
+
+## Scripts
+
+Defined in `package.json`:
+
+- `start` — Start Expo dev server
+- `android` — Start and open Android
+- `ios` — Start and open iOS
+- `web` — Start and open Web
+- `lint` — Lint the project using Expo's ESLint config
+- `reset-project` — Project cleanup via `scripts/reset-project.js`
+
+## Project Structure
+
+A high-level overview of directories:
+
+```
+app/           # Route-based screens and layouts (Expo Router)
+components/    # Reusable UI components
+constants/     # App-wide constants (colors, spacing, etc.)
+data/          # Static data or mock fixtures
+services/      # API clients, storage, and side-effectful logic
+types/         # Shared TypeScript types and interfaces
+scripts/       # Project utility scripts (e.g., reset)
+.vscode/       # Editor settings and recommendations
+```
+
+With Expo Router, files under `app/` map to routes. For example:
+
+- `app/index.tsx` → `/`
+- `app/(tabs)/home.tsx` → `/home`
+- `app/[id].tsx` → dynamic route `/123`
+
+Typed routes are enabled via `experiments.typedRoutes` in `app.json`.
+
+## Configuration
+
+Key settings in `app.json`:
+
+- Name/slug: `flight-life-app`
+- Scheme (deep linking): `flightlifeapp`
+- iOS: `supportsTablet: true`
+- Android: Edge-to-edge UI enabled
+- Web: Metro bundler and static output
+- Splash/icon assets:
+  - `./assets/images/icon.png`
+  - `./assets/images/adaptive-icon.png`
+  - `./assets/images/favicon.png`
+  - `./assets/images/splash-icon.png`
+
+Plugins:
+- `expo-router`
+- `expo-splash-screen` with configurable image, width, and background color
+
+New Architecture is enabled (`newArchEnabled: true`).
+
+## Linting and Formatting
+
+Run lints:
+
+```bash
+npm run lint
+```
+
+Recommendation (optional):
+- Add Prettier for consistent code formatting and hook it into your editor or pre-commit workflow.
+
+## Environment Variables
+
+If the app requires secrets or environment-based configuration, add a `.env` file and use a library such as `expo-constants` or `react-native-config`. Make sure to:
+
+- Add `.env*` to `.gitignore`
+- Never commit secrets to the repository
+
+## Navigation Notes
+
+This project includes:
+- `@react-navigation/native`
+- `@react-navigation/bottom-tabs`
+- `@react-navigation/elements`
+
+Expo Router integrates with React Navigation under the hood. Use layouts and segments in `app/` for file-based routing and shared UI.
+
+## Building
+
+For store-ready builds, consider using [EAS Build](https://docs.expo.dev/build/introduction/). After configuring your Expo account and `eas.json`:
+
+```bash
+# Example (requires EAS configuration, not included by default):
+# eas build --platform ios
+# eas build --platform android
+```
+
+For web, static export is enabled in `app.json` (`web.output: "static"`).
+
+## Troubleshooting
+
+- iOS Pods: Run `npx pod-install` after dependency changes.
+- Reanimated: If you define a custom Babel config, ensure `react-native-reanimated/plugin` is included as the last plugin.
+- Android Emulator: Make sure virtualization is enabled and an emulator is created in Android Studio.
+- Cache issues: Use `npm run reset-project` if provided script clears caches and resets state.
+
+## Tech Stack
+
+- Expo SDK 53
+- React 19
+- React Native 0.79
+- Expo Router
+- React Navigation
+- TypeScript
+- React Native Web
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit changes with clear messages
+4. Open a pull request with a concise summary and screenshots if UI changes are included
+
+## License
+
+This project does not currently include a license file. If you intend to open-source it, consider adding a license (e.g., MIT, Apache-2.0).
+
+## Acknowledgements
+
+- [Expo](https://expo.dev/)
+- [React Native](https://reactnative.dev/)
+- [Expo Router](https://expo.dev/router)
+- [React Navigation](https://reactnavigation.org/)

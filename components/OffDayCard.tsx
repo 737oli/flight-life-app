@@ -1,5 +1,5 @@
 import Colors from '@/constants/Colors';
-import { formatDateTime, formatTime } from '@/services/timeFormatting';
+import { formatDateOnly } from '@/services/timeFormatting';
 import { OffDay } from '@/types';
 import { Home } from 'lucide-react-native';
 import React from 'react';
@@ -49,11 +49,8 @@ export function OffDayCard({ event, onPress }: OffDayCardProps) {
           <Home color={Colors.light.success} size={20} />
         </View>
         <View style={styles.content}>
-          <Text style={styles.dateText}>{formatDateTime(event.startDate)}</Text>
+          <Text style={styles.dateText}>{formatDateOnly(event.startDate)}</Text>
           <Text style={styles.typeText}>{getOffDayType()}</Text>
-          <Text style={styles.durationText}>
-            {formatTime(event.startDate)} - {formatTime(event.endDate)} • {getDuration()}
-          </Text>
         </View>
         <View style={styles.badge}>
           <Text style={styles.badgeText}>OFF</Text>

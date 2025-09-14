@@ -9,6 +9,7 @@ import { RestPeriodCard } from "@/components/RestPeriodCard";
 
 import Colors from '@/constants/Colors';
 import { fetchListOfFlightDayGroupsFrom } from "@/scripts/fetchFlightDayGroup";
+import { fetchOffDays, fetchRestPeriods } from "@/services/calenderParser";
 import { formatDateOnly } from "@/services/timeFormatting";
 
 import type {
@@ -88,13 +89,13 @@ export default function TodayScreen() {
 
       // Fetch N days including the start day
       const DAYS = 14;
-      const days = await fetchListOfFlightDayGroupsFrom(start, DAYS);
+      const flightDays = await fetchListOfFlightDayGroupsFrom(start, DAYS);
 
-      setFlightDays(sortByDate(days));
+      setFlightDays(sortByDate(flightDays));
 
-      // If you have fetchers for these, populate them here:
-      // setRestPeriods(await fetchRestPeriods());
-      // setOffDays(await fetchOffDays());
+      setRestPeriods(await fetchRestPeriods());
+      
+      setOffDays(await fetchOffDays());
 
       setLoading(false);
     };
@@ -117,8 +118,13 @@ export default function TodayScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Schedule</Text>
-
-          {loading ? null : flightDays.length > 0 ? (
+          {(loading) ? (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Loading schedule...</Text>
+            </View>
+          ) : (
+            null
+          )}
             <View>
               {flightDays.map((flightDay) => {
                 const next = findNextAfter(flightDay, restPeriods, offDays);
@@ -162,12 +168,6 @@ export default function TodayScreen() {
                 );
               })}
             </View>
-          ) : (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>No flights scheduled</Text>
-              <Text style={styles.emptySubtext}>Enjoy your time off! ✈️</Text>
-            </View>
-          )}
         </View>
       </ScrollView>
 

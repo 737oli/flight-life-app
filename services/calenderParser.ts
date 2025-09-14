@@ -37,7 +37,7 @@ export const createGroundPeriod = (nextFlight: FlightEvent, prevFlight: FlightEv
             title = "TurnaroundTime"
         }
 
-        return { id, type, title,startDate, endDate, duration, toWalk, walkTime };
+        return { id, type, title,startDate, endDate, toWalk, walkTime };
 }
 
 export const fetchGroundPeriods = async() => {

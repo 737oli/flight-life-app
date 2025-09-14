@@ -1,5 +1,5 @@
 import Colors from '@/constants/Colors';
-import { getOpsDataForFlight, refreshMockOpsData } from '@/services/operationsData';
+import { getOpsDataForFlight, setOpsDataForEvent } from '@/services/operationsData';
 import { formatDateOnly, formatDuration } from '@/services/timeFormatting';
 import { isFlightEvent } from '@/services/typeGuards';
 import { FlightEvent, GroundPeriod, OffDay, TaxiEvent } from '@/types';
@@ -67,9 +67,20 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
   }, [event]);
 
   // Refresh/mock new ops data
-  const handleFreshOps = React.useCallback(async() => {
-    refreshMockOpsData();
-    await loadFlightOps();
+  const handleFreshOps = React.useCallback(async(event: FlightEvent) => {
+    // For testing purposes, refresh/mock new ops data
+    setLoadingOps(true);
+
+    // if departure time is less than 3 hours from Starttime
+    if (isDepartingSoon(event.startDate)) {
+      const ops = await setOpsDataForEvent(event);
+      setFlightOps(ops);
+    } else {
+      setFlightOps(null);
+    }
+
+    setLoadingOps(false);
+    
   }, [loadFlightOps]);
 
   // Check if flight is departing within 3 hours
@@ -192,12 +203,13 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
           </View>
 
 
+          {/* Flight Ops Departing Soon */}
           {isFlightEvent(event) && event.details?.flightNumber && isDepartingSoon(event.startDate) && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Flight Ops (beta)</Text>
                 <TouchableOpacity 
-                  onPress={handleFreshOps}
+                  onPress={() => handleFreshOps(event)}
                   style={styles.refreshButton}
                   disabled={loadingOps}
                 >
@@ -364,6 +376,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
             </View>
           )}
           
+          {/* Flight Ops Not Departing Soon*/}
           {isFlightEvent(event) && event.details?.flightNumber && !isDepartingSoon(event.startDate) && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Flight Ops</Text>
@@ -372,7 +385,8 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
               </Text>
             </View>
           )}
-          
+
+          {/* Flight Details */}
           {isFlightEvent(event) && event.details && (
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Flight Details</Text>

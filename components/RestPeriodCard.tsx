@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Coffee, Moon } from 'lucide-react-native';
 import Colors from '@/constants/Colors';
+import { Moon } from 'lucide-react-native';
+import React from 'react';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface RestPeriodCardProps {
   startDate: Date;
@@ -59,11 +59,11 @@ export function RestPeriodCard({
 
   const getRestType = () => {
     if (duration >= 24) {
-      return { icon: Moon, text: 'Rest Period', color: Colors.light.success };
-    } else if (duration >= 8) {
-      return { icon: Moon, text: 'Rest Period', color: Colors.light.warning };
+      return { icon: Moon, text: 'Long Rest Period', color: Colors.light.success };
+    } else if (duration >= 12) {
+      return { icon: Moon, text: 'Medium Rest Period', color: Colors.light.warning };
     } else {
-      return { icon: Coffee, text: 'Rest Period', color: Colors.light.secondary };
+      return { icon: Moon, text: 'Short Rest Period', color: Colors.light.danger };
     }
   };
 

@@ -1,6 +1,6 @@
 import Colors from '@/constants/Colors';
 import { setOpsDataForEvent } from '@/services/operationsData';
-import { formatDateOnly, formatDuration, formatTime, } from '@/services/timeFormatting';
+import { formatDateOnly, formatDuration, formatTimeOnly, } from '@/services/timeFormatting';
 import { isFlightDuty, isFlightEvent, isGroundPeriod, isTaxiEvent } from '@/services/typeGuards';
 import { FlightDay, FlightDuty, FlightEvent, GroundPeriod, TaxiEvent } from '@/types';
 import { ChevronDown, ChevronUp, Crown, Plane, User, Users } from 'lucide-react-native';
@@ -49,24 +49,10 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
         setExpanded(!isExpanded);
     };
 
-    // Extract aircraft type from event details or description
+    // Extract aircraft type from event details
     const getAircraftType = (event: FlightEvent): string | undefined => {
-    // First check parsed aircraft from details
     if (event.details?.aircraft) {
       return event.details.aircraft;
-    }
-    
-    // Then check description for aircraft patterns
-    if (event.description) {
-      const lines = event.description.split(/\\n|\n/).filter(line => line.trim());
-      const aircraftLine = lines.find(line => 
-        /\b(B\d{3}|A\d{3}|E\d{3}(?:-E\d)?|[A-Z]\d{3}(?:-[A-Z]\d)?)\b/.test(line) &&
-        !line.includes('(') // Exclude crew member lines
-      );
-      if (aircraftLine) {
-        const match = aircraftLine.match(/\b(B\d{3}|A\d{3}|E\d{3}(?:-E\d)?|[A-Z]\d{3}(?:-[A-Z]\d)?)\b/);
-        return match?.[1];
-      }
     }
     
     return undefined;
@@ -92,8 +78,8 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
             dutyEnd = dutyPeriod.endDate;
         }
 
-        // Add taxi if within duty period
-        if (taxi) {
+        // Add taxi if exists
+        if (isTaxiEvent(taxi)) {
             timeline.push(taxi);
         }
 
@@ -120,8 +106,6 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
 
     // Generate the timeline once
     const timeline = createTimeline();
-    console.log(timeline);
-
 
     // Format a line of meta information for a flight or event
     const formatFlightMetaLine = (event: FlightEvent) : String => {
@@ -134,7 +118,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
         }
 
         // Add times
-        const timeRange = `${formatTime(event.startDate)} - ${formatTime(event.endDate)}`;
+        const timeRange = `${formatTimeOnly(event.startDate)} - ${formatTimeOnly(event.endDate)}`;
         parts.push(timeRange);
 
         return parts.join(' | ');
@@ -189,16 +173,16 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
     // Fetch flight operations data when component mounts or date/flights change
     React.useEffect(() => {
         const fetchOpsData = async () => {
-            if (flights.length === 0) return;
-            const flightNumber = flights[0].details?.flightNumber || '';
-            if (!flightNumber) return;
-            await setOpsDataForEvent(flights[0]);
-        }
+            const opsData: Record<string, any> = {};
+            for (const flight of flights) {
+                const updatedFlight = await setOpsDataForEvent(flight);
+                opsData[flight.id] = updatedFlight.details;
+            }
+            setFlightOpsData(opsData);
+        };
+
         fetchOpsData();
     }, [date, flights]);
-
-    // Determine if this is an off day
-    const isOffDay = flights.length === 0 && !flightDay?.dutyPeriod;
 
     // Display crew members
     const CrewDisplay = ({ event}: { event: FlightEvent }) => {
@@ -260,7 +244,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
         if (event.walkTime) {
           parts.push(`Walk: ${event.walkTime}m`);
           const leaveTime = new Date(event.startDate.getTime() - event.walkTime * 60000);
-          parts.push(`Leave: ${formatTime(leaveTime)}`);
+          parts.push(`Leave: ${formatTimeOnly(leaveTime)}`);
         }
         if (parts.length > 0) {
           return parts.join(' • ');
@@ -279,11 +263,14 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
         >
           {/* Icon indicating flight day or off day */}
           <View style={styles.headerLeft}>
+            <View style={styles.iconContainer}>
+              <Plane color={Colors.light.tint} size={20} />
+            </View>
             <View style={styles.headerText}>
               <Text style={styles.dateText}>{formatDateOnly(date)}</Text>
               <Text style={styles.flightCount}>
                 
-                Duty Period • {formatTime(dutyPeriod.startDate)} {formatTime(dutyPeriod.endDate)}
+                Duty Period • {formatTimeOnly(dutyPeriod.startDate)} {formatTimeOnly(dutyPeriod.endDate)}
               </Text>
               <Text style={styles.flightSubtext}>
                 {flights.length} flight{flights.length !== 1 ? "s" : ""}
@@ -329,7 +316,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
                           Taxi
                         </Text>
                         <Text style={styles.groundTitle}>
-                          Pickup: {formatTime(item.startDate)} • Duration: {formatDuration(item)}
+                          Pickup: {formatTimeOnly(item.startDate)} • Duration: {formatDuration(item)}
                         </Text>
                       </View>
                     </>
@@ -351,7 +338,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
                     <>
                       <View style={styles.flightHeader}>
                         <Text style={styles.flightTitle}>
-                          {item.details?.flightNumber || item.title}
+                          {item.title}
                         </Text>
                       </View>
 
@@ -360,19 +347,14 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
                           {formatFlightMetaLine(item)}
                         </Text>
                         <View style={styles.badgesRow}>
-                          {getAircraftType(item) && (
-                            <AircraftBadge aircraft={getAircraftType(item)!} />
-                          )}
+                          {
+                            (item.details?.aircraft) ? (<AircraftBadge aircraft={getAircraftType(item)!} />) : 
+                            (<AircraftBadge aircraft="No Type" />)
+                          }
                         </View>
                       </View>
 
                       <FlightOpsBadges event={item} />
-
-                      {item.details?.departure && (
-                        <Text style={styles.flightLocation}>
-                          {item.details?.departure}
-                        </Text>
-                      )}
 
                       <CrewDisplay event={item} />
                     </>

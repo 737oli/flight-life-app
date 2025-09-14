@@ -39,7 +39,7 @@ export const formatDuration = (event: FlightEvent | OffDay | RestPeriod | Ground
   };
 
   // Format time as HH:MM
-  export const formatTime = (date: Date) => {
+  export const formatTimeOnly = (date: Date) => {
     return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',

@@ -27,15 +27,11 @@ const at = (dayOffset: number, hh: number, mm: number) => {
 export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
   // Rotation 1
   {
-    id: "kl1895",
+    id: "1",
     type: "flight",
     title: "KL1895 AMS → GOT",
     startDate: at(0, 6, 20),
-    endDate: at(0, 7, 55),
-    calendar: "Work",
-    type: "flight",
-    source: "demo",
-    calendarId: "demo-work",
+    endDate: at(0, 7, 50),
     details: {
       flightNumber: "1895",
       route: "AMS-GOT",
@@ -48,7 +44,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
     },
   },
   {
-    id: "kl1896",
+    id: "2",
     type: "flight",
     title: "KL1896 GOT → AMS",
     startDate: at(0, 8, 40),
@@ -66,7 +62,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
 
   // Rotation 2 (ends outstation)
   {
-    id: "kl1955",
+    id: "3",
     type: "flight",
     title: "KL1955 AMS → GDN",
     startDate: at(0, 19, 5),
@@ -87,7 +83,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
 
   // ---------- DAY 1 (Today +1) — GDN → AMS, then AMS → BHX → AMS ----------
   {
-    id: "kl1956",
+    id: "4",
     type: "flight",
     title: "KL1956 GDN → AMS",
     startDate: at(1, 9, 10),
@@ -103,7 +99,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
     },
   },
   {
-    id: "kl1761",
+    id: "5",
     type: "flight",
     title: "KL1761 AMS → BHX",
     startDate: at(1, 12, 20),
@@ -120,7 +116,7 @@ export const MOCK_FLIGHT_EVENTS: FlightEvent[] = [
     },
   },
   {
-    id: "kl1762",
+    id: "6",
     type: "flight",
     title: "KL1762 BHX → AMS",
     startDate: at(1, 14, 15),
@@ -246,3 +242,18 @@ export const MOCK_UP_GROUND_PERIODS: GroundPeriod[] = [
     toWalk: false,
   },
 ];
+
+export const MOCK_UP_AIRCRAFT = [
+    { type: "E75", registrations: ["PH-EZA", "PH-EZB", "PH-EZC", "PH-EZD"] },
+    { type: "E90", registrations: ["PH-EZE", "PH-EZF", "PH-EZG", "PH-EZH"] },
+    { type: "E295", registrations: ["PH-NAA", "PH-NAB", "PH-NAC", "PH-NAD"] },
+];
+
+// Mock flight ops data
+export const MOCK_OPS_DATA: FlightEvent['details'] = {
+    ctot: "08:32Z",
+    registration: "PH-EZX",
+    aircraft: "E90",
+    prevLegArr: { status: "arrived", actualArrLocal: "07:45" },
+    delay: { isDelayed: true, newDepLocal: "09:00", reason: "Weather" },
+};
