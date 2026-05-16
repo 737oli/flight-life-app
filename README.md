@@ -22,6 +22,28 @@ An Expo + React Native application scaffolded with Expo Router and TypeScript. T
 - Strict typing with TypeScript
 - Linting via ESLint (Expo config)
 
+## Shared Docs Workflow
+
+Shared project docs are committed into both the frontend and backend repositories so GitHub Copilot can reference them in either repo. The backend repo is the source of truth for:
+
+- `AGENTS.md`
+- `PROJECT_CONTEXT.md`
+- `docs/`
+
+Edit shared docs in `../flight-life-app-server/`, then sync them into this repo:
+
+```bash
+../flight-life-app-server/scripts/sync-shared-docs.sh
+```
+
+Preview a sync without changing files:
+
+```bash
+../flight-life-app-server/scripts/sync-shared-docs.sh --dry-run
+```
+
+After syncing, review, commit, and push the docs changes in both child repositories. Do not hand-edit the same shared docs separately in both repos.
+
 ## Quick Start
 
 ### Prerequisites

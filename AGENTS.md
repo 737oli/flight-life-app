@@ -32,6 +32,10 @@ Before planning larger work, read:
 - `docs/product/flight-life-app-prd.md`
 - `docs/product/flight-life-app-kanban.md`
 
+Before changing shared project docs, read:
+
+- `docs/ai/shared-docs-workflow.md`
+
 ## Current Planning Documents
 
 - `PROJECT_CONTEXT.md`
@@ -69,10 +73,14 @@ Real roster PDFs may be used locally for parser development and manual QA. Keep 
 
 - Treat `flight-life-app/` and `flight-life-app-server/` as separate repositories.
 - The workspace root is not a git repository.
+- Shared project docs are tracked in both child repositories so GitHub Copilot and other repo-local tools can reference them.
+- The canonical shared docs source is the backend repo copy: `flight-life-app-server/AGENTS.md`, `flight-life-app-server/PROJECT_CONTEXT.md`, and `flight-life-app-server/docs/`.
+- Do not hand-edit shared docs twice. Edit the backend repo copy, then run `flight-life-app-server/scripts/sync-shared-docs.sh` to copy shared docs into `flight-life-app/`.
+- After syncing shared docs, commit and push the shared-doc changes in both child repositories.
 - Check git status inside the relevant child repo before code edits.
 - Never revert user changes unless explicitly requested.
 - The frontend may have local uncommitted user work; work with it, do not undo it.
-- Keep docs-only changes in the root docs unless the issue explicitly targets a child repo.
+- The workspace-root docs are local convenience copies only. Do not treat them as the source of truth unless they are intentionally refreshed from the backend repo.
 
 ## Build, Test, And Verification
 
@@ -116,4 +124,3 @@ A task is done only when:
 - parser/import changes avoid committing private roster data;
 - the diff has been reviewed for readability, duplication, naming, coupling, privacy, and unnecessary complexity;
 - remaining risks or unverified assumptions are stated.
-

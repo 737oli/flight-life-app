@@ -27,6 +27,7 @@ Plan work so Codex stays inside small, reviewable, testable vertical slices.
 - Keep real roster PDFs local and ignored.
 - Use synthetic fixtures for committed tests.
 - Keep backend and frontend repos separate.
+- Keep shared docs synchronized through the backend-source workflow in `docs/ai/shared-docs-workflow.md`.
 - Do not mix public deployment/security work into private Tailscale deployment slices.
 
 ## Vertical Slice Rule
@@ -50,4 +51,3 @@ A good Codex task should be:
 - reversible if wrong;
 - independently useful or visibly closer to the first milestone;
 - free of private committed data.
-

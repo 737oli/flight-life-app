@@ -17,6 +17,14 @@ This folder is a parent workspace, not a git repository. It contains two separat
 - `docs/product/` - product, architecture, kanban, and planning documents.
 - `docs/issues/` - independently grabbable issue drafts.
 
+Shared project docs are committed into both child repositories so GitHub Copilot and repo-local tools can reference them. The backend repo copy is the canonical source for shared docs:
+
+- `flight-life-app-server/AGENTS.md`
+- `flight-life-app-server/PROJECT_CONTEXT.md`
+- `flight-life-app-server/docs/`
+
+When shared docs change, edit the backend repo copy, run `flight-life-app-server/scripts/sync-shared-docs.sh`, then commit and push the resulting docs changes in both child repositories.
+
 ## Product Direction
 
 Flight Life App should make the next duty day easier to understand quickly:
@@ -152,4 +160,3 @@ A slice is done only when:
 - the diff has been reviewed for readability, duplication, naming, coupling, and unnecessary complexity;
 - private roster data, logs, screenshots, and secrets remain uncommitted;
 - remaining risks or assumptions are stated.
-
