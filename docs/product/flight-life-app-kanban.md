@@ -24,9 +24,9 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 001 | Backend test harness and project hygiene | AFK | backend | Ready | none |
 | 002 | Parser characterization with private PDF and synthetic fixtures | human-in-the-loop | backend | Blocked | 001 |
 | 003 | SQLite persistence foundation with SQLAlchemy and Alembic | AFK | backend | Blocked | 001 |
-| 004 | Roster upload endpoint with atomic parse validation | AFK | backend | Blocked | 002, 003 |
-| 005 | Date-scoped roster import merge and import summary | AFK | backend | Blocked | 004 |
-| 006 | Stable schedule DTO and next-7-days API | AFK | backend | Blocked | 005 |
+| 004 | Roster upload endpoint with atomic parse validation | AFK | backend | Done | 002, 003 |
+| 005 | Date-scoped roster import merge and import summary | AFK | backend | Done | 004 |
+| 006 | Stable schedule DTO and next-7-days API | AFK | backend | Done | 005 |
 | 007 | Frontend backend configuration and connection status | AFK | frontend | Ready | none |
 | 008 | Settings roster import UI | AFK | frontend | Blocked | 004, 007 |
 | 009 | Home 7-day dashboard from backend data with fallback cache | AFK | frontend | Blocked | 006, 007 |

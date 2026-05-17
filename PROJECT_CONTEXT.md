@@ -138,9 +138,9 @@ Real roster PDFs may be used locally for parser development and manual QA, but c
 
 The frontend currently contains a mobile dashboard shell with mock flight, duty, ground, taxi, rest, off-day, and operations data. It also contains a mock stay-vs-home decisions screen. Some tabs referenced by the layout are not yet implemented.
 
-The backend currently contains a basic FastAPI app and parser modules for extracting NetLine/Crew roster PDF information. It does not yet expose the upload/import/schedule API needed by the first milestone.
+The backend currently contains a FastAPI app, parser modules for extracting NetLine/Crew roster PDF information, a parser normalization boundary, SQLite persistence with SQLAlchemy/Alembic, a roster upload/import endpoint, date-scoped import merge behavior, and a next-7-days schedule API.
 
-There are currently no committed frontend or backend test files.
+The backend has committed pytest coverage for API smoke behavior, parser characterization, parser normalization, persistence setup, upload/import validation, date-scoped merge behavior, rollback behavior, and schedule DTO output. Frontend test tooling has not been added yet.
 
 ## Current Planning Documents
 

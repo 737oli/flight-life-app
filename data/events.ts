@@ -156,9 +156,9 @@ export const MOCK_TAXI_EVENTS: TaxiEvent[] = [
   {
     id: "taxi-d0-1",
     type: "taxi",
-    title: "Taxi Home → AMS P30",
-    startDate: at(0, 4, 35),
-    endDate: at(0, 5, 15),
+    title: "Taxi GDN",
+    startDate: at(1, 7, 30),
+    endDate: at(1, 7, 50),
   },
 ];
 

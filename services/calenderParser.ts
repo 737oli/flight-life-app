@@ -28,10 +28,10 @@ export const createGroundPeriod = (nextFlight: FlightEvent, prevFlight: FlightEv
         const toWalk = (nextFlight?.details?.departure === "AMS");
         let title = undefined;
 
-        // retract the walk time from the end time to get the time to start walking
+        // Store the walking buffer in minutes. The UI derives the actual leave time.
         let walkTime: number | undefined = undefined;
         if (toWalk) {
-            walkTime = endDate.setMinutes(endDate.getMinutes() - calculateWalkTime(nextFlight));;
+            walkTime = calculateWalkTime(nextFlight);
             title = "GroundTime"
         } else {
             title = "TurnaroundTime"
@@ -76,6 +76,25 @@ export const fetchRestPeriods = async () => {
     return MOCK_REST_PERIODS;
 }
 
+const DEFAULT_BACKEND_BASE_URL = "http://127.0.0.1:8000";
 
+export const getBackendBaseUrl = () =>
+    process.env.EXPO_PUBLIC_FLIGHT_LIFE_API_URL ?? DEFAULT_BACKEND_BASE_URL;
+
+export const fetchBackendHealth = async (
+    baseUrl = getBackendBaseUrl()
+): Promise<{ ok: boolean; message?: string }> => {
+    try {
+        const response = await fetch(baseUrl);
+        if (!response.ok) {
+            return { ok: false, message: `HTTP ${response.status}` };
+        }
+
+        const data = await response.json() as { message?: string };
+        return { ok: true, message: data.message };
+    } catch {
+        return { ok: false };
+    }
+}
 
 

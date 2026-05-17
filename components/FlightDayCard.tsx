@@ -19,20 +19,11 @@ interface FlightDayCardProps {
 
 export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundTimes, taxi, dutyPeriod }: FlightDayCardProps) {
     const [isExpanded, setExpanded] = React.useState(false);
-    const [modalVisible, setModalVisible] = React.useState(false);
     const [flightOpsData, setFlightOpsData] = React.useState<Record<string, any>>({});
-    const [selectedEvent, setSelectedEvent] = React.useState<
-      FlightEvent | GroundPeriod | TaxiEvent | FlightDuty | null
-    >(null);
 
   // Handle a click on a flight to show details
     const handleEventPress = (event: FlightEvent | GroundPeriod | TaxiEvent) => {
-        if (onFlightPress) {
-            onFlightPress(event);
-        } else {
-            setSelectedEvent(event);
-            setModalVisible(true);
-        };
+        onFlightPress?.(event);
     };
 
     // If the flight day has a duty period, prioritize that
@@ -51,12 +42,13 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
 
     // Extract aircraft type from event details
     const getAircraftType = (event: FlightEvent): string | undefined => {
-    if (event.details?.aircraft) {
-      return event.details.aircraft;
-    }
+      const details = flightOpsData[event.id] ?? event.details;
+      if (details?.aircraft) {
+        return details.aircraft;
+      }
     
-    return undefined;
-  };
+      return undefined;
+    };
 
     // Aircraft badge component
     const AircraftBadge = ({ aircraft }: { aircraft: string }) => (
@@ -108,7 +100,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
     const timeline = createTimeline();
 
     // Format a line of meta information for a flight or event
-    const formatFlightMetaLine = (event: FlightEvent) : String => {
+    const formatFlightMetaLine = (event: FlightEvent): string => {
         const parts: string[] = [];
 
         // Add route
@@ -120,6 +112,10 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
         // Add times
         const timeRange = `${formatTimeOnly(event.startDate)} - ${formatTimeOnly(event.endDate)}`;
         parts.push(timeRange);
+
+        // Add duration
+        const duration = formatDuration(event);
+        parts.push(duration);
 
         return parts.join(' | ');
     };
@@ -213,21 +209,22 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
 
     // Flight operations badges
     const FlightOpsBadges = ({ event }: { event: FlightEvent }) => {
+        const details = flightOpsData[event.id] ?? event.details;
         return (
           <View style={styles.opsBadgesContainer}>
-            {event.details?.ctot && (
+            {details?.ctot && (
               <View style={styles.ctotBadgeSmall}>
-                <Text style={styles.ctotBadgeText}>CTOT: {event.details.ctot}</Text>
+                <Text style={styles.ctotBadgeText}>CTOT: {details.ctot}</Text>
               </View>
             )}
-            {event.details?.registration && (
+            {details?.registration && (
               <View style={styles.registrationBadge}>
-                <Text style={styles.registrationText}>{event.details.registration}</Text>
+                <Text style={styles.registrationText}>{details.registration}</Text>
               </View>
             )}
-            {event.details?.delay?.isDelayed && event.details.delay.newDepLocal && (
+            {details?.delay?.isDelayed && details.delay.newDepLocal && (
               <View style={styles.delayBadgeSmall}>
-                <Text style={styles.delayBadgeText}>Delayed to {event.details.delay.newDepLocal}</Text> 
+                <Text style={styles.delayBadgeText}>Delayed to {details.delay.newDepLocal}</Text>
               </View>
             )}
           </View>
@@ -235,23 +232,19 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
     };
 
     // Format ground time and turnaround info using event details if available
-    const formatGroundTimeInfo = (event: GroundPeriod) => {
+    const formatGroundTimeInfo = (event: GroundPeriod): string => {
       //convert duration from minutes to hours and minutes
       const parts: string[] = [];
       parts.push(`Ground Time: ${formatDuration(event)}`);
       if (event.toWalk) {
         
         if (event.walkTime) {
-          parts.push(`Walk: ${event.walkTime}m`);
           const leaveTime = new Date(event.startDate.getTime() - event.walkTime * 60000);
           parts.push(`Leave: ${formatTimeOnly(leaveTime)}`);
         }
-        if (parts.length > 0) {
-          return parts.join(' • ');
-        }
       }
 
-    return parts;
+    return parts.join(' | ');
   };
 
     return (
@@ -270,7 +263,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
               <Text style={styles.dateText}>{formatDateOnly(date)}</Text>
               <Text style={styles.flightCount}>
                 
-                Duty Period • {formatTimeOnly(dutyPeriod.startDate)} {formatTimeOnly(dutyPeriod.endDate)}
+                Duty Period • {formatTimeOnly(dutyPeriod.startDate)} - {formatTimeOnly(dutyPeriod.endDate)}
               </Text>
               <Text style={styles.flightSubtext}>
                 {flights.length} flight{flights.length !== 1 ? "s" : ""}
@@ -316,7 +309,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
                           Taxi
                         </Text>
                         <Text style={styles.groundTitle}>
-                          Pickup: {formatTimeOnly(item.startDate)} • Duration: {formatDuration(item)}
+                          {formatTimeOnly(item.startDate)} | {formatDuration(item)}
                         </Text>
                       </View>
                     </>
@@ -348,7 +341,7 @@ export function FlightDayCard({ date, flights, onFlightPress, flightDay, groundT
                         </Text>
                         <View style={styles.badgesRow}>
                           {
-                            (item.details?.aircraft) ? (<AircraftBadge aircraft={getAircraftType(item)!} />) : 
+                            (getAircraftType(item)) ? (<AircraftBadge aircraft={getAircraftType(item)!} />) :
                             (<AircraftBadge aircraft="No Type" />)
                           }
                         </View>
@@ -667,4 +660,3 @@ const styles = StyleSheet.create({
     color: Colors.light.secondary,
   },
 });
-
