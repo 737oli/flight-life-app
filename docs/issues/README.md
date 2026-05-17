@@ -26,4 +26,7 @@ Choose the target repository before publishing:
 - [014 - 90-minute operations enrichment API](014-operations-enrichment-api.md)
 - [015 - Frontend operations chips and detail panel](015-frontend-operations-ui.md)
 - [016 - README and deployment documentation refresh](016-readme-deployment-docs.md)
-
+- [017 - Real roster parser QA and sanitized fixture capture](017-real-roster-parser-qa.md)
+- [018 - Improve flight leg extraction and day assignment](018-improve-flight-leg-extraction.md)
+- [019 - Parser completeness validation and import summary refinement](019-parser-completeness-import-summary.md)
+- [020 - Fix parser omission of first two flight legs per duty day](020-fix-missing-first-flight-legs.md)

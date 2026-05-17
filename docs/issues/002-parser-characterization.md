@@ -1,5 +1,9 @@
 # Issue 002: Parser Characterization With Private PDF And Synthetic Fixtures
 
+## Status
+
+Done.
+
 ## Goal
 
 Characterize current parser behavior before changing it.

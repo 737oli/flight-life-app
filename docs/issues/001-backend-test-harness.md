@@ -1,5 +1,9 @@
 # Issue 001: Backend Test Harness And Project Hygiene
 
+## Status
+
+Done.
+
 ## Goal
 
 Create the backend testing foundation needed before parser, import, persistence, and API work.
@@ -35,4 +39,3 @@ The backend currently has parser logic but no committed test suite. The first im
 
 - Run the new backend test command.
 - Run `git status --short --ignored` and confirm private PDFs/logs remain ignored.
-

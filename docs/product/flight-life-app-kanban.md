@@ -21,22 +21,26 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 
 | Issue | Title | Type | Area | Status | Blocked by |
 | --- | --- | --- | --- | --- | --- |
-| 001 | Backend test harness and project hygiene | AFK | backend | Ready | none |
-| 002 | Parser characterization with private PDF and synthetic fixtures | human-in-the-loop | backend | Blocked | 001 |
-| 003 | SQLite persistence foundation with SQLAlchemy and Alembic | AFK | backend | Blocked | 001 |
+| 001 | Backend test harness and project hygiene | AFK | backend | Done | none |
+| 002 | Parser characterization with private PDF and synthetic fixtures | human-in-the-loop | backend | Done | 001 |
+| 003 | SQLite persistence foundation with SQLAlchemy and Alembic | AFK | backend | Done | 001 |
 | 004 | Roster upload endpoint with atomic parse validation | AFK | backend | Done | 002, 003 |
 | 005 | Date-scoped roster import merge and import summary | AFK | backend | Done | 004 |
 | 006 | Stable schedule DTO and next-7-days API | AFK | backend | Done | 005 |
-| 007 | Frontend backend configuration and connection status | AFK | frontend | Ready | none |
-| 008 | Settings roster import UI | AFK | frontend | Blocked | 004, 007 |
-| 009 | Home 7-day dashboard from backend data with fallback cache | AFK | frontend | Blocked | 006, 007 |
-| 010 | Raspberry Pi Docker Compose backend deployment | AFK | backend, deployment | Blocked | 001 |
-| 011 | Backend preferences model and Settings integration | AFK | both | Blocked | 003, 007 |
+| 007 | Frontend backend configuration and connection status | AFK | frontend | Done | none |
+| 008 | Settings roster import UI | AFK | frontend | Ready | none |
+| 009 | Home 7-day dashboard from backend data with fallback cache | AFK | frontend | Ready | none |
+| 010 | Raspberry Pi Docker Compose backend deployment | AFK | backend, deployment | Ready | none |
+| 011 | Backend preferences model and Settings integration | AFK | both | Ready | none |
 | 012 | Deterministic stay-vs-home decision engine | AFK | backend | Blocked | 005, 011 |
-| 013 | AF/KLM FlightStatus backend client | human-in-the-loop | backend | Blocked | 006 |
+| 013 | AF/KLM FlightStatus backend client | human-in-the-loop | backend | Ready | none |
 | 014 | 90-minute operations enrichment API | AFK | backend | Blocked | 013 |
 | 015 | Frontend operations chips and detail panel | AFK | frontend | Blocked | 014, 009 |
 | 016 | README and deployment documentation refresh | AFK | docs, both repos | Blocked | 010 |
+| 017 | Real roster parser QA and sanitized fixture capture | human-in-the-loop | backend | Done | 002 |
+| 018 | Improve flight leg extraction and day assignment | AFK | backend | Done | 017 |
+| 019 | Parser completeness validation and import summary refinement | AFK | backend | Done | 018 |
+| 020 | Fix parser omission of first two flight legs per duty day | human-in-the-loop | backend | Done | 019 |
 
 ## Dependency Graph
 
@@ -47,8 +51,12 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 005 adds the core import behavior: date-scoped upsert, preservation outside imported period, and summary counts.
 - 006 exposes the stable schedule contract needed by the frontend.
 - 007 can proceed independently so the frontend can target Pi/Tailscale and local dev URLs.
-- 008 depends on upload API and frontend backend configuration.
-- 009 depends on the schedule API and frontend backend configuration.
+- 017 turns real-roster parser failures into sanitized repeatable fixtures and counts-only notes.
+- 018 improves flight-leg extraction and day assignment while preserving the parser adapter shape.
+- 019 makes parser completeness visible in import summaries and preserves schedule output for incomplete flight duties.
+- 020 fixes the newly observed systematic omission where the first two flights of each duty day appear to be missing.
+- 008 depends on frontend backend configuration, parser-completeness reporting, and the missing-first-legs parser fix.
+- 009 depends on the schedule API, frontend backend configuration, parser-completeness reporting, and the missing-first-legs parser fix.
 - 010 can start after the backend test harness exists because Pi/Tailscale deployment is an early enabler for operational-window testing. It should add the basic Compose shape first and evolve volumes as persistence lands.
 - 011 depends on persistence and frontend settings structure.
 - 012 depends on imported roster data and preferences.
@@ -59,7 +67,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 
 ## First Milestone: Import And 7-Day Dashboard
 
-Issues 001 through 010.
+Issues 001 through 010 plus parser hardening issues 017 through 020.
 
 Goal: from a clean local setup, the user can upload a roster PDF from Settings, see a trustworthy import summary, and view the next 7 days on Home from parsed backend data while preserving data outside the imported roster period.
 
@@ -73,8 +81,18 @@ Recommended order:
 6. 004 Roster upload endpoint with atomic parse validation.
 7. 005 Date-scoped roster import merge and import summary.
 8. 006 Stable schedule DTO and next-7-days API.
-9. 008 Settings roster import UI.
-10. 009 Home 7-day dashboard from backend data with fallback cache.
+9. 017 Real roster parser QA and sanitized fixture capture.
+10. 018 Improve flight leg extraction and day assignment.
+11. 019 Parser completeness validation and import summary refinement.
+12. 020 Fix parser omission of first two flight legs per duty day.
+13. 008 Settings roster import UI.
+14. 009 Home 7-day dashboard from backend data with fallback cache.
+
+## Parser Hardening Mini-Milestone
+
+Issues 017 through 020.
+
+Goal: make the parser useful enough for Settings upload and Home backend rendering by reducing missed flight legs, documenting counts-only private QA, making remaining parser uncertainty explicit in import summaries, and fixing systematic first-leg omissions.
 
 ## Second Milestone: Preferences And Decisions
 

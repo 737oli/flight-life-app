@@ -1,5 +1,9 @@
 # Issue 007: Frontend Backend Configuration And Connection Status
 
+## Status
+
+Done.
+
 ## Goal
 
 Add frontend infrastructure for configuring and checking the backend API URL.
@@ -32,4 +36,3 @@ The app must work locally, on Expo/iPhone, and later against a Raspberry Pi reac
 
 - Run frontend lint.
 - Manually verify against local backend where practical.
-

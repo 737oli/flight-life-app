@@ -8,6 +8,13 @@ Replace mock Home schedule data with the backend next-7-days API and cache the l
 
 The first product milestone is only useful once Home shows real parsed roster data.
 
+## Dependencies
+
+- Blocked by Issue 006.
+- Blocked by Issue 007.
+- Blocked by Issue 019.
+- Blocked by Issue 020.
+
 ## Scope
 
 - Fetch next-7-days schedule from backend.
@@ -36,4 +43,3 @@ The first product milestone is only useful once Home shows real parsed roster da
 - Run frontend lint.
 - Add/run frontend behavior tests if tooling exists.
 - Manually verify with backend sample data.
-

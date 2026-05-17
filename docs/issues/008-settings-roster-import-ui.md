@@ -8,6 +8,12 @@ Add the mobile Settings flow for selecting and uploading a roster PDF.
 
 The user should not manually place PDFs on the backend. Settings is the control panel for import and backend state.
 
+## Dependencies
+
+- Blocked by Issue 007.
+- Blocked by Issue 019.
+- Blocked by Issue 020.
+
 ## Scope
 
 - Add or complete Settings screen.
@@ -33,4 +39,3 @@ The user should not manually place PDFs on the backend. Settings is the control 
 
 - Run frontend lint.
 - Manually test upload against local backend with an ignored private PDF.
-

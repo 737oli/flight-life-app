@@ -1,5 +1,9 @@
 # Issue 003: SQLite Persistence Foundation With SQLAlchemy And Alembic
 
+## Status
+
+Done.
+
 ## Goal
 
 Add durable backend persistence for roster imports, parsed schedule data, preferences, and manual decisions.
@@ -34,4 +38,3 @@ The app needs date-scoped imports, fallback data, preferences, and decision pres
 
 - Run migration command.
 - Run backend persistence tests.
-

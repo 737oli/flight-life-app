@@ -76,25 +76,3 @@ export const fetchRestPeriods = async () => {
     return MOCK_REST_PERIODS;
 }
 
-const DEFAULT_BACKEND_BASE_URL = "http://127.0.0.1:8000";
-
-export const getBackendBaseUrl = () =>
-    process.env.EXPO_PUBLIC_FLIGHT_LIFE_API_URL ?? DEFAULT_BACKEND_BASE_URL;
-
-export const fetchBackendHealth = async (
-    baseUrl = getBackendBaseUrl()
-): Promise<{ ok: boolean; message?: string }> => {
-    try {
-        const response = await fetch(baseUrl);
-        if (!response.ok) {
-            return { ok: false, message: `HTTP ${response.status}` };
-        }
-
-        const data = await response.json() as { message?: string };
-        return { ok: true, message: data.message };
-    } catch {
-        return { ok: false };
-    }
-}
-
-
