@@ -30,3 +30,6 @@ Choose the target repository before publishing:
 - [018 - Improve flight leg extraction and day assignment](018-improve-flight-leg-extraction.md)
 - [019 - Parser completeness validation and import summary refinement](019-parser-completeness-import-summary.md)
 - [020 - Fix parser omission of first two flight legs per duty day](020-fix-missing-first-flight-legs.md)
+- [021 - Frontend tab route cleanup](021-frontend-tab-route-cleanup.md)
+- [022 - Expo SDK compatibility refresh](022-expo-sdk-compatibility-refresh.md)
+- [023 - Tailscale Raspberry Pi smoke test](023-tailscale-pi-smoke-test.md)

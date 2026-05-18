@@ -41,6 +41,9 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 018 | Improve flight leg extraction and day assignment | AFK | backend | Done | 017 |
 | 019 | Parser completeness validation and import summary refinement | AFK | backend | Done | 018 |
 | 020 | Fix parser omission of first two flight legs per duty day | human-in-the-loop | backend | Done | 019 |
+| 021 | Frontend tab route cleanup | AFK | frontend | Ready | none |
+| 022 | Expo SDK compatibility refresh | AFK | frontend | Ready | none |
+| 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Ready | 010 |
 
 ## Dependency Graph
 
@@ -64,6 +67,9 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 014 wraps live data into the project-owned 90-minute operations contract.
 - 015 consumes that operations contract in the mobile UI.
 - 016 documents the actual deployable shape after Compose exists.
+- 021 cleans up Expo Router warnings found during first-milestone QA.
+- 022 addresses Expo SDK package compatibility warnings found during first-milestone QA.
+- 023 validates the Pi/Tailscale backend path after local Docker Compose is working.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -108,9 +114,9 @@ Goal: enrich only flights within 90 minutes using backend-owned AF/KLM FlightSta
 
 ## Fourth Milestone: Hardening And Documentation
 
-Issue 016 and follow-ups from QA.
+Issues 016 and 021 through 023.
 
-Goal: make the Pi/Tailscale setup repeatable and document remaining gaps before broader operational use.
+Goal: make the Pi/Tailscale setup repeatable, clean up development warnings, and document remaining gaps before broader operational use.
 
 ## Implementation Rule
 
