@@ -1,5 +1,9 @@
 # Issue 012: Deterministic Stay-Vs-Home Decision Engine
 
+## Status
+
+Ready.
+
 ## Goal
 
 Implement the first deterministic stay-vs-home recommendation engine on the backend.
@@ -39,4 +43,3 @@ The app should help with personal planning decisions, not only display the roste
 ## Validation
 
 - Run decision engine tests for stay, home, missing input, and changed-duty cases.
-

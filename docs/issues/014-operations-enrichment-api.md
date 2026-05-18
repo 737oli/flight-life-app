@@ -1,5 +1,9 @@
 # Issue 014: 90-Minute Operations Enrichment API
 
+## Status
+
+Ready.
+
 ## Goal
 
 Expose project-owned operations enrichment for flights within 90 minutes of current time.
@@ -31,4 +35,3 @@ The frontend needs compact live operations data without knowing AF/KLM API detai
 ## Validation
 
 - Run operations API tests with frozen time and mocked AF/KLM responses.
-

@@ -1,5 +1,9 @@
 # Issue 011: Backend Preferences Model And Settings Integration
 
+## Status
+
+Done.
+
 ## Goal
 
 Add backend-owned preferences and expose them through Settings.
@@ -36,3 +40,9 @@ Walking time, home-base assumptions, material-change threshold, and stay-vs-home
 - Run backend preference tests.
 - Run frontend lint and manually verify Settings behavior.
 
+## Completed Notes
+
+- Added backend `/preferences` read/update API backed by the existing SQLite `preferences` table.
+- Added default preferences for home base, AMS walking buffer, home commute, useful home time, and material-change threshold.
+- Import merge now uses the stored material-change threshold when deciding whether manual decisions need review.
+- Added Settings UI controls for loading and saving the backend-owned preference values.

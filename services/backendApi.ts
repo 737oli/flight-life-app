@@ -56,6 +56,22 @@ export type RosterUploadFile = {
   file?: Blob;
 };
 
+export type FlightLifePreferences = {
+  home_base_airport: string;
+  ams_walking_buffer_minutes: number;
+  home_commute_minutes: number;
+  minimum_useful_home_minutes: number;
+  material_change_threshold_minutes: number;
+  updated_at: string | null;
+};
+
+export type PreferencesResponse = {
+  status: "ok";
+  preferences: FlightLifePreferences;
+};
+
+export type PreferencesUpdate = Partial<Omit<FlightLifePreferences, "updated_at">>;
+
 export type ScheduleFlight = {
   sequence: number;
   flight_number: string;
@@ -216,6 +232,47 @@ export const importRosterPdf = async (
   }
 
   return payload as RosterImportResponse;
+};
+
+export const fetchPreferences = async (baseUrl?: string): Promise<FlightLifePreferences> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
+  const response = await fetch(`${normalizedBaseUrl}/preferences`);
+
+  if (!response.ok) {
+    throw new BackendApiError(`Preferences unavailable: HTTP ${response.status}`, {
+      status: response.status,
+      errors: [`HTTP ${response.status}`],
+    });
+  }
+
+  const payload = (await response.json()) as PreferencesResponse;
+  return payload.preferences;
+};
+
+export const updatePreferences = async (
+  preferences: PreferencesUpdate,
+  baseUrl?: string
+): Promise<FlightLifePreferences> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
+  const response = await fetch(`${normalizedBaseUrl}/preferences`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(preferences),
+  });
+  const payload = await response.json();
+
+  if (!response.ok) {
+    const detail = payload?.detail as { errors?: string[] } | undefined;
+    const errors = detail?.errors ?? [payload?.message ?? `HTTP ${response.status}`];
+    throw new BackendApiError(errors[0] ?? "Preferences update failed", {
+      status: response.status,
+      errors,
+    });
+  }
+
+  return (payload as PreferencesResponse).preferences;
 };
 
 export const fetchNextSevenDaysSchedule = async (

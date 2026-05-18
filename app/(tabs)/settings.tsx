@@ -7,7 +7,9 @@ import {
   CheckCircle2,
   FileUp,
   RefreshCw,
+  Save,
   Server,
+  SlidersHorizontal,
   Wifi,
   WifiOff,
 } from "lucide-react-native";
@@ -24,15 +26,18 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
   BackendApiError,
+  FlightLifePreferences,
   BackendHealthResult,
   BackendHealthStatus,
   RosterImportResponse,
   fetchBackendHealth,
+  fetchPreferences,
   getBackendBaseUrl,
   getConfiguredBackendBaseUrl,
   importRosterPdf,
   normalizeBackendBaseUrl,
   saveBackendBaseUrl,
+  updatePreferences,
 } from "@/services/backendApi";
 
 type StatusDetails = {
@@ -40,6 +45,14 @@ type StatusDetails = {
   color: string;
   backgroundColor: string;
   icon: typeof Wifi;
+};
+
+type PreferenceDraft = {
+  home_base_airport: string;
+  ams_walking_buffer_minutes: string;
+  home_commute_minutes: string;
+  minimum_useful_home_minutes: string;
+  material_change_threshold_minutes: string;
 };
 
 const statusDetailsByStatus: Record<BackendHealthStatus, StatusDetails> = {
@@ -76,13 +89,48 @@ export default function SettingsScreen() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<RosterImportResponse | null>(null);
   const [importError, setImportError] = useState<BackendApiError | null>(null);
+  const [preferences, setPreferences] = useState<FlightLifePreferences | null>(null);
+  const [preferenceDraft, setPreferenceDraft] = useState<PreferenceDraft>(emptyPreferenceDraft);
+  const [preferencesLoading, setPreferencesLoading] = useState(false);
+  const [preferencesSaving, setPreferencesSaving] = useState(false);
+  const [preferencesError, setPreferencesError] = useState<string | null>(null);
+  const [preferencesSaved, setPreferencesSaved] = useState(false);
 
   const statusDetails = statusDetailsByStatus[status];
   const StatusIcon = statusDetails.icon;
 
-  useEffect(() => {
-    getConfiguredBackendBaseUrl().then(setApiUrl);
+  const loadPreferencesForUrl = useCallback(async (baseUrl: string) => {
+    const normalizedUrl = normalizeBackendBaseUrl(baseUrl);
+    if (!normalizedUrl) {
+      return;
+    }
+
+    setPreferencesLoading(true);
+    setPreferencesError(null);
+    try {
+      const loadedPreferences = await fetchPreferences(normalizedUrl);
+      setPreferences(loadedPreferences);
+      setPreferenceDraft(toPreferenceDraft(loadedPreferences));
+    } catch {
+      setPreferencesError("Preferences unavailable");
+    } finally {
+      setPreferencesLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    getConfiguredBackendBaseUrl().then((configuredUrl) => {
+      if (!mounted) {
+        return;
+      }
+      setApiUrl(configuredUrl);
+      void loadPreferencesForUrl(configuredUrl);
+    });
+    return () => {
+      mounted = false;
+    };
+  }, [loadPreferencesForUrl]);
 
   const checkedAtText = useMemo(() => {
     if (!healthResult?.checkedAt) {
@@ -114,7 +162,10 @@ export default function SettingsScreen() {
     setApiUrl(result.baseUrl);
     setHealthResult(result);
     setStatus(result.ok ? "online" : "offline");
-  }, [apiUrl]);
+    if (result.ok) {
+      void loadPreferencesForUrl(result.baseUrl);
+    }
+  }, [apiUrl, loadPreferencesForUrl]);
 
   const handleApiUrlChange = (value: string) => {
     setApiUrl(value);
@@ -122,6 +173,39 @@ export default function SettingsScreen() {
       setStatus("idle");
     }
   };
+
+  const updatePreferenceDraft = (key: keyof PreferenceDraft, value: string) => {
+    setPreferenceDraft((currentDraft) => ({ ...currentDraft, [key]: value }));
+    setPreferencesSaved(false);
+  };
+
+  const savePreferences = useCallback(async () => {
+    const parsedDraft = parsePreferenceDraft(preferenceDraft);
+    if (!parsedDraft) {
+      setPreferencesError("Check preference values");
+      return;
+    }
+
+    setPreferencesSaving(true);
+    setPreferencesError(null);
+    setPreferencesSaved(false);
+    try {
+      const normalizedUrl = await saveBackendBaseUrl(apiUrl);
+      const savedPreferences = await updatePreferences(parsedDraft, normalizedUrl);
+      setApiUrl(normalizedUrl);
+      setPreferences(savedPreferences);
+      setPreferenceDraft(toPreferenceDraft(savedPreferences));
+      setPreferencesSaved(true);
+    } catch (error) {
+      if (error instanceof BackendApiError && error.errors.length > 0) {
+        setPreferencesError(error.errors.join(", "));
+      } else {
+        setPreferencesError("Preferences update failed");
+      }
+    } finally {
+      setPreferencesSaving(false);
+    }
+  }, [apiUrl, preferenceDraft]);
 
   const chooseAndImportRoster = useCallback(async () => {
     setImportError(null);
@@ -168,6 +252,97 @@ export default function SettingsScreen() {
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
           <Text style={styles.subtitle}>Roster import and backend</Text>
+        </View>
+
+        <View style={styles.panel}>
+          <View style={styles.panelHeader}>
+            <View style={styles.panelTitleGroup}>
+              <SlidersHorizontal color={Colors.light.tint} size={22} />
+              <Text style={styles.panelTitle}>Preferences</Text>
+            </View>
+            <TouchableOpacity
+              accessibilityRole="button"
+              disabled={preferencesLoading}
+              onPress={() => loadPreferencesForUrl(apiUrl)}
+              style={styles.iconButton}
+            >
+              <RefreshCw color={Colors.light.tint} size={18} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.fieldGroup}>
+            <Text style={styles.label}>Home Base</Text>
+            <TextInput
+              autoCapitalize="characters"
+              autoCorrect={false}
+              maxLength={3}
+              onChangeText={(value) => updatePreferenceDraft("home_base_airport", value)}
+              placeholder="AMS"
+              placeholderTextColor={Colors.light.secondary}
+              style={styles.input}
+              value={preferenceDraft.home_base_airport}
+            />
+          </View>
+
+          <View style={styles.twoColumnFields}>
+            <PreferenceNumberInput
+              label="AMS Walk"
+              onChangeText={(value) => updatePreferenceDraft("ams_walking_buffer_minutes", value)}
+              value={preferenceDraft.ams_walking_buffer_minutes}
+            />
+            <PreferenceNumberInput
+              label="Home Commute"
+              onChangeText={(value) => updatePreferenceDraft("home_commute_minutes", value)}
+              value={preferenceDraft.home_commute_minutes}
+            />
+            <PreferenceNumberInput
+              label="Useful Home"
+              onChangeText={(value) => updatePreferenceDraft("minimum_useful_home_minutes", value)}
+              value={preferenceDraft.minimum_useful_home_minutes}
+            />
+            <PreferenceNumberInput
+              label="Change Limit"
+              onChangeText={(value) => updatePreferenceDraft("material_change_threshold_minutes", value)}
+              value={preferenceDraft.material_change_threshold_minutes}
+            />
+          </View>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            disabled={preferencesSaving}
+            onPress={savePreferences}
+            style={[styles.importButton, preferencesSaving && styles.buttonDisabled]}
+          >
+            <Save color="#fff" size={18} />
+            <Text style={styles.primaryButtonText}>
+              {preferencesSaving ? "Saving" : "Save Preferences"}
+            </Text>
+          </TouchableOpacity>
+
+          {(preferencesError || preferencesSaved || preferences || preferencesLoading) && (
+            <View style={styles.preferenceStatusRow}>
+              {preferencesError ? (
+                <AlertCircle color={Colors.light.danger} size={18} />
+              ) : (
+                <CheckCircle2 color={Colors.light.success} size={18} />
+              )}
+              <Text
+                style={[
+                  styles.preferenceStatusText,
+                  preferencesError && { color: Colors.light.danger },
+                ]}
+              >
+                {preferencesError ??
+                  (preferencesLoading
+                    ? "Loading preferences"
+                    : preferencesSaved
+                      ? "Preferences saved"
+                      : preferences?.updated_at
+                        ? "Preferences loaded"
+                        : "Defaults loaded")}
+              </Text>
+            </View>
+          )}
         </View>
 
         <View style={styles.panel}>
@@ -344,6 +519,30 @@ export default function SettingsScreen() {
   );
 }
 
+function PreferenceNumberInput({
+  label,
+  onChangeText,
+  value,
+}: {
+  label: string;
+  onChangeText: (value: string) => void;
+  value: string;
+}) {
+  return (
+    <View style={styles.numberField}>
+      <Text style={styles.label}>{label}</Text>
+      <TextInput
+        keyboardType="number-pad"
+        onChangeText={onChangeText}
+        placeholder="0"
+        placeholderTextColor={Colors.light.secondary}
+        style={styles.input}
+        value={value}
+      />
+    </View>
+  );
+}
+
 function SummaryMetric({ label, value }: { label: string; value: number }) {
   return (
     <View style={styles.metric}>
@@ -352,6 +551,43 @@ function SummaryMetric({ label, value }: { label: string; value: number }) {
     </View>
   );
 }
+
+const emptyPreferenceDraft: PreferenceDraft = {
+  home_base_airport: "",
+  ams_walking_buffer_minutes: "",
+  home_commute_minutes: "",
+  minimum_useful_home_minutes: "",
+  material_change_threshold_minutes: "",
+};
+
+const toPreferenceDraft = (preferences: FlightLifePreferences): PreferenceDraft => ({
+  home_base_airport: preferences.home_base_airport,
+  ams_walking_buffer_minutes: String(preferences.ams_walking_buffer_minutes),
+  home_commute_minutes: String(preferences.home_commute_minutes),
+  minimum_useful_home_minutes: String(preferences.minimum_useful_home_minutes),
+  material_change_threshold_minutes: String(preferences.material_change_threshold_minutes),
+});
+
+const parsePreferenceDraft = (draft: PreferenceDraft) => {
+  const numericFields = {
+    ams_walking_buffer_minutes: Number(draft.ams_walking_buffer_minutes),
+    home_commute_minutes: Number(draft.home_commute_minutes),
+    minimum_useful_home_minutes: Number(draft.minimum_useful_home_minutes),
+    material_change_threshold_minutes: Number(draft.material_change_threshold_minutes),
+  };
+
+  if (
+    draft.home_base_airport.trim().length !== 3 ||
+    Object.values(numericFields).some((value) => !Number.isInteger(value) || value < 0)
+  ) {
+    return null;
+  }
+
+  return {
+    home_base_airport: draft.home_base_airport.trim().toUpperCase(),
+    ...numericFields,
+  };
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -432,6 +668,26 @@ const styles = StyleSheet.create({
     minHeight: 48,
     paddingHorizontal: 12,
     paddingVertical: 10,
+  },
+  iconButton: {
+    alignItems: "center",
+    borderColor: Colors.light.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    height: 38,
+    justifyContent: "center",
+    width: 38,
+  },
+  twoColumnFields: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginBottom: 14,
+  },
+  numberField: {
+    flexBasis: "47%",
+    flexGrow: 1,
+    minWidth: 132,
   },
   checkButton: {
     alignItems: "center",
@@ -585,5 +841,17 @@ const styles = StyleSheet.create({
     color: Colors.light.secondary,
     fontSize: 13,
     marginTop: 3,
+  },
+  preferenceStatusRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    marginTop: 12,
+  },
+  preferenceStatusText: {
+    color: Colors.light.secondary,
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "600",
   },
 });

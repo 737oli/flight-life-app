@@ -1,5 +1,9 @@
 # Issue 013: AF/KLM FlightStatus Backend Client
 
+## Status
+
+Done.
+
 ## Goal
 
 Add a backend client for the AF/KLM FlightStatus API.
@@ -41,3 +45,9 @@ Live operations data should enrich flights inside the 90-minute window, but API 
 - Run backend client tests with mocked responses.
 - Manually verify against AF/KLM API only with local ignored credentials.
 
+## Completed Notes
+
+- Added a backend-only AF/KLM FlightStatus client using env-configured `AFKLM_API_KEY` and optional `AFKLM_API_BASE_URL`.
+- Added tolerant normalization for CTOT, TSAT, parking position, previous-flight arrival, delay minutes, aircraft registration/type, and basic status fields.
+- Missing live fields normalize to `null` instead of creating noisy failures.
+- Added mocked client tests. Live credential validation remains local/manual only.
