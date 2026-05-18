@@ -28,15 +28,15 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 005 | Date-scoped roster import merge and import summary | AFK | backend | Done | 004 |
 | 006 | Stable schedule DTO and next-7-days API | AFK | backend | Done | 005 |
 | 007 | Frontend backend configuration and connection status | AFK | frontend | Done | none |
-| 008 | Settings roster import UI | AFK | frontend | Ready | none |
-| 009 | Home 7-day dashboard from backend data with fallback cache | AFK | frontend | Ready | none |
-| 010 | Raspberry Pi Docker Compose backend deployment | AFK | backend, deployment | Ready | none |
+| 008 | Settings roster import UI | AFK | frontend | Done | none |
+| 009 | Home 7-day dashboard from backend data with fallback cache | AFK | frontend | Done | none |
+| 010 | Raspberry Pi Docker Compose backend deployment | AFK | backend, deployment | Done | none |
 | 011 | Backend preferences model and Settings integration | AFK | both | Ready | none |
 | 012 | Deterministic stay-vs-home decision engine | AFK | backend | Blocked | 005, 011 |
 | 013 | AF/KLM FlightStatus backend client | human-in-the-loop | backend | Ready | none |
 | 014 | 90-minute operations enrichment API | AFK | backend | Blocked | 013 |
 | 015 | Frontend operations chips and detail panel | AFK | frontend | Blocked | 014, 009 |
-| 016 | README and deployment documentation refresh | AFK | docs, both repos | Blocked | 010 |
+| 016 | README and deployment documentation refresh | AFK | docs, both repos | Ready | none |
 | 017 | Real roster parser QA and sanitized fixture capture | human-in-the-loop | backend | Done | 002 |
 | 018 | Improve flight leg extraction and day assignment | AFK | backend | Done | 017 |
 | 019 | Parser completeness validation and import summary refinement | AFK | backend | Done | 018 |

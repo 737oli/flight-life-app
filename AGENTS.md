@@ -97,7 +97,7 @@ Frontend:
 Backend:
 
 - Install dependencies: `cd flight-life-app-server && python -m pip install -r requirements.txt`
-- Run dev server: `cd flight-life-app-server && uvicorn main:app --reload --host 0.0.0.0 --port 8000`
+- Run dev server: `cd flight-life-app-server && uvicorn main:app --reload --host 0.0.0.0 --port 8010`
 - Run parser CLI: `cd flight-life-app-server && python pdfParser.py rosters/<local-private-roster>.pdf`
 
 Testing:

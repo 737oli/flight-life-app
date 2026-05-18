@@ -1,5 +1,9 @@
 # Issue 010: Raspberry Pi Docker Compose Backend Deployment
 
+## Status
+
+Done.
+
 ## Goal
 
 Make the backend deployable on a Raspberry Pi with Docker Compose.

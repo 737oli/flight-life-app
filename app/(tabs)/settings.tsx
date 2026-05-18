@@ -1,13 +1,17 @@
 import Colors from "@/constants/Colors";
+import * as DocumentPicker from "expo-document-picker";
+import { router } from "expo-router";
 import {
   AlertCircle,
+  CalendarDays,
   CheckCircle2,
+  FileUp,
   RefreshCw,
   Server,
   Wifi,
   WifiOff,
 } from "lucide-react-native";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -19,11 +23,16 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
+  BackendApiError,
   BackendHealthResult,
   BackendHealthStatus,
+  RosterImportResponse,
   fetchBackendHealth,
   getBackendBaseUrl,
+  getConfiguredBackendBaseUrl,
+  importRosterPdf,
   normalizeBackendBaseUrl,
+  saveBackendBaseUrl,
 } from "@/services/backendApi";
 
 type StatusDetails = {
@@ -64,9 +73,16 @@ export default function SettingsScreen() {
   const [apiUrl, setApiUrl] = useState(getBackendBaseUrl());
   const [status, setStatus] = useState<BackendHealthStatus>("idle");
   const [healthResult, setHealthResult] = useState<BackendHealthResult | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<RosterImportResponse | null>(null);
+  const [importError, setImportError] = useState<BackendApiError | null>(null);
 
   const statusDetails = statusDetailsByStatus[status];
   const StatusIcon = statusDetails.icon;
+
+  useEffect(() => {
+    getConfiguredBackendBaseUrl().then(setApiUrl);
+  }, []);
 
   const checkedAtText = useMemo(() => {
     if (!healthResult?.checkedAt) {
@@ -93,6 +109,7 @@ export default function SettingsScreen() {
     }
 
     setStatus("checking");
+    await saveBackendBaseUrl(normalizedUrl);
     const result = await fetchBackendHealth(normalizedUrl);
     setApiUrl(result.baseUrl);
     setHealthResult(result);
@@ -106,12 +123,51 @@ export default function SettingsScreen() {
     }
   };
 
+  const chooseAndImportRoster = useCallback(async () => {
+    setImportError(null);
+    const pickerResult = await DocumentPicker.getDocumentAsync({
+      copyToCacheDirectory: true,
+      multiple: false,
+      type: "application/pdf",
+    });
+
+    if (pickerResult.canceled || !pickerResult.assets?.[0]) {
+      return;
+    }
+
+    const asset = pickerResult.assets[0];
+    setImporting(true);
+    try {
+      const normalizedUrl = await saveBackendBaseUrl(apiUrl);
+      const result = await importRosterPdf(
+        {
+          uri: asset.uri,
+          name: asset.name ?? "roster.pdf",
+          mimeType: asset.mimeType ?? "application/pdf",
+          file: (asset as { file?: Blob }).file,
+        },
+        normalizedUrl
+      );
+      setApiUrl(normalizedUrl);
+      setImportResult(result);
+      setImportError(null);
+    } catch (error) {
+      if (error instanceof BackendApiError) {
+        setImportError(error);
+      } else {
+        setImportError(new BackendApiError("Import failed"));
+      }
+    } finally {
+      setImporting(false);
+    }
+  }, [apiUrl]);
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>Settings</Text>
-          <Text style={styles.subtitle}>Backend connection</Text>
+          <Text style={styles.subtitle}>Roster import and backend</Text>
         </View>
 
         <View style={styles.panel}>
@@ -140,7 +196,7 @@ export default function SettingsScreen() {
               autoCorrect={false}
               keyboardType="url"
               onChangeText={handleApiUrlChange}
-              placeholder="http://127.0.0.1:8000"
+              placeholder="http://127.0.0.1:8010"
               placeholderTextColor={Colors.light.secondary}
               returnKeyType="done"
               style={styles.input}
@@ -154,11 +210,11 @@ export default function SettingsScreen() {
             onPress={checkConnection}
             style={[
               styles.checkButton,
-              status === "checking" && styles.checkButtonDisabled,
+              status === "checking" && styles.buttonDisabled,
             ]}
           >
             <RefreshCw color="#fff" size={18} />
-            <Text style={styles.checkButtonText}>
+            <Text style={styles.primaryButtonText}>
               {status === "checking" ? "Checking" : "Check"}
             </Text>
           </TouchableOpacity>
@@ -181,8 +237,119 @@ export default function SettingsScreen() {
             </View>
           )}
         </View>
+
+        <View style={styles.panel}>
+          <View style={styles.panelHeader}>
+            <View style={styles.panelTitleGroup}>
+              <FileUp color={Colors.light.tint} size={22} />
+              <Text style={styles.panelTitle}>Roster Import</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            disabled={importing}
+            onPress={chooseAndImportRoster}
+            style={[styles.importButton, importing && styles.buttonDisabled]}
+          >
+            <FileUp color="#fff" size={18} />
+            <Text style={styles.primaryButtonText}>
+              {importing ? "Importing" : "Import PDF"}
+            </Text>
+          </TouchableOpacity>
+
+          {importError && (
+            <View style={[styles.notice, styles.errorNotice]}>
+              <AlertCircle color={Colors.light.danger} size={18} />
+              <View style={styles.resultTextGroup}>
+                <Text style={styles.resultMessage}>{importError.message}</Text>
+                {importError.errors.map((error) => (
+                  <Text key={error} style={styles.warningText}>
+                    {error}
+                  </Text>
+                ))}
+                {importError.warnings.map((warning) => (
+                  <Text key={warning} style={styles.warningText}>
+                    {warning}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          )}
+
+          {importResult && (
+            <View style={styles.importSummary}>
+              <View style={styles.summaryHeader}>
+                <CheckCircle2 color={Colors.light.success} size={18} />
+                <View style={styles.resultTextGroup}>
+                  <Text style={styles.resultMessage}>Imported {importResult.source_filename}</Text>
+                  <Text style={styles.resultMeta}>
+                    {importResult.summary.roster_period.start} to{" "}
+                    {importResult.summary.roster_period.end}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.summaryGrid}>
+                <SummaryMetric label="Days" value={importResult.summary.duty_days_parsed} />
+                <SummaryMetric label="Flights" value={importResult.summary.flight_legs_parsed} />
+                <SummaryMetric label="Hotels" value={importResult.summary.hotel_stays_parsed} />
+                <SummaryMetric
+                  label="Warnings"
+                  value={importResult.summary.parser_warning_count ?? importResult.warnings.length}
+                />
+              </View>
+
+              <View style={styles.changeRow}>
+                <Text style={styles.changeText}>Inserted {importResult.summary.inserted_dates}</Text>
+                <Text style={styles.changeText}>Updated {importResult.summary.updated_dates}</Text>
+                <Text style={styles.changeText}>Unchanged {importResult.summary.unchanged_dates}</Text>
+              </View>
+
+              {importResult.warnings.length > 0 && (
+                <View style={styles.warningBox}>
+                  <AlertCircle color={Colors.light.warning} size={18} />
+                  <View style={styles.resultTextGroup}>
+                    <Text style={styles.warningTitle}>
+                      {importResult.warnings.length} parser warning
+                      {importResult.warnings.length === 1 ? "" : "s"}
+                    </Text>
+                    {importResult.warnings.slice(0, 4).map((warning) => (
+                      <Text key={warning} style={styles.warningText}>
+                        {warning}
+                      </Text>
+                    ))}
+                    {importResult.warnings.length > 4 && (
+                      <Text style={styles.warningText}>
+                        +{importResult.warnings.length - 4} more
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              )}
+
+              <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => router.navigate("/")}
+                style={styles.secondaryButton}
+              >
+                <CalendarDays color={Colors.light.tint} size={18} />
+                <Text style={styles.secondaryButtonText}>View Schedule</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <View style={styles.metric}>
+      <Text style={styles.metricValue}>{value}</Text>
+      <Text style={styles.metricLabel}>{label}</Text>
+    </View>
   );
 }
 
@@ -276,11 +443,38 @@ const styles = StyleSheet.create({
     minHeight: 44,
     paddingHorizontal: 16,
   },
-  checkButtonDisabled: {
+  importButton: {
+    alignItems: "center",
+    alignSelf: "stretch",
+    backgroundColor: Colors.light.tint,
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "center",
+    minHeight: 48,
+    paddingHorizontal: 16,
+  },
+  buttonDisabled: {
     opacity: 0.6,
   },
-  checkButtonText: {
+  primaryButtonText: {
     color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  secondaryButton: {
+    alignItems: "center",
+    alignSelf: "flex-start",
+    borderColor: Colors.light.tint,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    minHeight: 44,
+    paddingHorizontal: 14,
+  },
+  secondaryButtonText: {
+    color: Colors.light.tint,
     fontSize: 15,
     fontWeight: "700",
   },
@@ -305,5 +499,91 @@ const styles = StyleSheet.create({
     color: Colors.light.secondary,
     fontSize: 13,
     marginTop: 2,
+  },
+  notice: {
+    alignItems: "flex-start",
+    borderRadius: 8,
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+    padding: 12,
+  },
+  errorNotice: {
+    backgroundColor: `${Colors.light.danger}12`,
+    borderColor: `${Colors.light.danger}40`,
+    borderWidth: 1,
+  },
+  importSummary: {
+    borderTopColor: Colors.light.border,
+    borderTopWidth: 1,
+    gap: 14,
+    marginTop: 16,
+    paddingTop: 14,
+  },
+  summaryHeader: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 10,
+  },
+  summaryGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  metric: {
+    backgroundColor: "#fff",
+    borderColor: Colors.light.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    minWidth: "23%",
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  metricValue: {
+    color: Colors.light.text,
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  metricLabel: {
+    color: Colors.light.secondary,
+    fontSize: 12,
+    fontWeight: "700",
+    marginTop: 2,
+    textTransform: "uppercase",
+  },
+  changeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  changeText: {
+    backgroundColor: "#fff",
+    borderRadius: 999,
+    color: Colors.light.secondary,
+    fontSize: 13,
+    fontWeight: "700",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  warningBox: {
+    alignItems: "flex-start",
+    backgroundColor: `${Colors.light.warning}14`,
+    borderColor: `${Colors.light.warning}50`,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    padding: 12,
+  },
+  warningTitle: {
+    color: Colors.light.text,
+    fontSize: 14,
+    fontWeight: "700",
+    marginBottom: 4,
+  },
+  warningText: {
+    color: Colors.light.secondary,
+    fontSize: 13,
+    marginTop: 3,
   },
 });

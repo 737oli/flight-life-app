@@ -1,5 +1,9 @@
 # Issue 008: Settings Roster Import UI
 
+## Status
+
+Done.
+
 ## Goal
 
 Add the mobile Settings flow for selecting and uploading a roster PDF.

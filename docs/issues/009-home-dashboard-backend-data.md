@@ -1,5 +1,9 @@
 # Issue 009: Home 7-Day Dashboard From Backend Data With Fallback Cache
 
+## Status
+
+Done.
+
 ## Goal
 
 Replace mock Home schedule data with the backend next-7-days API and cache the last successful response as read-only fallback.
