@@ -41,8 +41,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 018 | Improve flight leg extraction and day assignment | AFK | backend | Done | 017 |
 | 019 | Parser completeness validation and import summary refinement | AFK | backend | Done | 018 |
 | 020 | Fix parser omission of first two flight legs per duty day | human-in-the-loop | backend | Done | 019 |
-| 021 | Frontend tab route cleanup | AFK | frontend | Ready | none |
-| 022 | Expo SDK compatibility refresh | AFK | frontend | Ready | none |
+| 021 | Frontend tab route cleanup | AFK | frontend | Done | none |
+| 022 | Expo SDK compatibility refresh | AFK | frontend | Done | none |
 | 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Ready | 010 |
 
 ## Dependency Graph
