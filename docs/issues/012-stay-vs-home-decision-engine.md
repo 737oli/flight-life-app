@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Done.
 
 ## Goal
 
@@ -43,3 +43,11 @@ The app should help with personal planning decisions, not only display the roste
 ## Validation
 
 - Run decision engine tests for stay, home, missing input, and changed-duty cases.
+
+## Completed Notes
+
+- Added backend `GET /decisions/stay-vs-home/{date}`.
+- Added backend `PUT /decisions/stay-vs-home/{date}/override`.
+- Implemented deterministic recommendations from arrival station, next duty, duty gap, commute assumptions, hotel availability, useful home time, and preferences.
+- Returns `needs_review` with missing inputs instead of pretending certainty.
+- Manual overrides are persisted in `manual_decisions`; existing `needs_review` manual decisions stay visible after material duty changes.

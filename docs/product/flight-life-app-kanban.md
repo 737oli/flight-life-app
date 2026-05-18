@@ -32,10 +32,10 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 009 | Home 7-day dashboard from backend data with fallback cache | AFK | frontend | Done | none |
 | 010 | Raspberry Pi Docker Compose backend deployment | AFK | backend, deployment | Done | none |
 | 011 | Backend preferences model and Settings integration | AFK | both | Done | none |
-| 012 | Deterministic stay-vs-home decision engine | AFK | backend | Ready | none |
+| 012 | Deterministic stay-vs-home decision engine | AFK | backend | Done | none |
 | 013 | AF/KLM FlightStatus backend client | human-in-the-loop | backend | Done | none |
-| 014 | 90-minute operations enrichment API | AFK | backend | Ready | none |
-| 015 | Frontend operations chips and detail panel | AFK | frontend | Blocked | 014, 009 |
+| 014 | 90-minute operations enrichment API | AFK | backend | Done | none |
+| 015 | Frontend operations chips and detail panel | AFK | frontend | Ready | none |
 | 016 | README and deployment documentation refresh | AFK | docs, both repos | Ready | none |
 | 017 | Real roster parser QA and sanitized fixture capture | human-in-the-loop | backend | Done | 002 |
 | 018 | Improve flight leg extraction and day assignment | AFK | backend | Done | 017 |
@@ -62,9 +62,9 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 009 depends on the schedule API, frontend backend configuration, parser-completeness reporting, and the missing-first-legs parser fix.
 - 010 can start after the backend test harness exists because Pi/Tailscale deployment is an early enabler for operational-window testing. It should add the basic Compose shape first and evolve volumes as persistence lands.
 - 011 added backend-owned preferences and Settings controls.
-- 012 depends on imported roster data and preferences.
+- 012 added the first deterministic stay-vs-home decision engine with manual overrides and needs-review states.
 - 013 added the backend-only AF/KLM FlightStatus client with mocked tests. Live credential validation remains local/manual.
-- 014 wraps live data into the project-owned 90-minute operations contract.
+- 014 added the project-owned 90-minute operations contract around persisted roster flight legs.
 - 015 consumes that operations contract in the mobile UI.
 - 016 documents the actual deployable shape after Compose exists.
 - 021 cleans up Expo Router warnings found during first-milestone QA.
@@ -106,7 +106,7 @@ Issues 011 and 012.
 
 Goal: add backend-owned preferences and the first deterministic stay-vs-home recommendation with "needs review" handling.
 
-Status: 011 is done; 012 is ready.
+Status: 011 and 012 are done.
 
 ## Third Milestone: Live Operations Window
 
@@ -114,7 +114,7 @@ Issues 013 through 015.
 
 Goal: enrich only flights within 90 minutes using backend-owned AF/KLM FlightStatus integration and show compact operations data in the mobile app.
 
-Status: 013 is done; 014 is ready; 015 remains blocked by 014.
+Status: 013 and 014 are done; 015 is ready.
 
 ## Fourth Milestone: Hardening And Documentation
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Done.
 
 ## Goal
 
@@ -35,3 +35,11 @@ The frontend needs compact live operations data without knowing AF/KLM API detai
 ## Validation
 
 - Run operations API tests with frozen time and mocked AF/KLM responses.
+
+## Completed Notes
+
+- Added backend `GET /operations/flights/{flight_leg_id}`.
+- Determines 90-minute eligibility from persisted roster flight-leg schedule data.
+- Returns scheduled baseline and walking start time for all known flight legs.
+- Fetches live AF/KLM enrichment only inside the operations window.
+- Handles missing credentials or live API failures as unavailable live enrichment without replacing planned roster data.

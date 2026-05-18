@@ -1,5 +1,9 @@
 # Issue 015: Frontend Operations Chips And Detail Panel
 
+## Status
+
+Ready.
+
 ## Goal
 
 Render backend operations enrichment in the mobile app.
@@ -38,4 +42,3 @@ Operational data should be glanceable on Home and richer in the detail view with
 
 - Run frontend lint.
 - Manually verify with mocked and real backend operations responses where practical.
-
