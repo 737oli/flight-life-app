@@ -1,5 +1,9 @@
 # Issue 016: README And Deployment Documentation Refresh
 
+## Status
+
+Done.
+
 ## Goal
 
 Update repository READMEs and deployment docs to match the implemented Pi/Tailscale flow.
@@ -44,4 +48,3 @@ The app spans two repositories and will run on a Raspberry Pi. Future work needs
 
 - Read docs against actual commands and files.
 - Run available checks if docs changes include code/config changes.
-

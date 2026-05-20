@@ -73,6 +73,7 @@ export type PreferencesResponse = {
 export type PreferencesUpdate = Partial<Omit<FlightLifePreferences, "updated_at">>;
 
 export type ScheduleFlight = {
+  flight_leg_id?: number;
   sequence: number;
   flight_number: string;
   dep_airport: string;
@@ -117,6 +118,54 @@ export type NextSevenDaysSchedule = {
   end_date: string;
   last_import: LastImportMetadata | null;
   days: ScheduleDay[];
+};
+
+export type OperationsScheduledFlight = {
+  flight_number: string;
+  dep_airport: string;
+  arr_airport: string;
+  departure_date: string;
+  departure_time: string | null;
+  arrival_time: string | null;
+  departure_at: string | null;
+  aircraft_code: string | null;
+};
+
+export type OperationsWalkingStart = {
+  time: string | null;
+  at: string | null;
+  buffer_minutes: number;
+};
+
+export type OperationsLiveData = {
+  flight_number: string | null;
+  carrier_code: string | null;
+  departure_airport: string | null;
+  arrival_airport: string | null;
+  scheduled_departure: string | null;
+  latest_departure: string | null;
+  scheduled_arrival: string | null;
+  latest_arrival: string | null;
+  delay_minutes: number | null;
+  parking_position: string | null;
+  ctot: string | null;
+  tsat: string | null;
+  previous_flight_arrival: string | null;
+  aircraft_registration: string | null;
+  aircraft_type: string | null;
+  status: string | null;
+};
+
+export type FlightOperationsResponse = {
+  flight_leg_id: number;
+  status: "scheduled_only" | "ok" | "live_unavailable" | string;
+  eligibility: "outside_window" | "eligible" | "not_eligible" | string;
+  operations_window_minutes: number;
+  minutes_until_departure: number | null;
+  scheduled: OperationsScheduledFlight;
+  walking_start: OperationsWalkingStart;
+  live: OperationsLiveData | null;
+  warnings: string[];
 };
 
 export class BackendApiError extends Error {
@@ -295,4 +344,21 @@ export const fetchNextSevenDaysSchedule = async (
   }
 
   return (await response.json()) as NextSevenDaysSchedule;
+};
+
+export const fetchFlightOperations = async (
+  flightLegId: number,
+  baseUrl?: string
+): Promise<FlightOperationsResponse> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
+  const response = await fetch(`${normalizedBaseUrl}/operations/flights/${flightLegId}`);
+
+  if (!response.ok) {
+    throw new BackendApiError(`Operations unavailable: HTTP ${response.status}`, {
+      status: response.status,
+      errors: [`HTTP ${response.status}`],
+    });
+  }
+
+  return (await response.json()) as FlightOperationsResponse;
 };

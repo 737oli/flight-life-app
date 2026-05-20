@@ -34,6 +34,8 @@ Docker Compose uses named volumes:
 
 The container runs `alembic upgrade head` before starting the API, so a new empty SQLite volume is initialized automatically.
 
+`docker-compose.yml` also passes optional `AFKLM_API_KEY` and `AFKLM_API_BASE_URL` values from the ignored `.env` file into the container for live operations testing.
+
 ## Local Smoke Test
 
 From `flight-life-app-server/`:
@@ -41,7 +43,7 @@ From `flight-life-app-server/`:
 ```bash
 cp deploy/pi.env.example .env
 docker compose build
-docker compose up
+docker compose up -d
 ```
 
 In another terminal:
@@ -75,11 +77,13 @@ Do not use `docker compose down -v` unless you intentionally want to delete the 
    cp deploy/pi.env.example .env
    ```
 
-5. Keep the default Pi binding for Tailscale testing:
+5. Keep the default Pi binding for Tailscale testing and add AF/KLM credentials only if live operations testing is needed:
 
    ```bash
    FLIGHT_LIFE_BIND_HOST=0.0.0.0
    FLIGHT_LIFE_PORT=8010
+   AFKLM_API_KEY=<local-private-key>
+   AFKLM_API_BASE_URL=https://api.airfranceklm.com/opendata
    ```
 
 6. Start the backend:

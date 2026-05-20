@@ -35,8 +35,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 012 | Deterministic stay-vs-home decision engine | AFK | backend | Done | none |
 | 013 | AF/KLM FlightStatus backend client | human-in-the-loop | backend | Done | none |
 | 014 | 90-minute operations enrichment API | AFK | backend | Done | none |
-| 015 | Frontend operations chips and detail panel | AFK | frontend | Ready | none |
-| 016 | README and deployment documentation refresh | AFK | docs, both repos | Ready | none |
+| 015 | Frontend operations chips and detail panel | AFK | frontend | Done | none |
+| 016 | README and deployment documentation refresh | AFK | docs, both repos | Done | none |
 | 017 | Real roster parser QA and sanitized fixture capture | human-in-the-loop | backend | Done | 002 |
 | 018 | Improve flight leg extraction and day assignment | AFK | backend | Done | 017 |
 | 019 | Parser completeness validation and import summary refinement | AFK | backend | Done | 018 |
@@ -44,7 +44,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 021 | Frontend tab route cleanup | AFK | frontend | Done | none |
 | 022 | Expo SDK compatibility refresh | AFK | frontend | Done | none |
 | 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Ready | 010 |
-| 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Ready | 015 |
+| 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Ready | none |
 
 ## Dependency Graph
 
@@ -71,7 +71,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 021 cleans up Expo Router warnings found during first-milestone QA.
 - 022 addresses Expo SDK package compatibility warnings found during first-milestone QA.
 - 023 validates the Pi/Tailscale backend path after local Docker Compose is working.
-- 024 fixes post-flight operations annotation retention and investigates missing departure superscript rendering. It should be handled after or together with 015 because it depends on the operations UI contract.
+- 024 fixes post-flight operations annotation retention and investigates missing departure superscript rendering after the operations UI contract.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -116,13 +116,15 @@ Issues 013 through 015.
 
 Goal: enrich only flights within 90 minutes using backend-owned AF/KLM FlightStatus integration and show compact operations data in the mobile app.
 
-Status: 013 and 014 are done; 015 is ready.
+Status: Done.
 
 ## Fourth Milestone: Hardening And Documentation
 
-Issues 016 and 021 through 023.
+Issues 016 and 021 through 024.
 
 Goal: make the Pi/Tailscale setup repeatable, clean up development warnings, preserve post-flight operations context, and document remaining gaps before broader operational use.
+
+Status: 016, 021, and 022 are done; 023 and 024 are ready.
 
 ## Implementation Rule
 

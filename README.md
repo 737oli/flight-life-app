@@ -1,30 +1,89 @@
 # Flight Life App
 
-An Expo + React Native application scaffolded with Expo Router and TypeScript. This project targets iOS, Android, and Web with a single codebase, using file‑based routing, modern React Native architecture, and a modular structure for components, services, and shared types.
+Mobile-first Expo app for a private personal flight-duty companion. The app uploads roster PDFs through Settings, reads the parsed backend schedule, keeps a read-only fallback cache for Home, and shows live operations annotations only through the backend.
 
-- Platforms: iOS, Android, Web
-- Routing: [Expo Router](https://expo.dev/router) (typed routes enabled)
-- Language: TypeScript
-- React Native: 0.79
-- React: 19
-- Expo SDK: 53
-- Deep linking scheme: `flightlifeapp`
-- New Architecture: enabled
+The primary target is iPhone with Expo Go or a development/internal build. Web is useful for development and emergency access, but Pi-hosted web is not part of the first milestone.
 
-## Features
+## Current Scope
 
-- Universal app (iOS/Android/Web) via Expo and React Native Web
-- File-based routing with Expo Router (typed routes enabled)
-- Navigation powered by React Navigation
-- UI polish with `expo-blur`, `expo-haptics`, and `expo-image`
-- In-app browser with `expo-web-browser`
-- Web content rendering with `react-native-webview`
-- Strict typing with TypeScript
-- Linting via ESLint (Expo config)
+- Home renders every day in the next 7 days from `/schedule/next-7-days`, including compressed off days and explicit missing-roster days.
+- Settings owns backend API URL, connection status, roster import, last import summary, and editable backend preferences.
+- Operations data is displayed as annotations for the next relevant flight and in the flight detail panel.
+- The frontend never calls AF/KLM directly and never stores API credentials.
+- If the backend is unavailable, Home renders the last successful cached schedule response when available. Upload/import and live operations still require backend access.
+
+## Requirements
+
+- Node.js 18+.
+- npm.
+- Xcode for iOS simulator testing on macOS.
+- Expo Go for fast device testing, or an EAS internal/TestFlight build once native configuration settles.
+- A running `flight-life-app-server` backend for roster import, preferences, decisions, and operations enrichment.
+
+## Setup
+
+```bash
+npm install
+```
+
+Start Expo on the project port:
+
+```bash
+npm run start
+```
+
+Useful scripts:
+
+```bash
+npm run ios      # iOS simulator
+npm run android  # Android emulator
+npm run web      # React Native Web on port 8090
+npm run lan      # Expo LAN mode on port 8090
+npm run lint     # Expo ESLint
+```
+
+All Expo scripts use port `8090` so this project can run beside other local apps.
+
+## Backend URL
+
+Default backend URL:
+
+```text
+http://127.0.0.1:8010
+```
+
+You can override it at runtime in the Settings screen. That value is stored locally on the device.
+
+For simulator/web development, run the backend locally:
+
+```bash
+cd ../flight-life-app-server
+uvicorn main:app --reload --host 0.0.0.0 --port 8010
+```
+
+For iPhone operational testing through a Raspberry Pi, connect the iPhone and Pi to the same Tailscale tailnet and set Settings API URL to:
+
+```text
+http://<pi-tailscale-name-or-ip>:8010
+```
+
+Then tap Check in Settings before importing or refreshing schedule data.
+
+## Privacy
+
+Never commit:
+
+- real roster PDFs;
+- parsed output from real rosters;
+- screenshots containing real roster data;
+- AF/KLM API credentials;
+- `.env`, `.env.local`, or `.env.*` files.
+
+Frontend environment values must not contain secrets. API credentials belong only in backend-side ignored environment config.
 
 ## Shared Docs Workflow
 
-Shared project docs are committed into both the frontend and backend repositories so GitHub Copilot can reference them in either repo. The backend repo is the source of truth for:
+Shared project docs are committed into both repositories so GitHub Copilot can reference them locally. The backend repo is the source of truth for:
 
 - `AGENTS.md`
 - `PROJECT_CONTEXT.md`
@@ -44,170 +103,30 @@ Preview a sync without changing files:
 
 After syncing, review, commit, and push the docs changes in both child repositories. Do not hand-edit the same shared docs separately in both repos.
 
-## Quick Start
-
-### Prerequisites
-
-- Node.js 18+ (LTS recommended)
-- npm or yarn (examples use npm)
-- Xcode (macOS) for iOS simulator builds
-- Android Studio for Android emulator builds
-- Expo Go app (optional) for device testing
-
-### Installation
-
-```bash
-# Install dependencies
-npm install
-```
-
-### Development
-
-```bash
-# Start the dev server (choose platform in the Expo UI)
-npm run start
-
-# iOS simulator
-npm run ios
-
-# Android emulator
-npm run android
-
-# Web (React Native Web)
-npm run web
-```
-
-If you run into iOS build issues locally, ensure pods are installed:
-
-```bash
-npx pod-install
-```
-
-## Scripts
-
-Defined in `package.json`:
-
-- `start` — Start Expo dev server
-- `android` — Start and open Android
-- `ios` — Start and open iOS
-- `web` — Start and open Web
-- `lint` — Lint the project using Expo's ESLint config
-- `reset-project` — Project cleanup via `scripts/reset-project.js`
-
 ## Project Structure
 
-A high-level overview of directories:
-
-```
-app/           # Route-based screens and layouts (Expo Router)
-components/    # Reusable UI components
-constants/     # App-wide constants (colors, spacing, etc.)
-data/          # Static data or mock fixtures
-services/      # API clients, storage, and side-effectful logic
-types/         # Shared TypeScript types and interfaces
-scripts/       # Project utility scripts (e.g., reset)
-.vscode/       # Editor settings and recommendations
+```text
+app/           Expo Router screens and layouts
+components/    Reusable UI components
+constants/     App colors and constants
+data/          Legacy/static mock data
+services/      Backend API, cache, parsing, and helper services
+types/         Shared TypeScript interfaces
+scripts/       Project utility scripts
 ```
 
-With Expo Router, files under `app/` map to routes. For example:
+## Current Limitations
 
-- `app/index.tsx` → `/`
-- `app/(tabs)/home.tsx` → `/home`
-- `app/[id].tsx` → dynamic route `/123`
-
-Typed routes are enabled via `experiments.typedRoutes` in `app.json`.
-
-## Configuration
-
-Key settings in `app.json`:
-
-- Name/slug: `flight-life-app`
-- Scheme (deep linking): `flightlifeapp`
-- iOS: `supportsTablet: true`
-- Android: Edge-to-edge UI enabled
-- Web: Metro bundler and static output
-- Splash/icon assets:
-  - `./assets/images/icon.png`
-  - `./assets/images/adaptive-icon.png`
-  - `./assets/images/favicon.png`
-  - `./assets/images/splash-icon.png`
-
-Plugins:
-- `expo-router`
-- `expo-splash-screen` with configurable image, width, and background color
-
-New Architecture is enabled (`newArchEnabled: true`).
-
-## Linting and Formatting
-
-Run lints:
-
-```bash
-npm run lint
-```
-
-Recommendation (optional):
-- Add Prettier for consistent code formatting and hook it into your editor or pre-commit workflow.
-
-## Environment Variables
-
-If the app requires secrets or environment-based configuration, add a `.env` file and use a library such as `expo-constants` or `react-native-config`. Make sure to:
-
-- Add `.env*` to `.gitignore`
-- Never commit secrets to the repository
-
-## Navigation Notes
-
-This project includes:
-- `@react-navigation/native`
-- `@react-navigation/bottom-tabs`
-- `@react-navigation/elements`
-
-Expo Router integrates with React Navigation under the hood. Use layouts and segments in `app/` for file-based routing and shared UI.
-
-## Building
-
-For store-ready builds, consider using [EAS Build](https://docs.expo.dev/build/introduction/). After configuring your Expo account and `eas.json`:
-
-```bash
-# Example (requires EAS configuration, not included by default):
-# eas build --platform ios
-# eas build --platform android
-```
-
-For web, static export is enabled in `app.json` (`web.output: "static"`).
-
-## Troubleshooting
-
-- iOS Pods: Run `npx pod-install` after dependency changes.
-- Reanimated: If you define a custom Babel config, ensure `react-native-reanimated/plugin` is included as the last plugin.
-- Android Emulator: Make sure virtualization is enabled and an emulator is created in Android Studio.
-- Cache issues: Use `npm run reset-project` if provided script clears caches and resets state.
+- No App Store release path yet.
+- No accounts, sharing, cloud sync, or public backend exposure.
+- No background refresh or push notifications.
+- Live operations are limited to backend-enriched eligible flights.
+- Component test tooling is not set up yet; use deterministic helpers and lint until that exists.
 
 ## Tech Stack
 
-- Expo SDK 53
+- Expo SDK 54
 - React 19
-- React Native 0.79
-- Expo Router
-- React Navigation
-- TypeScript
-- React Native Web
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes with clear messages
-4. Open a pull request with a concise summary and screenshots if UI changes are included
-
-## License
-
-This project does not currently include a license file. If you intend to open-source it, consider adding a license (e.g., MIT, Apache-2.0).
-
-## Acknowledgements
-
-- [Expo](https://expo.dev/)
-- [React Native](https://reactnative.dev/)
-- [Expo Router](https://expo.dev/router)
-- [React Navigation](https://reactnavigation.org/)
+- React Native 0.81
+- Expo Router 6
+- TypeScript 5.9

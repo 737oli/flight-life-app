@@ -1,18 +1,33 @@
 import Colors from "@/constants/Colors";
-import { fetchNextSevenDaysSchedule, ScheduleDay } from "@/services/backendApi";
+import {
+  fetchFlightOperations,
+  fetchNextSevenDaysSchedule,
+  FlightOperationsResponse,
+  ScheduleDay,
+  ScheduleFlight,
+} from "@/services/backendApi";
 import { loadScheduleCache, saveScheduleCache } from "@/services/scheduleCache";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
 import {
+  Activity,
   AlertCircle,
+  CheckCircle,
   Clock,
   FileUp,
+  MapPin,
+  Navigation,
+  ParkingCircle,
   Plane,
   RefreshCw,
   WifiOff,
+  X,
+  Zap,
 } from "lucide-react-native";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Modal,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -27,6 +42,17 @@ import type { NextSevenDaysSchedule } from "@/services/backendApi";
 
 type ScheduleSource = "backend" | "cache" | "empty";
 
+type FlightSelection = {
+  day: ScheduleDay;
+  flight: ScheduleFlight;
+};
+
+type OperationState = {
+  data: FlightOperationsResponse | null;
+  loading: boolean;
+  error: string | null;
+};
+
 export default function TodayScreen() {
   const [schedule, setSchedule] = useState<NextSevenDaysSchedule | null>(null);
   const [cachedSchedule, setCachedSchedule] = useState<CachedSchedule | null>(null);
@@ -34,6 +60,8 @@ export default function TodayScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [operationStates, setOperationStates] = useState<Record<number, OperationState>>({});
+  const [selectedFlight, setSelectedFlight] = useState<FlightSelection | null>(null);
 
   const loadSchedule = useCallback(async (asRefresh = false) => {
     if (asRefresh) {
@@ -68,10 +96,75 @@ export default function TodayScreen() {
     }
   }, []);
 
+  const loadOperations = useCallback(
+    async (flightLegId: number | undefined, force = false) => {
+      if (!flightLegId) {
+        return;
+      }
+
+      const existingState = operationStates[flightLegId];
+      if (!force && (existingState?.loading || existingState?.data)) {
+        return;
+      }
+
+      setOperationStates((current) => ({
+        ...current,
+        [flightLegId]: {
+          data: current[flightLegId]?.data ?? null,
+          loading: true,
+          error: null,
+        },
+      }));
+
+      try {
+        const operations = await fetchFlightOperations(flightLegId);
+        setOperationStates((current) => ({
+          ...current,
+          [flightLegId]: {
+            data: operations,
+            loading: false,
+            error: null,
+          },
+        }));
+      } catch (error) {
+        setOperationStates((current) => ({
+          ...current,
+          [flightLegId]: {
+            data: current[flightLegId]?.data ?? null,
+            loading: false,
+            error: error instanceof Error ? error.message : "Operations unavailable",
+          },
+        }));
+      }
+    },
+    [operationStates]
+  );
+
   useFocusEffect(
     useCallback(() => {
       loadSchedule();
     }, [loadSchedule])
+  );
+
+  const nextOperationalFlight = useMemo(
+    () => (schedule && source === "backend" ? findNextOperationalFlight(schedule.days) : null),
+    [schedule, source]
+  );
+
+  useEffect(() => {
+    if (nextOperationalFlight?.flight.flight_leg_id) {
+      loadOperations(nextOperationalFlight.flight.flight_leg_id);
+    }
+  }, [loadOperations, nextOperationalFlight?.flight.flight_leg_id]);
+
+  const handleFlightPress = useCallback(
+    (day: ScheduleDay, flight: ScheduleFlight) => {
+      setSelectedFlight({ day, flight });
+      if (source === "backend") {
+        loadOperations(flight.flight_leg_id);
+      }
+    },
+    [loadOperations, source]
   );
 
   const cachedAtText = cachedSchedule
@@ -140,16 +233,45 @@ export default function TodayScreen() {
             </View>
 
             {schedule.days.map((day) => (
-              <ScheduleDayCard key={day.date} day={day} />
+              <ScheduleDayCard
+                key={day.date}
+                day={day}
+                highlightedFlightLegId={nextOperationalFlight?.flight.flight_leg_id ?? null}
+                operationStates={operationStates}
+                onFlightPress={handleFlightPress}
+              />
             ))}
           </View>
         )}
       </ScrollView>
+
+      <FlightDetailModal
+        canLoadOperations={source === "backend"}
+        operationState={
+          selectedFlight?.flight.flight_leg_id
+            ? operationStates[selectedFlight.flight.flight_leg_id]
+            : undefined
+        }
+        onClose={() => setSelectedFlight(null)}
+        onRefresh={() => loadOperations(selectedFlight?.flight.flight_leg_id, true)}
+        selection={selectedFlight}
+        visible={selectedFlight !== null}
+      />
     </SafeAreaView>
   );
 }
 
-function ScheduleDayCard({ day }: { day: ScheduleDay }) {
+function ScheduleDayCard({
+  day,
+  highlightedFlightLegId,
+  operationStates,
+  onFlightPress,
+}: {
+  day: ScheduleDay;
+  highlightedFlightLegId: number | null;
+  operationStates: Record<number, OperationState>;
+  onFlightPress: (day: ScheduleDay, flight: ScheduleFlight) => void;
+}) {
   const isOffDay = day.kind === "off_day";
   const isMissing = day.kind === "missing_roster";
   const isFlightDuty = day.kind === "flight_duty";
@@ -185,8 +307,18 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
 
           {isFlightDuty && day.flights.length > 0 ? (
             <View style={styles.flightList}>
-              {day.flights.map((flight) => (
-                <View key={`${day.date}-${flight.sequence}-${flight.flight_number}`} style={styles.flightRow}>
+              {day.flights.map((flight) => {
+                const flightLegId = flight.flight_leg_id;
+                const operationState = flightLegId ? operationStates[flightLegId] : undefined;
+                const showOperations = flightLegId === highlightedFlightLegId;
+
+                return (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  key={`${day.date}-${flight.sequence}-${flight.flight_number}`}
+                  onPress={() => onFlightPress(day, flight)}
+                  style={styles.flightRow}
+                >
                   <Plane color={Colors.light.tint} size={16} />
                   <View style={styles.flightMain}>
                     <Text style={styles.flightTitle}>{flight.flight_number}</Text>
@@ -194,12 +326,19 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
                       {flight.dep_airport} {formatRosterTime(flight.scheduled_departure_time)} →{" "}
                       {flight.arr_airport} {formatRosterTime(flight.scheduled_arrival_time)}
                     </Text>
+                    {showOperations && (
+                      <OperationsChips
+                        loading={operationState?.loading ?? false}
+                        operations={operationState?.data ?? null}
+                      />
+                    )}
                   </View>
                   {flight.aircraft_code && (
                     <Text style={styles.aircraftCode}>{flight.aircraft_code}</Text>
                   )}
-                </View>
-              ))}
+                </TouchableOpacity>
+              );
+              })}
             </View>
           ) : (
             <Text style={styles.mutedText}>{day.duty?.type ?? "Other duty"}</Text>
@@ -217,6 +356,258 @@ function ScheduleDayCard({ day }: { day: ScheduleDay }) {
       )}
     </View>
   );
+}
+
+function OperationsChips({
+  loading,
+  operations,
+}: {
+  loading: boolean;
+  operations: FlightOperationsResponse | null;
+}) {
+  const live = operations?.live ?? null;
+  const chips = [
+    live?.parking_position ? { label: `Stand ${live.parking_position}`, tone: "neutral" } : null,
+    live?.aircraft_registration
+      ? {
+          label: [live.aircraft_registration, live.aircraft_type].filter(Boolean).join(" "),
+          tone: "neutral",
+        }
+      : live?.aircraft_type
+        ? { label: live.aircraft_type, tone: "neutral" }
+        : null,
+    live?.ctot ? { label: `CTOT ${formatOpsTime(live.ctot)}`, tone: "purple" } : null,
+    live?.tsat ? { label: `TSAT ${formatOpsTime(live.tsat)}`, tone: "purple" } : null,
+    typeof live?.delay_minutes === "number" && live.delay_minutes !== 0
+      ? { label: `${live.delay_minutes > 0 ? "+" : ""}${live.delay_minutes} min`, tone: "warning" }
+      : null,
+  ].filter((chip): chip is { label: string; tone: string } => Boolean(chip));
+
+  if (loading) {
+    return (
+      <View style={styles.opsChipRow}>
+        <View style={styles.opsChip}>
+          <ActivityIndicator color={Colors.light.tint} size="small" />
+          <Text style={styles.opsChipText}>Ops</Text>
+        </View>
+      </View>
+    );
+  }
+
+  if (chips.length === 0) {
+    return null;
+  }
+
+  return (
+    <View style={styles.opsChipRow}>
+      {chips.map((chip) => (
+        <View
+          key={chip.label}
+          style={[
+            styles.opsChip,
+            chip.tone === "purple" && styles.opsChipPurple,
+            chip.tone === "warning" && styles.opsChipWarning,
+          ]}
+        >
+          <Text
+            style={[
+              styles.opsChipText,
+              chip.tone === "purple" && styles.opsChipTextPurple,
+              chip.tone === "warning" && styles.opsChipTextWarning,
+            ]}
+          >
+            {chip.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function FlightDetailModal({
+  canLoadOperations,
+  operationState,
+  onClose,
+  onRefresh,
+  selection,
+  visible,
+}: {
+  canLoadOperations: boolean;
+  operationState?: OperationState;
+  onClose: () => void;
+  onRefresh: () => void;
+  selection: FlightSelection | null;
+  visible: boolean;
+}) {
+  const flight = selection?.flight ?? null;
+  const day = selection?.day ?? null;
+  const operations = operationState?.data ?? null;
+  const live = operations?.live ?? null;
+
+  return (
+    <Modal animationType="slide" onRequestClose={onClose} presentationStyle="pageSheet" visible={visible}>
+      <SafeAreaView style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <View style={styles.modalTitleGroup}>
+            <Text style={styles.modalTitle}>{flight?.flight_number ?? "Flight"}</Text>
+            {flight && (
+              <Text style={styles.modalSubtitle}>
+                {flight.dep_airport} {formatRosterTime(flight.scheduled_departure_time)} →{" "}
+                {flight.arr_airport} {formatRosterTime(flight.scheduled_arrival_time)}
+              </Text>
+            )}
+          </View>
+          <TouchableOpacity accessibilityRole="button" onPress={onClose} style={styles.iconButton}>
+            <X color={Colors.light.text} size={22} />
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView contentContainerStyle={styles.modalContent}>
+          {flight && day && (
+            <View style={styles.detailSection}>
+              <Text style={styles.detailSectionTitle}>Roster Plan</Text>
+              <DetailRow icon={Plane} label="Route" value={`${flight.dep_airport} → ${flight.arr_airport}`} />
+              <DetailRow
+                icon={Clock}
+                label="Scheduled"
+                value={`${formatShortDate(day.date)} ${formatRosterTime(flight.scheduled_departure_time)}-${formatRosterTime(flight.scheduled_arrival_time)}`}
+              />
+              {flight.aircraft_code && (
+                <DetailRow icon={Activity} label="Planned aircraft" value={flight.aircraft_code} />
+              )}
+            </View>
+          )}
+
+          <View style={styles.detailSection}>
+            <View style={styles.detailSectionHeader}>
+              <Text style={styles.detailSectionTitle}>Operations</Text>
+              {canLoadOperations && flight?.flight_leg_id && (
+                <TouchableOpacity
+                  accessibilityRole="button"
+                  disabled={operationState?.loading}
+                  onPress={onRefresh}
+                  style={styles.refreshButton}
+                >
+                  {operationState?.loading ? (
+                    <ActivityIndicator color={Colors.light.tint} size="small" />
+                  ) : (
+                    <RefreshCw color={Colors.light.tint} size={16} />
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+
+            {!canLoadOperations ? (
+              <Text style={styles.detailMuted}>Backend unavailable. Planned schedule is shown from cache.</Text>
+            ) : operationState?.loading ? (
+              <View style={styles.loadingRow}>
+                <ActivityIndicator color={Colors.light.secondary} size="small" />
+                <Text style={styles.detailMuted}>Loading operations...</Text>
+              </View>
+            ) : operationState?.error ? (
+              <Text style={styles.detailMuted}>{operationState.error}</Text>
+            ) : operations ? (
+              <View style={styles.opsDetailList}>
+                <DetailRow icon={CheckCircle} label="Source" value={labelForOperationsStatus(operations)} />
+                {operations.walking_start.time && (
+                  <DetailRow
+                    icon={MapPin}
+                    label="Start walking"
+                    value={`${formatRosterTime(operations.walking_start.time)} (${operations.walking_start.buffer_minutes} min buffer)`}
+                  />
+                )}
+                {live?.parking_position ? (
+                  <DetailRow icon={ParkingCircle} label="Stand" value={live.parking_position} />
+                ) : operations.eligibility === "eligible" ? (
+                  <DetailRow icon={ParkingCircle} label="Stand" value="Stand unknown" muted />
+                ) : null}
+                {live?.aircraft_registration || live?.aircraft_type ? (
+                  <DetailRow
+                    icon={Plane}
+                    label="Aircraft"
+                    value={[live?.aircraft_registration, live?.aircraft_type].filter(Boolean).join(" ")}
+                  />
+                ) : null}
+                {live?.ctot && <DetailRow icon={Zap} label="CTOT" value={formatOpsTime(live.ctot)} />}
+                {live?.tsat && <DetailRow icon={Zap} label="TSAT" value={formatOpsTime(live.tsat)} />}
+                {typeof live?.delay_minutes === "number" && (
+                  <DetailRow
+                    icon={Clock}
+                    label="Departure delay"
+                    value={`${live.delay_minutes > 0 ? "+" : ""}${live.delay_minutes} min`}
+                  />
+                )}
+                {live?.previous_flight_arrival && (
+                  <DetailRow
+                    icon={Navigation}
+                    label="Previous arrival"
+                    value={formatOpsTime(live.previous_flight_arrival)}
+                  />
+                )}
+                <OperationsContext operations={operations} />
+              </View>
+            ) : (
+              <Text style={styles.detailMuted}>Live operations are loaded for flights in the 90-minute window.</Text>
+            )}
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
+  );
+}
+
+function DetailRow({
+  icon: Icon,
+  label,
+  muted = false,
+  value,
+}: {
+  icon: React.ComponentType<{ color?: string; size?: number }>;
+  label: string;
+  muted?: boolean;
+  value: string;
+}) {
+  return (
+    <View style={styles.detailRow}>
+      <Icon color={muted ? Colors.light.secondary : Colors.light.tint} size={17} />
+      <View style={styles.detailRowContent}>
+        <Text style={styles.detailLabel}>{label}</Text>
+        <Text style={[styles.detailValue, muted && styles.detailValueMuted]}>{value}</Text>
+      </View>
+    </View>
+  );
+}
+
+function OperationsContext({ operations }: { operations: FlightOperationsResponse }) {
+  if (operations.status === "live_unavailable") {
+    return <Text style={styles.detailMuted}>Live data unavailable. Roster plan is unchanged.</Text>;
+  }
+
+  if (operations.eligibility === "outside_window") {
+    return (
+      <Text style={styles.detailMuted}>
+        Live enrichment opens {operations.operations_window_minutes} min before departure.
+      </Text>
+    );
+  }
+
+  const live = operations.live;
+  if (!live) {
+    return null;
+  }
+
+  const missingFields = [
+    live.parking_position ? null : "stand",
+    live.ctot ? null : "CTOT",
+    live.tsat ? null : "TSAT",
+    live.previous_flight_arrival ? null : "previous arrival",
+  ].filter((field): field is string => Boolean(field));
+
+  if (missingFields.length === 0) {
+    return null;
+  }
+
+  return <Text style={styles.detailMuted}>Unavailable: {missingFields.join(", ")}</Text>;
 }
 
 const formatLongDate = (date: Date) =>
@@ -253,6 +644,71 @@ const labelForKind = (kind: string) => {
     default:
       return kind.replace(/_/g, " ");
   }
+};
+
+const findNextOperationalFlight = (days: ScheduleDay[]): FlightSelection | null => {
+  const now = Date.now();
+  const candidates = days
+    .flatMap((day) =>
+      day.flights.map((flight) => ({
+        day,
+        flight,
+        departureAt: scheduledDepartureAt(day.date, flight.scheduled_departure_time),
+      }))
+    )
+    .filter((candidate) => {
+      if (!candidate.flight.flight_leg_id || !candidate.departureAt) {
+        return false;
+      }
+      const minutesUntilDeparture = (candidate.departureAt.getTime() - now) / 60000;
+      return minutesUntilDeparture >= 0 && minutesUntilDeparture <= 90;
+    })
+    .sort((left, right) => {
+      if (!left.departureAt || !right.departureAt) {
+        return 0;
+      }
+      return left.departureAt.getTime() - right.departureAt.getTime();
+    });
+
+  return candidates.length > 0 ? { day: candidates[0].day, flight: candidates[0].flight } : null;
+};
+
+const scheduledDepartureAt = (isoDate: string, hhmm: string | null | undefined) => {
+  if (!hhmm || !/^\d{4}$/.test(hhmm)) {
+    return null;
+  }
+  const hours = Number(hhmm.slice(0, 2));
+  const minutes = Number(hhmm.slice(2));
+  const departure = new Date(`${isoDate}T00:00:00`);
+  departure.setHours(hours, minutes, 0, 0);
+  return departure;
+};
+
+const formatOpsTime = (value: string) => {
+  if (/^\d{4}$/.test(value)) {
+    return formatRosterTime(value);
+  }
+  const parsed = new Date(value);
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+  return value;
+};
+
+const labelForOperationsStatus = (operations: FlightOperationsResponse) => {
+  if (operations.status === "ok") {
+    return "Live annotation";
+  }
+  if (operations.status === "live_unavailable") {
+    return "Live unavailable";
+  }
+  if (operations.eligibility === "outside_window") {
+    return "Scheduled baseline";
+  }
+  return operations.status.replace(/_/g, " ");
 };
 
 const styles = StyleSheet.create({
@@ -435,6 +891,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "800",
   },
+  opsChipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 8,
+  },
+  opsChip: {
+    alignItems: "center",
+    backgroundColor: `${Colors.light.tint}14`,
+    borderRadius: 999,
+    flexDirection: "row",
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  opsChipPurple: {
+    backgroundColor: "#5B4BAA18",
+  },
+  opsChipWarning: {
+    backgroundColor: `${Colors.light.warning}20`,
+  },
+  opsChipText: {
+    color: Colors.light.tint,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  opsChipTextPurple: {
+    color: "#5B4BAA",
+  },
+  opsChipTextWarning: {
+    color: Colors.light.warning,
+  },
   warningRow: {
     alignItems: "center",
     flexDirection: "row",
@@ -445,5 +933,106 @@ const styles = StyleSheet.create({
     color: Colors.light.warning,
     fontSize: 13,
     fontWeight: "700",
+  },
+  modalContainer: {
+    backgroundColor: Colors.light.background,
+    flex: 1,
+  },
+  modalHeader: {
+    alignItems: "center",
+    backgroundColor: Colors.light.card,
+    borderBottomColor: Colors.light.border,
+    borderBottomWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    padding: 16,
+  },
+  modalTitleGroup: {
+    flex: 1,
+  },
+  modalTitle: {
+    color: Colors.light.text,
+    fontSize: 22,
+    fontWeight: "800",
+  },
+  modalSubtitle: {
+    color: Colors.light.secondary,
+    fontSize: 14,
+    fontWeight: "700",
+    marginTop: 3,
+  },
+  iconButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 40,
+    minWidth: 40,
+  },
+  modalContent: {
+    gap: 14,
+    padding: 20,
+    paddingBottom: 36,
+  },
+  detailSection: {
+    backgroundColor: Colors.light.card,
+    borderColor: Colors.light.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 14,
+  },
+  detailSectionHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  detailSectionTitle: {
+    color: Colors.light.text,
+    fontSize: 17,
+    fontWeight: "800",
+    marginBottom: 10,
+  },
+  refreshButton: {
+    alignItems: "center",
+    borderRadius: 8,
+    justifyContent: "center",
+    minHeight: 36,
+    minWidth: 36,
+  },
+  detailMuted: {
+    color: Colors.light.secondary,
+    fontSize: 13,
+    fontWeight: "600",
+    lineHeight: 18,
+  },
+  loadingRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+  },
+  opsDetailList: {
+    gap: 10,
+  },
+  detailRow: {
+    alignItems: "flex-start",
+    flexDirection: "row",
+    gap: 10,
+  },
+  detailRowContent: {
+    flex: 1,
+  },
+  detailLabel: {
+    color: Colors.light.secondary,
+    fontSize: 12,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  detailValue: {
+    color: Colors.light.text,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  detailValueMuted: {
+    color: Colors.light.secondary,
   },
 });
