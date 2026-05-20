@@ -44,6 +44,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 021 | Frontend tab route cleanup | AFK | frontend | Done | none |
 | 022 | Expo SDK compatibility refresh | AFK | frontend | Done | none |
 | 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Ready | 010 |
+| 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Ready | 015 |
 
 ## Dependency Graph
 
@@ -70,6 +71,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 021 cleans up Expo Router warnings found during first-milestone QA.
 - 022 addresses Expo SDK package compatibility warnings found during first-milestone QA.
 - 023 validates the Pi/Tailscale backend path after local Docker Compose is working.
+- 024 fixes post-flight operations annotation retention and investigates missing departure superscript rendering. It should be handled after or together with 015 because it depends on the operations UI contract.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -120,7 +122,7 @@ Status: 013 and 014 are done; 015 is ready.
 
 Issues 016 and 021 through 023.
 
-Goal: make the Pi/Tailscale setup repeatable, clean up development warnings, and document remaining gaps before broader operational use.
+Goal: make the Pi/Tailscale setup repeatable, clean up development warnings, preserve post-flight operations context, and document remaining gaps before broader operational use.
 
 ## Implementation Rule
 

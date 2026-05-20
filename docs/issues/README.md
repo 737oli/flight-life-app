@@ -33,3 +33,4 @@ Choose the target repository before publishing:
 - [021 - Frontend tab route cleanup](021-frontend-tab-route-cleanup.md)
 - [022 - Expo SDK compatibility refresh](022-expo-sdk-compatibility-refresh.md)
 - [023 - Tailscale Raspberry Pi smoke test](023-tailscale-pi-smoke-test.md)
+- [024 - Operations data retention and departure superscript QA](024-operations-data-retention-and-departure-superscript.md)
