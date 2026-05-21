@@ -2,7 +2,15 @@
 
 ## Status
 
-Ready.
+Done.
+
+## Implementation Notes
+
+- Root cause for disappearing delay annotations: the Home screen only rendered operations chips for the next future flight inside the 90-minute window, and the backend correctly returns scheduled-only data after the flight leaves that window.
+- Fix: the frontend now stores a minimal last-known operations annotation per flight leg when live data is available. It keeps only display fields such as delay minutes/times, stand, CTOT/TSAT, previous arrival, aircraft registration/type, walking start, and capture time; it does not store raw AF/KLM responses.
+- Completed-flight annotations are marked as "Last known" on Home and "Last-known live annotation" in the detail panel.
+- Root cause for missing departure superscript: the detail panel depended on explicit `delay_minutes` and did not derive a departure deviation from scheduled/latest departure timestamps when the explicit delay field was missing.
+- Fix: the detail panel derives departure and arrival deviations from scheduled/latest timestamps and renders the revised time with a small signed superscript when there is a difference.
 
 ## Goal
 

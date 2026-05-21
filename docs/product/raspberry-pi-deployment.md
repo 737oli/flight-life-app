@@ -104,13 +104,21 @@ Do not use `docker compose down -v` unless you intentionally want to delete the 
    curl http://<pi-tailscale-name-or-ip>:8010/health
    ```
 
-9. In the iPhone app Settings screen, set API URL to:
+9. Optionally run the backend smoke helper from another Tailscale-connected machine:
+
+   ```bash
+   scripts/tailscale-smoke-check.sh http://<pi-tailscale-name-or-ip>:8010 rosters/<local-private-roster>.pdf
+   ```
+
+   This checks `/health`, optionally imports a private local roster PDF, and fetches `/schedule/next-7-days`.
+
+10. In the iPhone app Settings screen, set API URL to:
 
    ```text
    http://<pi-tailscale-name-or-ip>:8010
    ```
 
-Then tap Check. Roster import and Home schedule fetches use that stored URL.
+Then tap Check. Roster import and Home schedule fetches use that stored URL. The final Tailscale acceptance check is the real iPhone path: Settings connection check, roster import, then Home refresh over the Pi URL.
 
 ## Operational Notes
 

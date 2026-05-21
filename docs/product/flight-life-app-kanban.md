@@ -43,8 +43,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 020 | Fix parser omission of first two flight legs per duty day | human-in-the-loop | backend | Done | 019 |
 | 021 | Frontend tab route cleanup | AFK | frontend | Done | none |
 | 022 | Expo SDK compatibility refresh | AFK | frontend | Done | none |
-| 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Ready | 010 |
-| 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Ready | none |
+| 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Needs manual validation | 010 |
+| 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Done | none |
 
 ## Dependency Graph
 
@@ -124,7 +124,7 @@ Issues 016 and 021 through 024.
 
 Goal: make the Pi/Tailscale setup repeatable, clean up development warnings, preserve post-flight operations context, and document remaining gaps before broader operational use.
 
-Status: 016, 021, and 022 are done; 023 and 024 are ready.
+Status: 016, 021, 022, and 024 are done; 023 has a smoke-check helper and still needs real Pi/iPhone validation.
 
 ## Implementation Rule
 

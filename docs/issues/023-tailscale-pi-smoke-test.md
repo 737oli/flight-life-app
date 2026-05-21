@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Needs manual validation.
 
 ## Goal
 
@@ -40,3 +40,13 @@ The local import-to-Home flow works, and Docker Compose has been validated local
 - `docker compose up -d --build` on the Pi.
 - `curl http://<pi-tailscale-name-or-ip>:8010/health` from another Tailscale device.
 - Manual iPhone app QA through Settings and Home.
+
+## Tooling Added
+
+Use the helper script from the backend repo to validate the remote backend route from any Tailscale-connected machine:
+
+```bash
+scripts/tailscale-smoke-check.sh http://<pi-tailscale-name-or-ip>:8010 rosters/<local-private-roster>.pdf
+```
+
+The script checks `/health`, optionally imports one local PDF, and checks `/schedule/next-7-days`. The final iPhone Settings/Home validation still needs to be performed manually on the real device.

@@ -6,6 +6,14 @@ import {
   ScheduleDay,
   ScheduleFlight,
 } from "@/services/backendApi";
+import {
+  CachedOperationSnapshot,
+  formatSignedMinutes,
+  getOperationAnnotation,
+  loadOperationSnapshots,
+  OperationAnnotation,
+  saveOperationSnapshot,
+} from "@/services/operationsSnapshotCache";
 import { loadScheduleCache, saveScheduleCache } from "@/services/scheduleCache";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -61,6 +69,7 @@ export default function TodayScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [operationStates, setOperationStates] = useState<Record<number, OperationState>>({});
+  const [operationSnapshots, setOperationSnapshots] = useState<Record<number, CachedOperationSnapshot>>({});
   const [selectedFlight, setSelectedFlight] = useState<FlightSelection | null>(null);
 
   const loadSchedule = useCallback(async (asRefresh = false) => {
@@ -75,6 +84,7 @@ export default function TodayScreen() {
       setSchedule(response);
       setSource(response.status === "empty" ? "empty" : "backend");
       setErrorMessage(null);
+      setOperationSnapshots(await loadOperationSnapshots(flightLegIdsForSchedule(response)));
       if (response.status !== "empty") {
         setCachedSchedule(await saveScheduleCache(response));
       }
@@ -85,10 +95,12 @@ export default function TodayScreen() {
         setSchedule(cache.schedule);
         setSource("cache");
         setErrorMessage("Backend unavailable");
+        setOperationSnapshots(await loadOperationSnapshots(flightLegIdsForSchedule(cache.schedule)));
       } else {
         setSchedule(null);
         setSource("empty");
         setErrorMessage(error instanceof Error ? error.message : "Schedule unavailable");
+        setOperationSnapshots({});
       }
     } finally {
       setLoading(false);
@@ -118,6 +130,7 @@ export default function TodayScreen() {
 
       try {
         const operations = await fetchFlightOperations(flightLegId);
+        const snapshot = await saveOperationSnapshot(operations);
         setOperationStates((current) => ({
           ...current,
           [flightLegId]: {
@@ -126,6 +139,12 @@ export default function TodayScreen() {
             error: null,
           },
         }));
+        if (snapshot) {
+          setOperationSnapshots((current) => ({
+            ...current,
+            [flightLegId]: snapshot,
+          }));
+        }
       } catch (error) {
         setOperationStates((current) => ({
           ...current,
@@ -237,6 +256,7 @@ export default function TodayScreen() {
                 key={day.date}
                 day={day}
                 highlightedFlightLegId={nextOperationalFlight?.flight.flight_leg_id ?? null}
+                operationSnapshots={operationSnapshots}
                 operationStates={operationStates}
                 onFlightPress={handleFlightPress}
               />
@@ -252,6 +272,11 @@ export default function TodayScreen() {
             ? operationStates[selectedFlight.flight.flight_leg_id]
             : undefined
         }
+        operationSnapshot={
+          selectedFlight?.flight.flight_leg_id
+            ? operationSnapshots[selectedFlight.flight.flight_leg_id]
+            : undefined
+        }
         onClose={() => setSelectedFlight(null)}
         onRefresh={() => loadOperations(selectedFlight?.flight.flight_leg_id, true)}
         selection={selectedFlight}
@@ -264,11 +289,13 @@ export default function TodayScreen() {
 function ScheduleDayCard({
   day,
   highlightedFlightLegId,
+  operationSnapshots,
   operationStates,
   onFlightPress,
 }: {
   day: ScheduleDay;
   highlightedFlightLegId: number | null;
+  operationSnapshots: Record<number, CachedOperationSnapshot>;
   operationStates: Record<number, OperationState>;
   onFlightPress: (day: ScheduleDay, flight: ScheduleFlight) => void;
 }) {
@@ -310,7 +337,14 @@ function ScheduleDayCard({
               {day.flights.map((flight) => {
                 const flightLegId = flight.flight_leg_id;
                 const operationState = flightLegId ? operationStates[flightLegId] : undefined;
-                const showOperations = flightLegId === highlightedFlightLegId;
+                const annotation = getOperationAnnotation(
+                  operationState?.data ?? null,
+                  flightLegId ? operationSnapshots[flightLegId] ?? null : null
+                );
+                const showOperations =
+                  flightLegId === highlightedFlightLegId ||
+                  annotation !== null ||
+                  Boolean(operationState?.loading);
 
                 return (
                 <TouchableOpacity
@@ -328,8 +362,8 @@ function ScheduleDayCard({
                     </Text>
                     {showOperations && (
                       <OperationsChips
+                        annotation={annotation}
                         loading={operationState?.loading ?? false}
-                        operations={operationState?.data ?? null}
                       />
                     )}
                   </View>
@@ -359,27 +393,31 @@ function ScheduleDayCard({
 }
 
 function OperationsChips({
+  annotation,
   loading,
-  operations,
 }: {
+  annotation: OperationAnnotation | null;
   loading: boolean;
-  operations: FlightOperationsResponse | null;
 }) {
-  const live = operations?.live ?? null;
+  const isLastKnown = annotation?.source === "last_known";
   const chips = [
-    live?.parking_position ? { label: `Stand ${live.parking_position}`, tone: "neutral" } : null,
-    live?.aircraft_registration
+    isLastKnown ? { label: "Last known", tone: "muted" } : null,
+    annotation?.parking_position ? { label: `Stand ${annotation.parking_position}`, tone: "neutral" } : null,
+    annotation?.aircraft_registration
       ? {
-          label: [live.aircraft_registration, live.aircraft_type].filter(Boolean).join(" "),
+          label: [annotation.aircraft_registration, annotation.aircraft_type].filter(Boolean).join(" "),
           tone: "neutral",
         }
-      : live?.aircraft_type
-        ? { label: live.aircraft_type, tone: "neutral" }
+      : annotation?.aircraft_type
+        ? { label: annotation.aircraft_type, tone: "neutral" }
         : null,
-    live?.ctot ? { label: `CTOT ${formatOpsTime(live.ctot)}`, tone: "purple" } : null,
-    live?.tsat ? { label: `TSAT ${formatOpsTime(live.tsat)}`, tone: "purple" } : null,
-    typeof live?.delay_minutes === "number" && live.delay_minutes !== 0
-      ? { label: `${live.delay_minutes > 0 ? "+" : ""}${live.delay_minutes} min`, tone: "warning" }
+    annotation?.ctot ? { label: `CTOT ${formatOpsTime(annotation.ctot)}`, tone: "purple" } : null,
+    annotation?.tsat ? { label: `TSAT ${formatOpsTime(annotation.tsat)}`, tone: "purple" } : null,
+    typeof annotation?.departure_delay_minutes === "number" && annotation.departure_delay_minutes !== 0
+      ? { label: `Dep ${formatSignedMinutes(annotation.departure_delay_minutes)}`, tone: "warning" }
+      : null,
+    typeof annotation?.arrival_delay_minutes === "number" && annotation.arrival_delay_minutes !== 0
+      ? { label: `Arr ${formatSignedMinutes(annotation.arrival_delay_minutes)}`, tone: "warning" }
       : null,
   ].filter((chip): chip is { label: string; tone: string } => Boolean(chip));
 
@@ -405,6 +443,7 @@ function OperationsChips({
           key={chip.label}
           style={[
             styles.opsChip,
+            chip.tone === "muted" && styles.opsChipMuted,
             chip.tone === "purple" && styles.opsChipPurple,
             chip.tone === "warning" && styles.opsChipWarning,
           ]}
@@ -412,6 +451,7 @@ function OperationsChips({
           <Text
             style={[
               styles.opsChipText,
+              chip.tone === "muted" && styles.opsChipTextMuted,
               chip.tone === "purple" && styles.opsChipTextPurple,
               chip.tone === "warning" && styles.opsChipTextWarning,
             ]}
@@ -426,6 +466,7 @@ function OperationsChips({
 
 function FlightDetailModal({
   canLoadOperations,
+  operationSnapshot,
   operationState,
   onClose,
   onRefresh,
@@ -433,6 +474,7 @@ function FlightDetailModal({
   visible,
 }: {
   canLoadOperations: boolean;
+  operationSnapshot?: CachedOperationSnapshot;
   operationState?: OperationState;
   onClose: () => void;
   onRefresh: () => void;
@@ -442,7 +484,7 @@ function FlightDetailModal({
   const flight = selection?.flight ?? null;
   const day = selection?.day ?? null;
   const operations = operationState?.data ?? null;
-  const live = operations?.live ?? null;
+  const annotation = getOperationAnnotation(operations, operationSnapshot ?? null);
 
   return (
     <Modal animationType="slide" onRequestClose={onClose} presentationStyle="pageSheet" visible={visible}>
@@ -497,18 +539,22 @@ function FlightDetailModal({
               )}
             </View>
 
-            {!canLoadOperations ? (
+            {!canLoadOperations && !annotation ? (
               <Text style={styles.detailMuted}>Backend unavailable. Planned schedule is shown from cache.</Text>
-            ) : operationState?.loading ? (
+            ) : operationState?.loading && !annotation ? (
               <View style={styles.loadingRow}>
                 <ActivityIndicator color={Colors.light.secondary} size="small" />
                 <Text style={styles.detailMuted}>Loading operations...</Text>
               </View>
-            ) : operationState?.error ? (
+            ) : operationState?.error && !annotation ? (
               <Text style={styles.detailMuted}>{operationState.error}</Text>
             ) : operations ? (
               <View style={styles.opsDetailList}>
-                <DetailRow icon={CheckCircle} label="Source" value={labelForOperationsStatus(operations)} />
+                <DetailRow
+                  icon={CheckCircle}
+                  label="Source"
+                  value={labelForOperationsStatus(operations, annotation)}
+                />
                 {operations.walking_start.time && (
                   <DetailRow
                     icon={MapPin}
@@ -516,35 +562,70 @@ function FlightDetailModal({
                     value={`${formatRosterTime(operations.walking_start.time)} (${operations.walking_start.buffer_minutes} min buffer)`}
                   />
                 )}
-                {live?.parking_position ? (
-                  <DetailRow icon={ParkingCircle} label="Stand" value={live.parking_position} />
+                {annotation?.latest_departure || annotation?.scheduled_departure ? (
+                  <DetailTimeRow
+                    icon={Clock}
+                    label="Departure"
+                    plannedValue={formatOpsTime(
+                      annotation.scheduled_departure ?? operations.scheduled.departure_time
+                    )}
+                    revisedValue={annotation.latest_departure ? formatOpsTime(annotation.latest_departure) : null}
+                    deviationMinutes={annotation.departure_delay_minutes}
+                  />
+                ) : null}
+                {annotation?.latest_arrival || annotation?.scheduled_arrival ? (
+                  <DetailTimeRow
+                    icon={Clock}
+                    label="Arrival"
+                    plannedValue={formatOpsTime(
+                      annotation.scheduled_arrival ?? operations.scheduled.arrival_time
+                    )}
+                    revisedValue={annotation.latest_arrival ? formatOpsTime(annotation.latest_arrival) : null}
+                    deviationMinutes={annotation.arrival_delay_minutes}
+                  />
+                ) : null}
+                {annotation?.parking_position ? (
+                  <DetailRow icon={ParkingCircle} label="Stand" value={annotation.parking_position} />
                 ) : operations.eligibility === "eligible" ? (
                   <DetailRow icon={ParkingCircle} label="Stand" value="Stand unknown" muted />
                 ) : null}
-                {live?.aircraft_registration || live?.aircraft_type ? (
+                {annotation?.aircraft_registration || annotation?.aircraft_type ? (
                   <DetailRow
                     icon={Plane}
                     label="Aircraft"
-                    value={[live?.aircraft_registration, live?.aircraft_type].filter(Boolean).join(" ")}
+                    value={[annotation?.aircraft_registration, annotation?.aircraft_type].filter(Boolean).join(" ")}
                   />
                 ) : null}
-                {live?.ctot && <DetailRow icon={Zap} label="CTOT" value={formatOpsTime(live.ctot)} />}
-                {live?.tsat && <DetailRow icon={Zap} label="TSAT" value={formatOpsTime(live.tsat)} />}
-                {typeof live?.delay_minutes === "number" && (
+                {annotation?.ctot && <DetailRow icon={Zap} label="CTOT" value={formatOpsTime(annotation.ctot)} />}
+                {annotation?.tsat && <DetailRow icon={Zap} label="TSAT" value={formatOpsTime(annotation.tsat)} />}
+                {typeof annotation?.departure_delay_minutes === "number" && (
                   <DetailRow
                     icon={Clock}
                     label="Departure delay"
-                    value={`${live.delay_minutes > 0 ? "+" : ""}${live.delay_minutes} min`}
+                    value={formatSignedMinutes(annotation.departure_delay_minutes)}
                   />
                 )}
-                {live?.previous_flight_arrival && (
+                {typeof annotation?.arrival_delay_minutes === "number" && annotation.arrival_delay_minutes !== 0 && (
+                  <DetailRow
+                    icon={Clock}
+                    label="Arrival delay"
+                    value={formatSignedMinutes(annotation.arrival_delay_minutes)}
+                  />
+                )}
+                {annotation?.previous_flight_arrival && (
                   <DetailRow
                     icon={Navigation}
                     label="Previous arrival"
-                    value={formatOpsTime(live.previous_flight_arrival)}
+                    value={formatOpsTime(annotation.previous_flight_arrival)}
                   />
                 )}
-                <OperationsContext operations={operations} />
+                <OperationsContext annotation={annotation} operations={operations} />
+              </View>
+            ) : annotation ? (
+              <View style={styles.opsDetailList}>
+                <DetailRow icon={CheckCircle} label="Source" value={labelForOperationsStatus(null, annotation)} />
+                <CachedAnnotationRows annotation={annotation} />
+                <OperationsContext annotation={annotation} operations={null} />
               </View>
             ) : (
               <Text style={styles.detailMuted}>Live operations are loaded for flights in the 90-minute window.</Text>
@@ -578,12 +659,104 @@ function DetailRow({
   );
 }
 
-function OperationsContext({ operations }: { operations: FlightOperationsResponse }) {
-  if (operations.status === "live_unavailable") {
+function DetailTimeRow({
+  deviationMinutes,
+  icon: Icon,
+  label,
+  plannedValue,
+  revisedValue,
+}: {
+  deviationMinutes: number | null;
+  icon: React.ComponentType<{ color?: string; size?: number }>;
+  label: string;
+  plannedValue: string;
+  revisedValue: string | null;
+}) {
+  const showDeviation = typeof deviationMinutes === "number" && deviationMinutes !== 0;
+  const primaryValue = revisedValue || plannedValue;
+
+  return (
+    <View style={styles.detailRow}>
+      <Icon color={showDeviation ? Colors.light.warning : Colors.light.tint} size={17} />
+      <View style={styles.detailRowContent}>
+        <Text style={styles.detailLabel}>{label}</Text>
+        <Text style={[styles.detailValue, showDeviation && styles.detailValueWarning]}>
+          {primaryValue}
+          {showDeviation && (
+            <Text style={styles.superscript}> {formatSignedMinutes(deviationMinutes)}</Text>
+          )}
+        </Text>
+        {revisedValue && revisedValue !== plannedValue && (
+          <Text style={styles.detailMuted}>Roster {plannedValue}</Text>
+        )}
+      </View>
+    </View>
+  );
+}
+
+function CachedAnnotationRows({ annotation }: { annotation: OperationAnnotation }) {
+  return (
+    <>
+      {annotation.latest_departure || annotation.scheduled_departure ? (
+        <DetailTimeRow
+          icon={Clock}
+          label="Departure"
+          plannedValue={formatOpsTime(annotation.scheduled_departure)}
+          revisedValue={annotation.latest_departure ? formatOpsTime(annotation.latest_departure) : null}
+          deviationMinutes={annotation.departure_delay_minutes}
+        />
+      ) : null}
+      {annotation.latest_arrival || annotation.scheduled_arrival ? (
+        <DetailTimeRow
+          icon={Clock}
+          label="Arrival"
+          plannedValue={formatOpsTime(annotation.scheduled_arrival)}
+          revisedValue={annotation.latest_arrival ? formatOpsTime(annotation.latest_arrival) : null}
+          deviationMinutes={annotation.arrival_delay_minutes}
+        />
+      ) : null}
+      {annotation.parking_position && (
+        <DetailRow icon={ParkingCircle} label="Stand" value={annotation.parking_position} />
+      )}
+      {annotation.aircraft_registration || annotation.aircraft_type ? (
+        <DetailRow
+          icon={Plane}
+          label="Aircraft"
+          value={[annotation.aircraft_registration, annotation.aircraft_type].filter(Boolean).join(" ")}
+        />
+      ) : null}
+      {annotation.previous_flight_arrival && (
+        <DetailRow
+          icon={Navigation}
+          label="Previous arrival"
+          value={formatOpsTime(annotation.previous_flight_arrival)}
+        />
+      )}
+    </>
+  );
+}
+
+function OperationsContext({
+  annotation,
+  operations,
+}: {
+  annotation: OperationAnnotation | null;
+  operations: FlightOperationsResponse | null;
+}) {
+  if (annotation?.source === "last_known") {
+    return (
+      <Text style={styles.detailMuted}>
+        Last-known live annotation{annotation.captured_at ? ` from ${formatCapturedAt(annotation.captured_at)}` : ""}.
+        Roster plan is unchanged.
+      </Text>
+    );
+  }
+
+  if (operations?.status === "live_unavailable") {
     return <Text style={styles.detailMuted}>Live data unavailable. Roster plan is unchanged.</Text>;
   }
 
-  if (operations.eligibility === "outside_window") {
+  if (operations?.eligibility === "outside_window") {
     return (
       <Text style={styles.detailMuted}>
         Live enrichment opens {operations.operations_window_minutes} min before departure.
@@ -591,16 +764,15 @@ function OperationsContext({ operations }: { operations: FlightOperationsRespons
     );
   }
 
-  const live = operations.live;
-  if (!live) {
+  if (!annotation) {
     return null;
   }
 
   const missingFields = [
-    live.parking_position ? null : "stand",
-    live.ctot ? null : "CTOT",
-    live.tsat ? null : "TSAT",
-    live.previous_flight_arrival ? null : "previous arrival",
+    annotation.parking_position ? null : "stand",
+    annotation.ctot ? null : "CTOT",
+    annotation.tsat ? null : "TSAT",
+    annotation.previous_flight_arrival ? null : "previous arrival",
   ].filter((field): field is string => Boolean(field));
 
   if (missingFields.length === 0) {
@@ -684,7 +856,10 @@ const scheduledDepartureAt = (isoDate: string, hhmm: string | null | undefined) 
   return departure;
 };
 
-const formatOpsTime = (value: string) => {
+const formatOpsTime = (value: string | null | undefined) => {
+  if (!value) {
+    return "";
+  }
   if (/^\d{4}$/.test(value)) {
     return formatRosterTime(value);
   }
@@ -698,18 +873,44 @@ const formatOpsTime = (value: string) => {
   return value;
 };
 
-const labelForOperationsStatus = (operations: FlightOperationsResponse) => {
-  if (operations.status === "ok") {
+const formatCapturedAt = (value: string) => {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return value;
+  }
+  return parsed.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const labelForOperationsStatus = (
+  operations: FlightOperationsResponse | null,
+  annotation: OperationAnnotation | null
+) => {
+  if (annotation?.source === "last_known") {
+    return "Last-known live annotation";
+  }
+  if (operations?.status === "ok") {
     return "Live annotation";
   }
-  if (operations.status === "live_unavailable") {
+  if (operations?.status === "live_unavailable") {
     return "Live unavailable";
   }
-  if (operations.eligibility === "outside_window") {
+  if (operations?.eligibility === "outside_window") {
     return "Scheduled baseline";
   }
-  return operations.status.replace(/_/g, " ");
+  return operations?.status.replace(/_/g, " ") ?? "Operations";
 };
+
+const flightLegIdsForSchedule = (schedule: NextSevenDaysSchedule): number[] =>
+  schedule.days.flatMap((day) =>
+    day.flights
+      .map((flight) => flight.flight_leg_id)
+      .filter((flightLegId): flightLegId is number => typeof flightLegId === "number")
+  );
 
 const styles = StyleSheet.create({
   container: {
@@ -906,6 +1107,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
+  opsChipMuted: {
+    backgroundColor: `${Colors.light.secondary}16`,
+  },
   opsChipPurple: {
     backgroundColor: "#5B4BAA18",
   },
@@ -916,6 +1120,9 @@ const styles = StyleSheet.create({
     color: Colors.light.tint,
     fontSize: 11,
     fontWeight: "800",
+  },
+  opsChipTextMuted: {
+    color: Colors.light.secondary,
   },
   opsChipTextPurple: {
     color: "#5B4BAA",
@@ -1032,7 +1239,15 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "700",
   },
+  detailValueWarning: {
+    color: Colors.light.warning,
+  },
   detailValueMuted: {
     color: Colors.light.secondary,
+  },
+  superscript: {
+    fontSize: 10,
+    fontWeight: "800",
+    lineHeight: 12,
   },
 });
