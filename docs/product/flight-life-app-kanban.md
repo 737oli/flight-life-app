@@ -45,6 +45,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 022 | Expo SDK compatibility refresh | AFK | frontend | Done | none |
 | 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Needs manual validation | 010 |
 | 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Done | none |
+| 025 | Frontend stay-vs-home decision integration | AFK | frontend | Done | 012 |
+| 026 | Home next decision summary | AFK | frontend | Ready | 025 |
 
 ## Dependency Graph
 
@@ -72,6 +74,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 022 addresses Expo SDK package compatibility warnings found during first-milestone QA.
 - 023 validates the Pi/Tailscale backend path after local Docker Compose is working.
 - 024 fixes post-flight operations annotation retention and investigates missing departure superscript rendering after the operations UI contract.
+- 025 connects the Decisions tab to the backend deterministic stay-vs-home decision API.
+- 026 surfaces the next actionable decision on Home after the Decisions tab uses real backend data.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -125,6 +129,14 @@ Issues 016 and 021 through 024.
 Goal: make the Pi/Tailscale setup repeatable, clean up development warnings, preserve post-flight operations context, and document remaining gaps before broader operational use.
 
 Status: 016, 021, 022, and 024 are done; 023 has a smoke-check helper and still needs real Pi/iPhone validation.
+
+## Fifth Milestone: Decision Experience
+
+Issues 025 and 026.
+
+Goal: move decision-making out of mock UI and into the daily workflow by showing backend-owned stay-vs-home recommendations in Decisions and surfacing the next actionable decision on Home.
+
+Status: 025 is done; 026 is ready.
 
 ## Implementation Rule
 

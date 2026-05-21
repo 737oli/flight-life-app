@@ -168,6 +168,47 @@ export type FlightOperationsResponse = {
   warnings: string[];
 };
 
+export type StayVsHomeChoice = "go_home" | "stay_outstation";
+export type StayVsHomeRecommendation = StayVsHomeChoice | "needs_review";
+export type StayVsHomeState = "recommended" | "overridden" | "needs_review" | string;
+
+export type StayVsHomeManualOverride = {
+  choice: StayVsHomeChoice;
+  status: "confirmed" | "needs_review" | string;
+};
+
+export type StayVsHomeReasoning = {
+  arrival_station?: string | null;
+  home_base_airport?: string | null;
+  next_duty_date?: string | null;
+  next_duty_start?: string | null;
+  current_duty_end?: string | null;
+  time_between_duties_minutes?: number | null;
+  home_commute_minutes_each_way?: number | null;
+  minimum_useful_home_minutes?: number | null;
+  useful_home_minutes?: number | null;
+  hotel_available?: boolean | null;
+  manual_review_reason?: string | null;
+  [key: string]: unknown;
+};
+
+export type StayVsHomeDecision = {
+  decision_key: string;
+  decision_date: string;
+  decision_type: "stay_vs_home" | string;
+  state: StayVsHomeState;
+  recommendation: StayVsHomeRecommendation;
+  system_recommendation: StayVsHomeRecommendation;
+  manual_override: StayVsHomeManualOverride | null;
+  missing_inputs: string[];
+  reasoning: StayVsHomeReasoning;
+};
+
+export type StayVsHomeDecisionResponse = {
+  status: "ok";
+  decision: StayVsHomeDecision;
+};
+
 export class BackendApiError extends Error {
   status?: number;
   errors: string[];
@@ -361,4 +402,48 @@ export const fetchFlightOperations = async (
   }
 
   return (await response.json()) as FlightOperationsResponse;
+};
+
+export const fetchStayVsHomeDecision = async (
+  decisionDate: string,
+  baseUrl?: string
+): Promise<StayVsHomeDecision> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
+  const response = await fetch(`${normalizedBaseUrl}/decisions/stay-vs-home/${decisionDate}`);
+
+  if (!response.ok) {
+    throw new BackendApiError(`Decision unavailable: HTTP ${response.status}`, {
+      status: response.status,
+      errors: [`HTTP ${response.status}`],
+    });
+  }
+
+  return ((await response.json()) as StayVsHomeDecisionResponse).decision;
+};
+
+export const overrideStayVsHomeDecision = async (
+  decisionDate: string,
+  choice: StayVsHomeChoice,
+  baseUrl?: string
+): Promise<StayVsHomeDecision> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
+  const response = await fetch(`${normalizedBaseUrl}/decisions/stay-vs-home/${decisionDate}/override`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ choice }),
+  });
+  const payload = await response.json();
+
+  if (!response.ok) {
+    const detail = payload?.detail as { errors?: string[] } | undefined;
+    const errors = detail?.errors ?? [payload?.message ?? `HTTP ${response.status}`];
+    throw new BackendApiError(errors[0] ?? "Decision override failed", {
+      status: response.status,
+      errors,
+    });
+  }
+
+  return (payload as StayVsHomeDecisionResponse).decision;
 };

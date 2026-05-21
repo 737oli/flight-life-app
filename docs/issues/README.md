@@ -34,3 +34,5 @@ Choose the target repository before publishing:
 - [022 - Expo SDK compatibility refresh](022-expo-sdk-compatibility-refresh.md)
 - [023 - Tailscale Raspberry Pi smoke test](023-tailscale-pi-smoke-test.md)
 - [024 - Operations data retention and departure superscript QA](024-operations-data-retention-and-departure-superscript.md)
+- [025 - Frontend stay-vs-home decision integration](025-frontend-stay-vs-home-decisions.md)
+- [026 - Home next decision summary](026-home-next-decision-summary.md)
