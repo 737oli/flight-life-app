@@ -46,7 +46,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Needs manual validation | 010 |
 | 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Done | none |
 | 025 | Frontend stay-vs-home decision integration | AFK | frontend | Done | 012 |
-| 026 | Home next decision summary | AFK | frontend | Ready | 025 |
+| 026 | Home next decision summary | AFK | frontend | Blocked | 025, 027 |
+| 027 | Decision manual override action reliability | AFK | frontend | Ready | 025 |
 
 ## Dependency Graph
 
@@ -75,7 +76,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 023 validates the Pi/Tailscale backend path after local Docker Compose is working.
 - 024 fixes post-flight operations annotation retention and investigates missing departure superscript rendering after the operations UI contract.
 - 025 connects the Decisions tab to the backend deterministic stay-vs-home decision API.
-- 026 surfaces the next actionable decision on Home after the Decisions tab uses real backend data.
+- 026 surfaces the next actionable decision on Home after the Decisions tab uses real backend data and manual overrides are verified.
+- 027 fixes the observed Decisions tab manual override action failure before Home depends on that state.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -132,11 +134,11 @@ Status: 016, 021, 022, and 024 are done; 023 has a smoke-check helper and still 
 
 ## Fifth Milestone: Decision Experience
 
-Issues 025 and 026.
+Issues 025 through 027.
 
-Goal: move decision-making out of mock UI and into the daily workflow by showing backend-owned stay-vs-home recommendations in Decisions and surfacing the next actionable decision on Home.
+Goal: move decision-making out of mock UI and into the daily workflow by showing backend-owned stay-vs-home recommendations in Decisions, making manual overrides reliable, and surfacing the next actionable decision on Home.
 
-Status: 025 is done; 026 is ready.
+Status: 025 is done; 027 is ready; 026 is blocked by 027.
 
 ## Implementation Rule
 

@@ -36,3 +36,4 @@ Choose the target repository before publishing:
 - [024 - Operations data retention and departure superscript QA](024-operations-data-retention-and-departure-superscript.md)
 - [025 - Frontend stay-vs-home decision integration](025-frontend-stay-vs-home-decisions.md)
 - [026 - Home next decision summary](026-home-next-decision-summary.md)
+- [027 - Decision manual override action reliability](027-decision-manual-override-action.md)

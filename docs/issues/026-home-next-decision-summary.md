@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Blocked.
 
 ## Goal
 
@@ -14,6 +14,7 @@ The user’s primary daily question is what decision needs attention soon. The D
 
 ## Scope
 
+- Blocked by Issue 027.
 - Fetch or reuse backend stay-vs-home decision data for the next relevant duty.
 - Show a compact Home card for:
   - needs-review decision;
