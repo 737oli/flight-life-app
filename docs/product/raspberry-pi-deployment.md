@@ -36,7 +36,7 @@ The container runs `alembic upgrade head` before starting the API, so a new empt
 
 `docker-compose.yml` also passes optional `AFKLM_API_KEY` and `AFKLM_API_BASE_URL` values from the ignored `.env` file into the container for live operations testing.
 
-Future decision-context provider keys, such as TomTom and OpenAI, must follow the same backend-only `.env` rule. Exact home coordinates should live only in backend local config/database and must not be committed.
+Future decision-context provider keys, such as TomTom and OpenAI, must follow the same backend-only `.env` rule. Exact home coordinates should live only in backend local config/database and must not be committed. For Pi testing, set `FLIGHT_LIFE_HOME_LATITUDE`, `FLIGHT_LIFE_HOME_LONGITUDE`, and `TOMTOM_API_KEY` in the ignored `.env` file only.
 
 ## Local Smoke Test
 
@@ -127,5 +127,5 @@ Then tap Check. Roster import and Home schedule fetches use that stored URL. The
 - Uploaded source PDFs remain in the `flight_life_rosters` Docker volume.
 - The durable app data is the SQLite database in `flight_life_runtime`.
 - API credentials for later AF/KLM integration must be stored in ignored backend env config, never in the frontend.
-- Traffic/OpenAI credentials and exact home coordinates are backend-only decision-context data and must never be stored in frontend code or committed docs.
+- Traffic/OpenAI credentials and exact home coordinates are backend-only decision-context data and must never be stored in frontend code, screenshots, logs, or committed docs.
 - Cloudflare Tunnel remains deferred until authentication/security is designed.

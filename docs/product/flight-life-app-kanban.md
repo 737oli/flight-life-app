@@ -54,8 +54,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 028 | Home inline AMS decision placement | AFK | frontend | Done | 026, 027 |
 | 029 | Schedule date-range API | AFK | backend | Done | 006 |
 | 030 | Mobile calendar agenda tab | AFK | frontend | Done | 028, 029 |
-| 031 | TomTom traffic provider foundation | AFK | backend | Ready | 012 |
-| 032 | Decision context builder for advisor data | AFK | backend | Ready | 012, 031 |
+| 031 | TomTom traffic provider foundation | AFK | backend | Done | 012 |
+| 032 | Decision context builder for advisor data | AFK | backend | Done | 012, 031 |
 | 033 | OpenAI structured decision advisor endpoint | AFK | backend | Ready | 032 |
 | 034 | AI advisor panel in decision detail pane | AFK | frontend | Ready | 028, 033 |
 | 035 | Open-Meteo weather context for decisions | AFK | backend | Ready | 032 |
@@ -178,7 +178,7 @@ Recommended order:
 7. 034 AI advisor panel in decision detail pane.
 8. 035 Open-Meteo weather context for decisions.
 
-Status: 029, 030, and 036 are done. Issues 031 through 035 are ready.
+Status: 029 through 032 and 036 are done. Issues 033 through 035 are ready.
 
 ## Implementation Rule
 

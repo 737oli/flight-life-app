@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Done.
 
 ## Goal
 
@@ -41,4 +41,3 @@ GPT should interpret a compact, backend-owned data package. It should not fetch 
 
 - Run focused backend decision-context tests.
 - Run full backend `pytest`.
-

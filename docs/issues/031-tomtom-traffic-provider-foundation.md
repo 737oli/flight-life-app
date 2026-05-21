@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Done.
 
 ## Goal
 
@@ -41,4 +41,3 @@ Stay-vs-home decisions need realistic travel-time context. The backend should ga
 
 - Run focused backend traffic tests.
 - Run full backend `pytest`.
-
