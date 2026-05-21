@@ -58,7 +58,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 032 | Decision context builder for advisor data | AFK | backend | Done | 012, 031 |
 | 033 | OpenAI structured decision advisor endpoint | AFK | backend | Done | 032 |
 | 034 | AI advisor panel in decision detail pane | AFK | frontend | Done | 028, 033 |
-| 035 | Open-Meteo weather context for decisions | AFK | backend | Ready | 032 |
+| 035 | Open-Meteo weather context for decisions | AFK | backend | Done | 032 |
 | 036 | Document calendar and AI decision architecture | AFK | docs, both repos | Done | none |
 
 ## Dependency Graph
@@ -178,7 +178,7 @@ Recommended order:
 7. 034 AI advisor panel in decision detail pane.
 8. 035 Open-Meteo weather context for decisions.
 
-Status: 029 through 034 and 036 are done. Issue 035 is ready.
+Status: 029 through 036 are done.
 
 ## Implementation Rule
 

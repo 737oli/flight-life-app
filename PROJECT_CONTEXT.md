@@ -152,6 +152,8 @@ Never commit:
 - employee identifiers;
 - screenshots containing real roster data;
 - AF/KLM API credentials;
+- TomTom, OpenAI, and Open-Meteo-related local secrets;
+- exact home coordinates or addresses;
 - `.env` files or local secrets.
 
 Real roster PDFs may be used locally for parser development and manual QA, but committed automated tests must use sanitized synthetic fixtures that mimic the real structure without copying private data.
@@ -160,11 +162,11 @@ Real roster PDFs may be used locally for parser development and manual QA, but c
 
 The frontend currently contains a mobile dashboard shell with mock flight, duty, ground, taxi, rest, off-day, and operations data. It also contains a mock stay-vs-home decisions screen. Some tabs referenced by the layout are not yet implemented.
 
-The backend currently contains a FastAPI app, parser modules for extracting NetLine/Crew roster PDF information, a parser normalization boundary, SQLite persistence with SQLAlchemy/Alembic, a roster upload/import endpoint, date-scoped import merge behavior, next-7-days and date-range schedule APIs, backend-owned preferences, a deterministic stay-vs-home decision engine, backend-only traffic context with TomTom, a compact decision context builder, an on-demand OpenAI structured decision advisor endpoint with short-lived cache, a backend-only AF/KLM FlightStatus client, a 90-minute operations enrichment API, and a Docker Compose deployment shape for Raspberry Pi/Tailscale backend testing.
+The backend currently contains a FastAPI app, parser modules for extracting NetLine/Crew roster PDF information, a parser normalization boundary, SQLite persistence with SQLAlchemy/Alembic, a roster upload/import endpoint, date-scoped import merge behavior, next-7-days and date-range schedule APIs, backend-owned preferences, a deterministic stay-vs-home decision engine, backend-only traffic context with TomTom, backend-only weather context with Open-Meteo summaries, a compact decision context builder, an on-demand OpenAI structured decision advisor endpoint with short-lived cache, a backend-only AF/KLM FlightStatus client, a 90-minute operations enrichment API, and a Docker Compose deployment shape for Raspberry Pi/Tailscale backend testing.
 
 The frontend currently contains a backend-driven Home dashboard, Settings roster import and backend configuration, Decisions integration with manual overrides, an AI advisor panel inside decision surfaces, operations chips/detail panels, and a Calendar tab that renders the full imported roster period as a mobile agenda.
 
-The backend has committed pytest coverage for API smoke behavior, parser characterization, parser normalization, persistence setup, upload/import validation, date-scoped merge behavior, rollback behavior, schedule DTO output, preferences behavior, deterministic stay-vs-home decisions, mocked FlightStatus client normalization, and operations enrichment eligibility/fallback behavior. Frontend test tooling has not been added yet.
+The backend has committed pytest coverage for API smoke behavior, parser characterization, parser normalization, persistence setup, upload/import validation, date-scoped merge behavior, rollback behavior, schedule DTO output, preferences behavior, deterministic stay-vs-home decisions, mocked FlightStatus client normalization, operations enrichment eligibility/fallback behavior, traffic context, weather context, and OpenAI advisor structured-output/cache behavior. Frontend test tooling has not been added yet.
 
 ## Current Planning Documents
 

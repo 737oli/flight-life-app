@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Done.
 
 ## Goal
 
@@ -39,4 +39,3 @@ Weather can affect commute and recovery decisions, but it should remain supporti
 
 - Run focused backend weather-context tests.
 - Run full backend `pytest`.
-
