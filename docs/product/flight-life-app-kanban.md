@@ -48,6 +48,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 025 | Frontend stay-vs-home decision integration | AFK | frontend | Done | 012 |
 | 026 | Home next decision summary | AFK | frontend | Done | 025, 027 |
 | 027 | Decision manual override action reliability | AFK | frontend | Done | 025 |
+| 028 | Home inline AMS decision placement | AFK | frontend | Done | 026, 027 |
 
 ## Dependency Graph
 
@@ -78,6 +79,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 025 connects the Decisions tab to the backend deterministic stay-vs-home decision API.
 - 026 surfaces the next actionable decision on Home after the Decisions tab uses real backend data and manual overrides are verified.
 - 027 fixes the observed Decisions tab manual override action failure before Home depends on that state.
+- 028 moves Home decision prompts into their AMS-ending duty day and keeps outstation-ending duties out of stay-vs-home prompting.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -134,11 +136,11 @@ Status: 016, 021, 022, and 024 are done; 023 has a smoke-check helper and still 
 
 ## Fifth Milestone: Decision Experience
 
-Issues 025 through 027.
+Issues 025 through 028.
 
-Goal: move decision-making out of mock UI and into the daily workflow by showing backend-owned stay-vs-home recommendations in Decisions, making manual overrides reliable, and surfacing the next actionable decision on Home.
+Goal: move decision-making out of mock UI and into the daily workflow by showing backend-owned stay-vs-home recommendations in Decisions, making manual overrides reliable, and surfacing decision prompts in the correct AMS-ending Home duty day.
 
-Status: 025, 026, and 027 are done.
+Status: 025 through 028 are done.
 
 ## Implementation Rule
 

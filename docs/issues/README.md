@@ -37,3 +37,4 @@ Choose the target repository before publishing:
 - [025 - Frontend stay-vs-home decision integration](025-frontend-stay-vs-home-decisions.md)
 - [026 - Home next decision summary](026-home-next-decision-summary.md)
 - [027 - Decision manual override action reliability](027-decision-manual-override-action.md)
+- [028 - Home inline AMS decision placement](028-home-inline-ams-decision-placement.md)

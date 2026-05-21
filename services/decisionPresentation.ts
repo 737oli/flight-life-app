@@ -7,8 +7,24 @@ import type {
 export const isDecisionCandidateDay = (day: ScheduleDay) =>
   day.kind !== "off_day" && day.kind !== "missing_roster" && day.duty !== null;
 
-export const nextDecisionCandidateDay = (days: ScheduleDay[]) =>
-  days.find(isDecisionCandidateDay) ?? null;
+export const isHomeBaseDecisionCandidateDay = (day: ScheduleDay, homeBaseAirport = "AMS") =>
+  day.kind === "flight_duty" &&
+  day.duty !== null &&
+  arrivalStationForDay(day)?.toUpperCase() === homeBaseAirport.toUpperCase();
+
+export const homeBaseDecisionCandidateDays = (days: ScheduleDay[], homeBaseAirport = "AMS") =>
+  days.filter((day) => isHomeBaseDecisionCandidateDay(day, homeBaseAirport));
+
+export const decisionNeedsAttention = (decision: StayVsHomeDecision) =>
+  decision.state === "needs_review" ||
+  decision.recommendation === "needs_review" ||
+  decision.manual_override?.status === "needs_review" ||
+  !decision.manual_override;
+
+export const arrivalStationForDay = (day: ScheduleDay) => {
+  const lastFlight = day.flights.at(-1);
+  return lastFlight?.arr_airport ?? day.duty?.overnight_station ?? null;
+};
 
 export const choiceLabel = (choice: StayVsHomeChoice) =>
   choice === "go_home" ? "Go Home" : "Stay at Outstation";

@@ -11,7 +11,7 @@ import {
   choiceLabel,
   decisionReasoningItems,
   formatDisplayDate,
-  isDecisionCandidateDay,
+  isHomeBaseDecisionCandidateDay,
   recommendationLabel,
 } from "@/services/decisionPresentation";
 import { router, useFocusEffect } from "expo-router";
@@ -70,7 +70,7 @@ export default function DecisionsScreen() {
         return;
       }
 
-      const decisionDays = schedule.days.filter(isDecisionCandidateDay);
+      const decisionDays = schedule.days.filter((day) => isHomeBaseDecisionCandidateDay(day));
       const decisions = await Promise.all(
         decisionDays.map(async (day) => ({
           day,
@@ -169,7 +169,7 @@ export default function DecisionsScreen() {
         ) : loadState === "empty" ? (
           <View style={styles.statePanel}>
             <FileUp color={Colors.light.tint} size={24} />
-            <Text style={styles.stateTitle}>No decision days found</Text>
+            <Text style={styles.stateTitle}>No AMS-ending decision days found</Text>
             <TouchableOpacity
               accessibilityRole="button"
               onPress={() => router.navigate("/settings" as never)}
