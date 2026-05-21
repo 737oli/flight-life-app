@@ -7,6 +7,13 @@ import {
   StayVsHomeChoice,
   StayVsHomeDecision,
 } from "@/services/backendApi";
+import {
+  choiceLabel,
+  decisionReasoningItems,
+  formatDisplayDate,
+  isDecisionCandidateDay,
+  recommendationLabel,
+} from "@/services/decisionPresentation";
 import { router, useFocusEffect } from "expo-router";
 import {
   AlertCircle,
@@ -19,7 +26,6 @@ import {
 import React, { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -42,6 +48,11 @@ export default function DecisionsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [savingDecisionKey, setSavingDecisionKey] = useState<string | null>(null);
+  const [pendingOverride, setPendingOverride] = useState<{
+    choice: StayVsHomeChoice;
+    decisionKey: string;
+  } | null>(null);
+  const [overrideErrors, setOverrideErrors] = useState<Record<string, string>>({});
 
   const loadDecisions = useCallback(async (asRefresh = false) => {
     if (asRefresh) {
@@ -85,37 +96,47 @@ export default function DecisionsScreen() {
     }, [loadDecisions])
   );
 
-  const handleOverride = useCallback(
-    (decision: StayVsHomeDecision, choice: StayVsHomeChoice) => {
-      Alert.alert("Confirm choice", confirmationMessage(choice), [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Confirm",
-          onPress: async () => {
-            setSavingDecisionKey(decision.decision_key);
-            try {
-              const updatedDecision = await overrideStayVsHomeDecision(decision.decision_date, choice);
-              setCards((currentCards) =>
-                currentCards.map((card) =>
-                  card.decision.decision_key === updatedDecision.decision_key
-                    ? { ...card, decision: updatedDecision }
-                    : card
-                )
-              );
-            } catch (error) {
-              Alert.alert(
-                "Decision not saved",
-                error instanceof Error ? error.message : "The backend did not save this choice."
-              );
-            } finally {
-              setSavingDecisionKey(null);
-            }
-          },
-        },
-      ]);
-    },
-    []
-  );
+  const requestOverride = useCallback((decision: StayVsHomeDecision, choice: StayVsHomeChoice) => {
+    setPendingOverride({ choice, decisionKey: decision.decision_key });
+    setOverrideErrors((current) => {
+      const next = { ...current };
+      delete next[decision.decision_key];
+      return next;
+    });
+  }, []);
+
+  const cancelOverride = useCallback(() => {
+    setPendingOverride(null);
+  }, []);
+
+  const confirmOverride = useCallback(async (decision: StayVsHomeDecision, choice: StayVsHomeChoice) => {
+    setSavingDecisionKey(decision.decision_key);
+    setOverrideErrors((current) => {
+      const next = { ...current };
+      delete next[decision.decision_key];
+      return next;
+    });
+
+    try {
+      const updatedDecision = await overrideStayVsHomeDecision(decision.decision_date, choice);
+      setCards((currentCards) =>
+        currentCards.map((card) =>
+          card.decision.decision_key === updatedDecision.decision_key
+            ? { ...card, decision: updatedDecision }
+            : card
+        )
+      );
+      setPendingOverride(null);
+    } catch (error) {
+      setOverrideErrors((current) => ({
+        ...current,
+        [decision.decision_key]:
+          error instanceof Error ? error.message : "The backend did not save this choice.",
+      }));
+    } finally {
+      setSavingDecisionKey(null);
+    }
+  }, []);
 
   const headerSubtitle = useMemo(() => {
     if (loadState === "ready") {
@@ -164,7 +185,15 @@ export default function DecisionsScreen() {
               card={card}
               isSaving={savingDecisionKey === card.decision.decision_key}
               key={card.decision.decision_key}
-              onOverride={handleOverride}
+              onCancelOverride={cancelOverride}
+              onConfirmOverride={confirmOverride}
+              onRequestOverride={requestOverride}
+              overrideError={overrideErrors[card.decision.decision_key] ?? null}
+              pendingChoice={
+                pendingOverride?.decisionKey === card.decision.decision_key
+                  ? pendingOverride.choice
+                  : null
+              }
             />
           ))
         )}
@@ -176,11 +205,19 @@ export default function DecisionsScreen() {
 function DecisionCard({
   card,
   isSaving,
-  onOverride,
+  onCancelOverride,
+  onConfirmOverride,
+  onRequestOverride,
+  overrideError,
+  pendingChoice,
 }: {
   card: DecisionCardModel;
   isSaving: boolean;
-  onOverride: (decision: StayVsHomeDecision, choice: StayVsHomeChoice) => void;
+  onCancelOverride: () => void;
+  onConfirmOverride: (decision: StayVsHomeDecision, choice: StayVsHomeChoice) => void;
+  onRequestOverride: (decision: StayVsHomeDecision, choice: StayVsHomeChoice) => void;
+  overrideError: string | null;
+  pendingChoice: StayVsHomeChoice | null;
 }) {
   const decision = card.decision;
   const displayChoice = decision.recommendation;
@@ -227,24 +264,62 @@ function DecisionCard({
         </View>
       )}
 
-      <View style={styles.actionContainer}>
-        <TouchableOpacity
-          disabled={isSaving}
-          onPress={() => onOverride(decision, "go_home")}
-          style={[styles.actionButton, styles.homeButton, isSaving && styles.disabledButton]}
-        >
-          <Home color="white" size={18} />
-          <Text style={styles.actionButtonText}>Go Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          disabled={isSaving}
-          onPress={() => onOverride(decision, "stay_outstation")}
-          style={[styles.actionButton, styles.stayButton, isSaving && styles.disabledButton]}
-        >
-          <Building color="white" size={18} />
-          <Text style={styles.actionButtonText}>Stay</Text>
-        </TouchableOpacity>
-      </View>
+      {overrideError && (
+        <View style={styles.errorPanel}>
+          <AlertCircle color={Colors.light.danger} size={16} />
+          <Text style={styles.errorText}>{overrideError}</Text>
+        </View>
+      )}
+
+      {pendingChoice ? (
+        <View style={styles.confirmPanel}>
+          <Text style={styles.confirmText}>{confirmationMessage(pendingChoice)}</Text>
+          <View style={styles.confirmActions}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              disabled={isSaving}
+              onPress={onCancelOverride}
+              style={[styles.secondaryActionButton, isSaving && styles.disabledButton]}
+            >
+              <Text style={styles.secondaryActionText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              accessibilityRole="button"
+              disabled={isSaving}
+              onPress={() => onConfirmOverride(decision, pendingChoice)}
+              style={[styles.confirmActionButton, isSaving && styles.disabledButton]}
+            >
+              {isSaving ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <CheckCircle color="#fff" size={17} />
+              )}
+              <Text style={styles.confirmActionText}>{isSaving ? "Saving" : "Confirm"}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.actionContainer}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            disabled={isSaving}
+            onPress={() => onRequestOverride(decision, "go_home")}
+            style={[styles.actionButton, styles.homeButton, isSaving && styles.disabledButton]}
+          >
+            <Home color="white" size={18} />
+            <Text style={styles.actionButtonText}>Go Home</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            disabled={isSaving}
+            onPress={() => onRequestOverride(decision, "stay_outstation")}
+            style={[styles.actionButton, styles.stayButton, isSaving && styles.disabledButton]}
+          >
+            <Building color="white" size={18} />
+            <Text style={styles.actionButtonText}>Stay</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
@@ -317,89 +392,13 @@ function StatePanel({
   );
 }
 
-const isDecisionCandidateDay = (day: ScheduleDay) =>
-  day.kind !== "off_day" && day.kind !== "missing_roster" && day.duty !== null;
-
 const confirmationMessage = (choice: StayVsHomeChoice) =>
   choice === "go_home"
     ? "Save manual choice: go home for this duty?"
     : "Save manual choice: stay at outstation for this duty?";
 
-const recommendationLabel = (decision: StayVsHomeDecision) => {
-  if (decision.recommendation === "needs_review") {
-    return "Needs review";
-  }
-  const prefix = decision.state === "overridden" ? "Your choice" : "Recommended";
-  return `${prefix}: ${choiceLabel(decision.recommendation)}`;
-};
-
-const choiceLabel = (choice: StayVsHomeChoice) =>
-  choice === "go_home" ? "Go Home" : "Stay at Outstation";
-
 const choiceColor = (choice: StayVsHomeDecision["recommendation"]) =>
   choice === "go_home" ? Colors.light.success : Colors.light.tint;
-
-const decisionReasoningItems = (decision: StayVsHomeDecision) => {
-  const reasoning = decision.reasoning;
-  const items: string[] = [];
-
-  if (reasoning.arrival_station) {
-    items.push(`Arrival station: ${reasoning.arrival_station}`);
-  }
-  if (reasoning.next_duty_date && reasoning.next_duty_start) {
-    items.push(`Next duty: ${formatDisplayDate(reasoning.next_duty_date)} at ${formatIsoTime(reasoning.next_duty_start)}`);
-  }
-  if (typeof reasoning.time_between_duties_minutes === "number") {
-    items.push(`Time between duties: ${formatMinutes(reasoning.time_between_duties_minutes)}`);
-  }
-  if (typeof reasoning.useful_home_minutes === "number") {
-    items.push(`Useful time at home: ${formatMinutes(reasoning.useful_home_minutes)}`);
-  }
-  if (typeof reasoning.home_commute_minutes_each_way === "number") {
-    items.push(`Commute assumption: ${reasoning.home_commute_minutes_each_way} min each way`);
-  }
-  if (typeof reasoning.hotel_available === "boolean") {
-    items.push(reasoning.hotel_available ? "Hotel/rest available" : "Hotel/rest unknown");
-  }
-  if (reasoning.manual_review_reason) {
-    items.push(`Manual choice review: ${reasoning.manual_review_reason.replace(/_/g, " ")}`);
-  }
-  decision.missing_inputs.forEach((input) => {
-    items.push(`Missing input: ${input.replace(/_/g, " ")}`);
-  });
-
-  return items;
-};
-
-const formatDisplayDate = (isoDate: string) =>
-  new Date(`${isoDate}T00:00:00`).toLocaleDateString([], {
-    weekday: "long",
-    month: "short",
-    day: "numeric",
-  });
-
-const formatIsoTime = (isoDateTime: string) => {
-  const parsed = new Date(isoDateTime);
-  if (Number.isNaN(parsed.getTime())) {
-    return isoDateTime;
-  }
-  return parsed.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-const formatMinutes = (minutes: number) => {
-  const hours = Math.floor(minutes / 60);
-  const remainder = minutes % 60;
-  if (hours <= 0) {
-    return `${minutes} min`;
-  }
-  if (remainder === 0) {
-    return `${hours}h`;
-  }
-  return `${hours}h ${remainder}m`;
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -583,6 +582,41 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 4,
   },
+  errorPanel: {
+    alignItems: "center",
+    backgroundColor: `${Colors.light.danger}12`,
+    borderColor: `${Colors.light.danger}40`,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 12,
+    padding: 10,
+  },
+  errorText: {
+    color: Colors.light.danger,
+    flex: 1,
+    fontSize: 13,
+    fontWeight: "700",
+    lineHeight: 18,
+  },
+  confirmPanel: {
+    backgroundColor: Colors.light.background,
+    borderColor: Colors.light.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    gap: 12,
+    padding: 12,
+  },
+  confirmText: {
+    color: Colors.light.text,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  confirmActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
   actionContainer: {
     flexDirection: "row",
     gap: 12,
@@ -604,6 +638,36 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.55,
+  },
+  secondaryActionButton: {
+    alignItems: "center",
+    backgroundColor: "#fff",
+    borderColor: Colors.light.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 42,
+  },
+  secondaryActionText: {
+    color: Colors.light.secondary,
+    fontSize: 14,
+    fontWeight: "800",
+  },
+  confirmActionButton: {
+    alignItems: "center",
+    backgroundColor: Colors.light.tint,
+    borderRadius: 8,
+    flex: 1,
+    flexDirection: "row",
+    gap: 7,
+    justifyContent: "center",
+    minHeight: 42,
+  },
+  confirmActionText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "800",
   },
   actionButtonText: {
     color: "white",

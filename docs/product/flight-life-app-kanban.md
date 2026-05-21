@@ -46,8 +46,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Needs manual validation | 010 |
 | 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Done | none |
 | 025 | Frontend stay-vs-home decision integration | AFK | frontend | Done | 012 |
-| 026 | Home next decision summary | AFK | frontend | Blocked | 025, 027 |
-| 027 | Decision manual override action reliability | AFK | frontend | Ready | 025 |
+| 026 | Home next decision summary | AFK | frontend | Done | 025, 027 |
+| 027 | Decision manual override action reliability | AFK | frontend | Done | 025 |
 
 ## Dependency Graph
 
@@ -138,7 +138,7 @@ Issues 025 through 027.
 
 Goal: move decision-making out of mock UI and into the daily workflow by showing backend-owned stay-vs-home recommendations in Decisions, making manual overrides reliable, and surfacing the next actionable decision on Home.
 
-Status: 025 is done; 027 is ready; 026 is blocked by 027.
+Status: 025, 026, and 027 are done.
 
 ## Implementation Rule
 

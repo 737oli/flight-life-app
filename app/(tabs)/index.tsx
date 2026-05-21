@@ -2,10 +2,18 @@ import Colors from "@/constants/Colors";
 import {
   fetchFlightOperations,
   fetchNextSevenDaysSchedule,
+  fetchStayVsHomeDecision,
   FlightOperationsResponse,
   ScheduleDay,
   ScheduleFlight,
+  StayVsHomeDecision,
 } from "@/services/backendApi";
+import {
+  decisionReasoningItems,
+  formatDisplayDate,
+  nextDecisionCandidateDay,
+  recommendationLabel,
+} from "@/services/decisionPresentation";
 import {
   CachedOperationSnapshot,
   formatSignedMinutes,
@@ -20,9 +28,12 @@ import { router } from "expo-router";
 import {
   Activity,
   AlertCircle,
+  Building,
+  ChevronRight,
   CheckCircle,
   Clock,
   FileUp,
+  Home as HomeIcon,
   MapPin,
   Navigation,
   ParkingCircle,
@@ -61,6 +72,11 @@ type OperationState = {
   error: string | null;
 };
 
+type DecisionSummary = {
+  day: ScheduleDay;
+  decision: StayVsHomeDecision;
+};
+
 export default function TodayScreen() {
   const [schedule, setSchedule] = useState<NextSevenDaysSchedule | null>(null);
   const [cachedSchedule, setCachedSchedule] = useState<CachedSchedule | null>(null);
@@ -71,6 +87,32 @@ export default function TodayScreen() {
   const [operationStates, setOperationStates] = useState<Record<number, OperationState>>({});
   const [operationSnapshots, setOperationSnapshots] = useState<Record<number, CachedOperationSnapshot>>({});
   const [selectedFlight, setSelectedFlight] = useState<FlightSelection | null>(null);
+  const [decisionSummary, setDecisionSummary] = useState<DecisionSummary | null>(null);
+  const [decisionSummaryLoading, setDecisionSummaryLoading] = useState(false);
+  const [decisionSummaryError, setDecisionSummaryError] = useState<string | null>(null);
+
+  const loadDecisionSummary = useCallback(async (nextSchedule: NextSevenDaysSchedule) => {
+    const decisionDay = nextDecisionCandidateDay(nextSchedule.days);
+    if (!decisionDay) {
+      setDecisionSummary(null);
+      setDecisionSummaryError(null);
+      setDecisionSummaryLoading(false);
+      return;
+    }
+
+    setDecisionSummaryLoading(true);
+    setDecisionSummaryError(null);
+    setDecisionSummary(null);
+    try {
+      const decision = await fetchStayVsHomeDecision(decisionDay.date);
+      setDecisionSummary({ day: decisionDay, decision });
+    } catch (error) {
+      setDecisionSummary(null);
+      setDecisionSummaryError(error instanceof Error ? error.message : "Decision unavailable");
+    } finally {
+      setDecisionSummaryLoading(false);
+    }
+  }, []);
 
   const loadSchedule = useCallback(async (asRefresh = false) => {
     if (asRefresh) {
@@ -87,6 +129,11 @@ export default function TodayScreen() {
       setOperationSnapshots(await loadOperationSnapshots(flightLegIdsForSchedule(response)));
       if (response.status !== "empty") {
         setCachedSchedule(await saveScheduleCache(response));
+        void loadDecisionSummary(response);
+      } else {
+        setDecisionSummary(null);
+        setDecisionSummaryError(null);
+        setDecisionSummaryLoading(false);
       }
     } catch (error) {
       const cache = await loadScheduleCache();
@@ -96,17 +143,23 @@ export default function TodayScreen() {
         setSource("cache");
         setErrorMessage("Backend unavailable");
         setOperationSnapshots(await loadOperationSnapshots(flightLegIdsForSchedule(cache.schedule)));
+        setDecisionSummary(null);
+        setDecisionSummaryError(null);
+        setDecisionSummaryLoading(false);
       } else {
         setSchedule(null);
         setSource("empty");
         setErrorMessage(error instanceof Error ? error.message : "Schedule unavailable");
         setOperationSnapshots({});
+        setDecisionSummary(null);
+        setDecisionSummaryError(null);
+        setDecisionSummaryLoading(false);
       }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [loadDecisionSummary]);
 
   const loadOperations = useCallback(
     async (flightLegId: number | undefined, force = false) => {
@@ -243,25 +296,35 @@ export default function TodayScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Next 7 Days</Text>
-              <Text style={styles.sectionMeta}>
-                {schedule.start_date} to {schedule.end_date}
-              </Text>
-            </View>
-
-            {schedule.days.map((day) => (
-              <ScheduleDayCard
-                key={day.date}
-                day={day}
-                highlightedFlightLegId={nextOperationalFlight?.flight.flight_leg_id ?? null}
-                operationSnapshots={operationSnapshots}
-                operationStates={operationStates}
-                onFlightPress={handleFlightPress}
+          <>
+            {source === "backend" && (
+              <DecisionSummaryCard
+                error={decisionSummaryError}
+                loading={decisionSummaryLoading}
+                summary={decisionSummary}
               />
-            ))}
-          </View>
+            )}
+
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Next 7 Days</Text>
+                <Text style={styles.sectionMeta}>
+                  {schedule.start_date} to {schedule.end_date}
+                </Text>
+              </View>
+
+              {schedule.days.map((day) => (
+                <ScheduleDayCard
+                  key={day.date}
+                  day={day}
+                  highlightedFlightLegId={nextOperationalFlight?.flight.flight_leg_id ?? null}
+                  operationSnapshots={operationSnapshots}
+                  operationStates={operationStates}
+                  onFlightPress={handleFlightPress}
+                />
+              ))}
+            </View>
+          </>
         )}
       </ScrollView>
 
@@ -283,6 +346,121 @@ export default function TodayScreen() {
         visible={selectedFlight !== null}
       />
     </SafeAreaView>
+  );
+}
+
+function DecisionSummaryCard({
+  error,
+  loading,
+  summary,
+}: {
+  error: string | null;
+  loading: boolean;
+  summary: DecisionSummary | null;
+}) {
+  if (!summary && !loading && !error) {
+    return null;
+  }
+
+  if (loading && !summary) {
+    return (
+      <View style={styles.decisionSummaryCard}>
+        <ActivityIndicator color={Colors.light.tint} size="small" />
+        <Text style={styles.decisionSummaryLoadingText}>Checking next decision</Text>
+      </View>
+    );
+  }
+
+  if (error && !summary) {
+    return (
+      <TouchableOpacity
+        accessibilityRole="button"
+        onPress={() => router.navigate("/decisions" as never)}
+        style={styles.decisionSummaryCard}
+      >
+        <AlertCircle color={Colors.light.warning} size={20} />
+        <View style={styles.decisionSummaryMain}>
+          <Text style={styles.decisionSummaryEyebrow}>Next Decision</Text>
+          <Text style={styles.decisionSummaryTitle}>Decision unavailable</Text>
+          <Text style={styles.decisionSummaryMeta}>{error}</Text>
+        </View>
+        <ChevronRight color={Colors.light.secondary} size={20} />
+      </TouchableOpacity>
+    );
+  }
+
+  if (!summary) {
+    return null;
+  }
+
+  const decision = summary.decision;
+  const isNeedsReview = decision.state === "needs_review" || decision.recommendation === "needs_review";
+  const Icon = decisionIcon(decision.recommendation);
+  const reasoning = decisionReasoningItems(decision).slice(0, 3);
+
+  return (
+    <TouchableOpacity
+      accessibilityRole="button"
+      onPress={() => router.navigate("/decisions" as never)}
+      style={[
+        styles.decisionSummaryCard,
+        isNeedsReview && styles.decisionSummaryCardReview,
+      ]}
+    >
+      {isNeedsReview ? (
+        <AlertCircle color={Colors.light.warning} size={22} />
+      ) : (
+        <Icon color={decisionColor(decision.recommendation)} size={22} />
+      )}
+      <View style={styles.decisionSummaryMain}>
+        <View style={styles.decisionSummaryHeader}>
+          <Text style={styles.decisionSummaryEyebrow}>Next Decision</Text>
+          <DecisionSummaryBadge decision={decision} />
+        </View>
+        <Text
+          style={[
+            styles.decisionSummaryTitle,
+            { color: isNeedsReview ? Colors.light.warning : decisionColor(decision.recommendation) },
+          ]}
+        >
+          {recommendationLabel(decision)}
+        </Text>
+        <Text style={styles.decisionSummaryMeta}>
+          {formatDisplayDate(summary.day.date)}
+          {summary.day.duty?.start ? ` from ${formatRosterTime(summary.day.duty.start)}` : ""}
+        </Text>
+        {reasoning.map((item) => (
+          <Text key={item} style={styles.decisionSummaryReason}>
+            {item}
+          </Text>
+        ))}
+      </View>
+      <ChevronRight color={Colors.light.secondary} size={20} />
+    </TouchableOpacity>
+  );
+}
+
+function DecisionSummaryBadge({ decision }: { decision: StayVsHomeDecision }) {
+  if (decision.state === "overridden") {
+    return (
+      <View style={styles.decisionSummaryBadgeConfirmed}>
+        <Text style={styles.decisionSummaryBadgeConfirmedText}>Overridden</Text>
+      </View>
+    );
+  }
+
+  if (decision.state === "needs_review" || decision.recommendation === "needs_review") {
+    return (
+      <View style={styles.decisionSummaryBadgeReview}>
+        <Text style={styles.decisionSummaryBadgeReviewText}>Review</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.decisionSummaryBadge}>
+      <Text style={styles.decisionSummaryBadgeText}>Recommended</Text>
+    </View>
   );
 }
 
@@ -818,6 +996,16 @@ const labelForKind = (kind: string) => {
   }
 };
 
+const decisionIcon = (choice: StayVsHomeDecision["recommendation"]) => {
+  if (choice === "go_home") {
+    return HomeIcon;
+  }
+  return Building;
+};
+
+const decisionColor = (choice: StayVsHomeDecision["recommendation"]) =>
+  choice === "go_home" ? Colors.light.success : Colors.light.tint;
+
 const findNextOperationalFlight = (days: ScheduleDay[]): FlightSelection | null => {
   const now = Date.now();
   const candidates = days
@@ -985,6 +1173,94 @@ const styles = StyleSheet.create({
   section: {
     paddingHorizontal: 20,
     paddingTop: 12,
+  },
+  decisionSummaryCard: {
+    alignItems: "flex-start",
+    backgroundColor: Colors.light.card,
+    borderColor: Colors.light.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 12,
+    marginHorizontal: 20,
+    marginTop: 12,
+    padding: 14,
+  },
+  decisionSummaryCardReview: {
+    backgroundColor: `${Colors.light.warning}10`,
+    borderColor: `${Colors.light.warning}45`,
+  },
+  decisionSummaryMain: {
+    flex: 1,
+  },
+  decisionSummaryHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 8,
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  decisionSummaryEyebrow: {
+    color: Colors.light.secondary,
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
+  },
+  decisionSummaryTitle: {
+    color: Colors.light.text,
+    fontSize: 17,
+    fontWeight: "800",
+  },
+  decisionSummaryMeta: {
+    color: Colors.light.secondary,
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 3,
+  },
+  decisionSummaryReason: {
+    color: Colors.light.secondary,
+    fontSize: 12,
+    fontWeight: "600",
+    lineHeight: 17,
+    marginTop: 4,
+  },
+  decisionSummaryLoadingText: {
+    color: Colors.light.secondary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  decisionSummaryBadge: {
+    backgroundColor: `${Colors.light.tint}16`,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  decisionSummaryBadgeText: {
+    color: Colors.light.tint,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  decisionSummaryBadgeConfirmed: {
+    backgroundColor: `${Colors.light.success}18`,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  decisionSummaryBadgeConfirmedText: {
+    color: Colors.light.success,
+    fontSize: 11,
+    fontWeight: "800",
+  },
+  decisionSummaryBadgeReview: {
+    backgroundColor: `${Colors.light.warning}20`,
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+  },
+  decisionSummaryBadgeReviewText: {
+    color: Colors.light.warning,
+    fontSize: 11,
+    fontWeight: "800",
   },
   sectionHeader: {
     alignItems: "flex-start",

@@ -2,7 +2,7 @@
 
 ## Status
 
-Blocked.
+Done.
 
 ## Goal
 
@@ -14,7 +14,6 @@ The user’s primary daily question is what decision needs attention soon. The D
 
 ## Scope
 
-- Blocked by Issue 027.
 - Fetch or reuse backend stay-vs-home decision data for the next relevant duty.
 - Show a compact Home card for:
   - needs-review decision;
@@ -42,3 +41,9 @@ The user’s primary daily question is what decision needs attention soon. The D
 - Run frontend TypeScript compile.
 - Run frontend lint.
 - Manually smoke test Home and Decisions against the local backend.
+
+## Implementation Notes
+
+- Home now shows a compact next-decision card above the next-7-days roster when backend data is available.
+- The card links through to Decisions and preserves the roster list unchanged.
+- Backend-unavailable cached schedule mode does not pretend decision data is available.

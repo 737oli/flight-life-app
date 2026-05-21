@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Done.
 
 ## Goal
 
@@ -44,3 +44,9 @@ Manual QA found that the manual override button from the Decisions test flow doe
 - Run frontend lint.
 - Smoke test Decisions against the local backend.
 - Specifically click/tap both override buttons and verify persisted state after refresh.
+
+## Implementation Notes
+
+- Replaced the platform-dependent alert confirmation with an inline confirmation panel.
+- The Decisions card now shows visible save state and inline save errors.
+- Both backend override choices were verified through the local API and persisted after readback.
