@@ -1,4 +1,5 @@
 import Colors from "@/constants/Colors";
+import { AiAdvisorPanel } from "@/components/AiAdvisorPanel";
 import {
   fetchFlightOperations,
   fetchNextSevenDaysSchedule,
@@ -740,6 +741,8 @@ function DecisionDetailModal({
               </Text>
             ))}
           </View>
+
+          <AiAdvisorPanel decision={decision} />
 
           <TouchableOpacity
             accessibilityRole="button"

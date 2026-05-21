@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Done.
 
 ## Goal
 
@@ -41,4 +41,3 @@ AI should be tied to a specific stay-vs-home decision. It should not become a se
 
 - Run frontend lint/type checks available in the repo.
 - Manual Expo/iPhone test for analyze, cache display, retry/error, and disagreement states.
-

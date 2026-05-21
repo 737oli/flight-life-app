@@ -211,6 +211,38 @@ export type StayVsHomeDecisionResponse = {
   decision: StayVsHomeDecision;
 };
 
+export type AiAdvisorResult = {
+  recommendation: StayVsHomeRecommendation;
+  confidence: "low" | "medium" | "high" | string;
+  summary: string;
+  reasoning_points: string[];
+  risks: string[];
+  missing_inputs: string[];
+  facts_used: string[];
+};
+
+export type AiAdvisorResponse = {
+  status: "ok" | "unavailable" | "not_applicable" | string;
+  decision_date: string;
+  context_hash?: string | null;
+  cache_status?: "hit" | "miss" | string;
+  provider?: string;
+  model?: string;
+  created_at?: string;
+  expires_at?: string;
+  usage?: {
+    input_tokens?: number | null;
+    output_tokens?: number | null;
+    total_tokens?: number | null;
+  };
+  rule_recommendation?: StayVsHomeRecommendation | null;
+  advisor: AiAdvisorResult | null;
+  agreement?: "agrees" | "disagrees" | "not_comparable" | string;
+  decision_state?: "advisor_ready" | "advisor_unavailable" | "needs_review" | string;
+  warnings: string[];
+  reason?: string;
+};
+
 export class BackendApiError extends Error {
   status?: number;
   errors: string[];
@@ -468,4 +500,26 @@ export const overrideStayVsHomeDecision = async (
   }
 
   return (payload as StayVsHomeDecisionResponse).decision;
+};
+
+export const fetchStayVsHomeAdvisor = async (
+  decisionDate: string,
+  baseUrl?: string
+): Promise<AiAdvisorResponse> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
+  const response = await fetch(`${normalizedBaseUrl}/decisions/stay-vs-home/${decisionDate}/advisor`, {
+    method: "POST",
+  });
+  const payload = await response.json();
+
+  if (!response.ok) {
+    const detail = payload?.detail as { errors?: string[] } | undefined;
+    const errors = detail?.errors ?? [payload?.message ?? `HTTP ${response.status}`];
+    throw new BackendApiError(errors[0] ?? "AI advisor unavailable", {
+      status: response.status,
+      errors,
+    });
+  }
+
+  return payload as AiAdvisorResponse;
 };

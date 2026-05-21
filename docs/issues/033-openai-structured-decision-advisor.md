@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Done.
 
 ## Goal
 
@@ -45,4 +45,3 @@ The deterministic backend recommendation remains the official app result. GPT sh
 
 - Run focused backend AI advisor tests with mocked OpenAI calls.
 - Run full backend `pytest`.
-

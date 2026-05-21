@@ -1,4 +1,5 @@
 import Colors from "@/constants/Colors";
+import { AiAdvisorPanel } from "@/components/AiAdvisorPanel";
 import {
   fetchNextSevenDaysSchedule,
   fetchStayVsHomeDecision,
@@ -270,6 +271,8 @@ function DecisionCard({
           <Text style={styles.errorText}>{overrideError}</Text>
         </View>
       )}
+
+      <AiAdvisorPanel decision={decision} />
 
       {pendingChoice ? (
         <View style={styles.confirmPanel}>
