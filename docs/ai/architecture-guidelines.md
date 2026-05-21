@@ -4,7 +4,7 @@
 
 Preserve trust by keeping source-of-truth boundaries explicit.
 
-The roster PDF defines the planned schedule. Live operations data annotates near-term flights. The frontend presents state and caches fallback data, but the backend owns parsing, persistence, merge rules, credentials, live API calls, preferences, and decisions.
+The roster PDF defines the planned schedule. Live operations data annotates near-term flights. Traffic, weather, and AI advisor data add decision context only. The frontend presents state and caches fallback data, but the backend owns parsing, persistence, merge rules, credentials, live API calls, traffic/weather calls, OpenAI calls, preferences, deterministic decisions, and advisor context.
 
 ## Deep Modules
 
@@ -38,6 +38,12 @@ Operations services own AF/KLM API calls, credential use, response normalization
 
 Decision services own stay-vs-home recommendations, reasoning, manual overrides, and "needs review" states.
 
+Deterministic backend recommendations remain authoritative. GPT may provide an on-demand advisor result, but it cannot silently replace or override the backend rule result.
+
+### Calendar Boundary
+
+Schedule services own date-range schedule DTOs for the full roster agenda. The frontend calendar v1 should render a mobile agenda over a backend-provided date range rather than constructing its own roster range or month-grid logic.
+
 ### Frontend Boundary
 
 Frontend code owns mobile presentation, Settings upload flow, Home rendering, detail views, and read-only fallback cache. It should not contain AF/KLM credentials or backend decision logic.
@@ -58,9 +64,10 @@ Frontend code owns mobile presentation, Settings upload flow, Home rendering, de
 At external boundaries:
 
 - isolate AF/KLM API details behind backend adapters;
+- isolate TomTom, Open-Meteo, and OpenAI details behind backend adapters/services;
 - normalize external payloads into project-owned DTOs;
 - mock external calls in tests;
 - keep secrets in ignored backend env files;
+- keep exact home coordinates in backend-only local config/database and never commit them;
 - use Tailscale for v1 remote access to the Raspberry Pi backend;
 - defer public Cloudflare exposure until authentication/security are designed.
-

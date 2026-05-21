@@ -1,6 +1,6 @@
 import Colors from '@/constants/Colors';
 import { Tabs } from 'expo-router';
-import { Calendar, Home, Settings } from "lucide-react-native";
+import { CalendarDays, CheckSquare, Home, Settings } from "lucide-react-native";
 import React from 'react';
 
 export default function TabLayout() {
@@ -28,7 +28,14 @@ export default function TabLayout() {
         name="decisions"
         options={{
           title: "Decisions",
-          tabBarIcon: ({ color }) => <Calendar color={color} size={24} />,
+          tabBarIcon: ({ color }) => <CheckSquare color={color} size={24} />,
+        }}
+      />
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          title: "Calendar",
+          tabBarIcon: ({ color }) => <CalendarDays color={color} size={24} />,
         }}
       />
       <Tabs.Screen

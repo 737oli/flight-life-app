@@ -111,7 +111,7 @@ export type LastImportMetadata = {
   summary: RosterImportSummary;
 };
 
-export type NextSevenDaysSchedule = {
+export type ScheduleResponse = {
   status: "ok" | "empty" | string;
   generated_at: string;
   start_date: string;
@@ -119,6 +119,8 @@ export type NextSevenDaysSchedule = {
   last_import: LastImportMetadata | null;
   days: ScheduleDay[];
 };
+
+export type NextSevenDaysSchedule = ScheduleResponse;
 
 export type OperationsScheduledFlight = {
   flight_number: string;
@@ -385,6 +387,26 @@ export const fetchNextSevenDaysSchedule = async (
   }
 
   return (await response.json()) as NextSevenDaysSchedule;
+};
+
+export const fetchScheduleRange = async (
+  options: { startDate: string; endDate: string; baseUrl?: string }
+): Promise<ScheduleResponse> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(options.baseUrl || await getConfiguredBackendBaseUrl());
+  const params = new URLSearchParams();
+  params.set("start_date", options.startDate);
+  params.set("end_date", options.endDate);
+
+  const response = await fetch(`${normalizedBaseUrl}/schedule?${params.toString()}`);
+
+  if (!response.ok) {
+    throw new BackendApiError(`Schedule unavailable: HTTP ${response.status}`, {
+      status: response.status,
+      errors: [`HTTP ${response.status}`],
+    });
+  }
+
+  return (await response.json()) as ScheduleResponse;
 };
 
 export const fetchFlightOperations = async (

@@ -132,3 +132,58 @@ Decision: Real roster PDFs may be used for local parser development and manual Q
 
 Rationale: Real roster data can contain private personal, crew, and operational details. Parser correctness needs real-layout validation, but project artifacts must remain sanitized.
 
+## ADR-017: Use A Mobile Agenda For Calendar V1
+
+Status: Accepted
+
+Decision: The full roster calendar v1 will be a mobile agenda backed by a backend date-range schedule endpoint, not a month grid.
+
+Rationale: Roster data is duty-based and dense. A month grid becomes cramped on iPhone and hides flight sequences, hotels, warnings, and decision markers. A mobile agenda preserves trust by showing every day in order.
+
+## ADR-018: Keep External Decision Context Backend-Owned
+
+Status: Accepted
+
+Decision: The backend gathers traffic, weather, roster, preference, deterministic decision, and missing-input facts for stay-vs-home advisor context. GPT receives a compact structured context and does not fetch its own external data.
+
+Rationale: Backend ownership keeps credentials private, makes provider behavior testable, and prevents source-of-truth confusion.
+
+## ADR-019: Use TomTom For Traffic V1
+
+Status: Accepted
+
+Decision: Traffic v1 uses a backend-only TomTom provider for expected travel times on AMS-to-home and home-to-AMS stay-vs-home routes.
+
+Rationale: Stay-vs-home decisions need realistic expected travel times. TomTom provides an official routing API with traffic-aware context and a suitable cost/risk profile for the first implementation.
+
+## ADR-020: Store Exact Home Coordinates Backend-Side Only
+
+Status: Accepted
+
+Decision: Exact home coordinates may be stored in backend local config/database for route calculations. They must never be committed and should not be sent raw to GPT unless a later feature explicitly requires it.
+
+Rationale: Exact coordinates improve travel-time quality but are privacy-sensitive. The backend can use them while exposing only derived travel facts to the rest of the system.
+
+## ADR-021: Use GPT As An On-Demand Advisor Only
+
+Status: Accepted
+
+Decision: GPT/OpenAI is called only when the user explicitly requests analysis for a specific decision. The deterministic backend recommendation remains authoritative. GPT cannot override it silently.
+
+Rationale: On-demand calls control cost, keep the core app usable without AI, and preserve trust in deterministic decision rules. GPT is useful for interpreting context, not replacing the app source of truth.
+
+## ADR-022: Cache AI Advisor Results Short-Term By Context Hash
+
+Status: Accepted
+
+Decision: AI advisor results use a short-lived backend cache keyed by decision/context hash. Store provider/model, created time, context hash, token/cost estimate if available, structured advisor result, and expiry time. Do not permanently store raw prompts or full transcripts.
+
+Rationale: Reopening the same decision should not spend money again, but raw AI prompt history is not needed for v1 and increases privacy burden.
+
+## ADR-023: Use Open-Meteo As Secondary Weather Context
+
+Status: Accepted
+
+Decision: Weather v1 uses Open-Meteo for decision-relevant forecast context around AMS, the home area, and next-duty windows. The backend summarizes weather before it is used by the advisor.
+
+Rationale: Weather can affect commute and recovery decisions, but it is secondary context. Open-Meteo keeps early development simple because it can be used without adding another secret.

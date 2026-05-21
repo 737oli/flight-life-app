@@ -15,7 +15,11 @@ Prioritize tests where a mistake would break trust:
 - manual decision preservation and invalidation;
 - schedule DTO/API output;
 - frontend mapping from backend DTOs to the 7-day dashboard;
+- frontend mapping from backend date-range DTOs to the full mobile agenda;
 - 90-minute operations-window eligibility;
+- deterministic decision context assembly;
+- traffic/weather provider fallback behavior;
+- OpenAI advisor structured-output validation and cache behavior;
 - timezone and daylight-saving edge cases.
 
 ## Real PDFs And Fixtures
@@ -52,6 +56,10 @@ Codex should:
 - Schedule API returns exactly 7 calendar days for Home.
 - Preferences and decision rules.
 - Operations enrichment with frozen time and mocked AF/KLM responses.
+- Date-range schedule API output.
+- Traffic context with mocked TomTom responses.
+- Weather context with mocked Open-Meteo responses.
+- AI advisor endpoint with mocked OpenAI responses.
 
 ## First Frontend Test Targets
 
@@ -64,6 +72,9 @@ When frontend test tooling is added, prioritize:
 - compressed off-day rendering;
 - Settings upload success/warning/error states;
 - operations chips and detail panel behavior.
+- full agenda rendering from the backend date-range schedule endpoint;
+- decision markers in the agenda;
+- on-demand AI advisor loading, unavailable, cached, and disagreement states once the backend endpoint exists.
 
 ## Test Quality
 
@@ -77,4 +88,3 @@ Good tests are:
 - built around user-visible or contract-visible behavior.
 
 Avoid tests that only verify mocks, duplicate the implementation, or depend on live AF/KLM calls.
-

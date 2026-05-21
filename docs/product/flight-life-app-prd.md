@@ -28,6 +28,13 @@ The first implementation milestone is an end-to-end import and dashboard slice:
 8. Home shows every day in the next 7 days from backend schedule data.
 9. Frontend caches the last successful 7-day response as read-only fallback data.
 
+The next increment adds:
+
+- a full imported-roster mobile agenda;
+- backend traffic context for stay-vs-home decisions;
+- backend weather context as secondary support;
+- an on-demand GPT advisor that interprets backend-owned facts without replacing the deterministic recommendation.
+
 ## 3. Product Rules
 
 ### Planned Schedule
@@ -75,6 +82,32 @@ Version 1 should use deterministic rules, not AI/ML scoring. Inputs include:
 The backend owns the decision engine and returns a recommendation plus reasoning. The frontend owns presentation, confirmation, overrides, and later preference editing.
 
 Decision states should include "needs review" when inputs are missing or weak.
+
+AI advisor v1 is not an official decision engine. The backend rule result remains authoritative. GPT can add structured context only after the user taps an analysis action inside a decision detail pane. If GPT disagrees with the deterministic result, the app should show a disagreement or needs-review state instead of silently trusting GPT.
+
+### Calendar Agenda
+
+Calendar v1 should be a mobile agenda, not a month grid.
+
+Acceptance criteria:
+
+- The agenda uses a backend date-range schedule endpoint.
+- The agenda shows the full imported roster period.
+- Days are grouped by week and ordered by date.
+- Every day is visible, including compressed off days.
+- AMS-ending flight days may show small decision status markers.
+- AI advisor content is not shown directly in agenda rows.
+
+### Traffic And Weather Decision Context
+
+Traffic v1 should use a backend-only TomTom provider for expected travel times on stay-vs-home routes only:
+
+- AMS to home after an AMS-ending duty;
+- home to AMS before the next AMS-starting duty.
+
+Traffic should be calculated for the relevant planned decision window. Exact home coordinates are stored only in backend local config/database, never committed, and not sent raw to GPT unless explicitly required later.
+
+Weather v1 should use Open-Meteo as secondary context. The backend should summarize decision-relevant weather windows before passing facts into decision context or GPT.
 
 ## 4. User Stories
 
@@ -147,6 +180,12 @@ Acceptance criteria:
 - Settings owns roster upload/import and backend connection state.
 - Backend owns parser, persistence, import merge, live API integration, credentials, preferences, and decisions.
 - Frontend owns mobile UI, upload flow, schedule presentation, and read-only fallback cache.
+- Calendar v1 is a mobile agenda backed by a date-range schedule endpoint.
+- Backend owns traffic/weather provider calls and OpenAI calls.
+- TomTom is the first traffic provider for stay-vs-home expected travel times.
+- Open-Meteo is the first weather provider for secondary decision context.
+- GPT is on-demand advisor context only and cannot override deterministic backend recommendations.
+- AI advisor responses use a short-lived backend cache keyed by decision/context hash.
 - SQLite is planned backend persistence.
 - SQLAlchemy and Alembic should be used from the start.
 - Raspberry Pi plus Docker Compose is the v1 deployment target.
@@ -177,6 +216,7 @@ First test priorities:
 ## 7. Out Of Scope For The First Milestone
 
 - Full calendar/month view.
+- Month-grid calendar UI.
 - Roster history UI.
 - Editable parsed duties.
 - Advanced stay-vs-home scoring.
@@ -188,6 +228,9 @@ First test priorities:
 - Public Cloudflare deployment.
 - App Store release.
 - Polished final visual design.
+- General chatbot behavior.
+- Background AI analysis.
+- Permanent raw prompt or full AI transcript storage.
 
 ## 8. Definition Of Done
 
@@ -202,4 +245,3 @@ The first implementation milestone is done when:
 - private PDFs, logs, secrets, and real parsed data remain uncommitted;
 - relevant tests and checks have run;
 - remaining risks are documented.
-

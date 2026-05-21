@@ -2,7 +2,7 @@
 
 ## Project Issue Graph
 
-The next product increment is the first real vertical slice: upload a roster PDF from the mobile app, parse and persist it on the backend, merge it by roster date range, show a trustworthy import summary, and render the next 7 days on Home from backend data.
+The next product increment is a calendar and advisor-context milestone: expose date-range schedule data, render a mobile roster agenda, gather backend-owned traffic/weather context for stay-vs-home decisions, and add an on-demand GPT advisor that cannot override deterministic rules.
 
 Codex should implement only one issue at a time unless explicitly told otherwise.
 
@@ -13,6 +13,9 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - Use sanitized synthetic fixtures for committed automated tests.
 - The roster PDF is the planned source of truth.
 - Live AF/KLM data is backend-only enrichment and must not silently reorder, hide, or replace planned roster data.
+- Traffic, weather, and AI advisor data are decision context only and must not rewrite roster facts.
+- Exact home coordinates are backend-only local config/database data and must never be committed.
+- OpenAI calls are on-demand only and must not store raw prompts or full transcripts permanently.
 - Keep frontend and backend git state separate. The workspace root is not currently a git repository.
 - Preserve user changes.
 - Treat date, time, timezone, duty-period, rest-period, taxi, hotel-stay, and import merge logic as domain-sensitive.
@@ -49,6 +52,14 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 026 | Home next decision summary | AFK | frontend | Done | 025, 027 |
 | 027 | Decision manual override action reliability | AFK | frontend | Done | 025 |
 | 028 | Home inline AMS decision placement | AFK | frontend | Done | 026, 027 |
+| 029 | Schedule date-range API | AFK | backend | Done | 006 |
+| 030 | Mobile calendar agenda tab | AFK | frontend | Done | 028, 029 |
+| 031 | TomTom traffic provider foundation | AFK | backend | Ready | 012 |
+| 032 | Decision context builder for advisor data | AFK | backend | Ready | 012, 031 |
+| 033 | OpenAI structured decision advisor endpoint | AFK | backend | Ready | 032 |
+| 034 | AI advisor panel in decision detail pane | AFK | frontend | Ready | 028, 033 |
+| 035 | Open-Meteo weather context for decisions | AFK | backend | Ready | 032 |
+| 036 | Document calendar and AI decision architecture | AFK | docs, both repos | Done | none |
 
 ## Dependency Graph
 
@@ -80,6 +91,14 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 026 surfaces the next actionable decision on Home after the Decisions tab uses real backend data and manual overrides are verified.
 - 027 fixes the observed Decisions tab manual override action failure before Home depends on that state.
 - 028 moves Home decision prompts into their AMS-ending duty day and keeps outstation-ending duties out of stay-vs-home prompting.
+- 029 adds a date-range schedule endpoint for the full roster agenda while keeping Home's next-7-days endpoint stable.
+- 030 renders the full imported roster period as a mobile agenda and reuses the AMS-ending decision marker rules from Home.
+- 031 adds backend-only TomTom traffic context for AMS-to-home and home-to-AMS stay-vs-home routes.
+- 032 builds the compact backend-owned decision context that GPT can interpret without seeing raw PDFs or full roster dumps.
+- 033 adds an on-demand OpenAI structured advisor endpoint with short-lived cache and disagreement handling.
+- 034 renders AI advisor output inside the existing decision detail pane after a user action.
+- 035 adds Open-Meteo weather summaries as secondary decision context.
+- 036 records the calendar, traffic, weather, and AI advisor architecture in shared docs.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -141,6 +160,25 @@ Issues 025 through 028.
 Goal: move decision-making out of mock UI and into the daily workflow by showing backend-owned stay-vs-home recommendations in Decisions, making manual overrides reliable, and surfacing decision prompts in the correct AMS-ending Home duty day.
 
 Status: 025 through 028 are done.
+
+## Sixth Milestone: Calendar And AI Decision Context
+
+Issues 029 through 036.
+
+Goal: add a full imported-roster mobile agenda and prepare stay-vs-home decisions for richer external context without weakening source-of-truth boundaries.
+
+Recommended order:
+
+1. 036 Document calendar and AI decision architecture.
+2. 029 Schedule date-range API.
+3. 030 Mobile calendar agenda tab.
+4. 031 TomTom traffic provider foundation.
+5. 032 Decision context builder for advisor data.
+6. 033 OpenAI structured decision advisor endpoint.
+7. 034 AI advisor panel in decision detail pane.
+8. 035 Open-Meteo weather context for decisions.
+
+Status: 029, 030, and 036 are done. Issues 031 through 035 are ready.
 
 ## Implementation Rule
 

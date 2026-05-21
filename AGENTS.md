@@ -50,9 +50,11 @@ Before changing shared project docs, read:
 - AF/KLM FlightStatus data is live enrichment only.
 - Live data must never silently reorder, hide, or replace planned roster data.
 - Home shows every day in the next 7 days, including compressed off days.
+- Calendar v1 is a mobile agenda for the full imported roster period, not a month grid.
+- Stay-vs-home decisions are only shown for AMS-ending flight days.
 - Settings owns backend connection status, roster upload/import, last import summary, and basic preferences.
-- Backend owns parsing, persistence, import merge rules, live API calls, credentials, preferences, and decision logic.
-- Frontend owns mobile presentation, upload UI, settings UI, and a read-only fallback cache of the last successful schedule response.
+- Backend owns parsing, persistence, import merge rules, live API calls, traffic/weather provider calls, OpenAI calls, credentials, preferences, deterministic decision logic, and decision-advisor context.
+- Frontend owns mobile presentation, upload UI, settings UI, calendar/agenda UI, decision panes, and a read-only fallback cache of the last successful schedule response.
 
 ## Privacy And Data Safety
 
@@ -65,6 +67,8 @@ Never commit:
 - employee identifiers;
 - screenshots containing real roster data;
 - AF/KLM API credentials;
+- TomTom, OpenAI, Open-Meteo-related local secrets;
+- exact home coordinates or addresses;
 - `.env`, `.env.local`, or `.env.*` files.
 
 Real roster PDFs may be used locally for parser development and manual QA. Keep them in ignored runtime storage such as `flight-life-app-server/rosters/`. Committed tests must use sanitized synthetic fixtures.
@@ -113,6 +117,9 @@ Docker and deployment:
 - Backend state should live in mounted volumes for SQLite, uploaded PDFs, logs, and ignored env config.
 - Remote v1 access is through Tailscale VPN, not a public unauthenticated endpoint.
 - Cloudflare Tunnel is a later hardening track after authentication/security is designed.
+- Traffic v1 uses backend-only TomTom calls for AMS-home and home-AMS stay-vs-home routes.
+- Weather v1 uses backend-only Open-Meteo context as secondary decision input.
+- GPT/OpenAI is on-demand advisor context only and cannot override deterministic backend recommendations.
 
 ## Definition Of Done
 
