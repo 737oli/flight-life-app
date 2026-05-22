@@ -2,7 +2,7 @@
 
 ## Project Issue Graph
 
-The next product increment is a calendar and advisor-context milestone: expose date-range schedule data, render a mobile roster agenda, gather backend-owned traffic/weather context for stay-vs-home decisions, and add an on-demand GPT advisor that cannot override deterministic rules.
+The next product increment is a roster import history and privacy-controls milestone: make Settings clearly show the current roster import, recent successful import history, parser warning signal, preserved schedule context, and source-PDF cleanup controls.
 
 Codex should implement only one issue at a time unless explicitly told otherwise.
 
@@ -60,6 +60,9 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 034 | AI advisor panel in decision detail pane | AFK | frontend | Done | 028, 033 |
 | 035 | Open-Meteo weather context for decisions | AFK | backend | Done | 032 |
 | 036 | Document calendar and AI decision architecture | AFK | docs, both repos | Done | none |
+| 037 | Backend import history and source PDF cleanup API | AFK | backend | Ready | none |
+| 038 | Settings current roster and import history UI | AFK | frontend | Ready | 037 |
+| 039 | Roster import history docs and QA checklist | AFK | docs, both repos | Ready | 037, 038 |
 
 ## Dependency Graph
 
@@ -99,6 +102,9 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 034 renders AI advisor output inside the existing decision detail pane after a user action.
 - 035 adds Open-Meteo weather summaries as secondary decision context.
 - 036 records the calendar, traffic, weather, and AI advisor architecture in shared docs.
+- 037 exposes the current roster import, recent successful import history, preserved-days signal, and irreversible source-PDF deletion without exposing file paths.
+- 038 renders the current roster card, recent import history, timestamp display preference, warning preview, and source-PDF deletion flow in Settings.
+- 039 documents the import-history behavior and creates the focused QA checklist after implementation.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -179,6 +185,20 @@ Recommended order:
 8. 035 Open-Meteo weather context for decisions.
 
 Status: 029 through 036 are done.
+
+## Seventh Milestone: Roster Import History And Privacy Controls
+
+Issues 037 through 039.
+
+Goal: make Settings a trustworthy roster-management surface by showing the latest successful import as the Current roster, recent successful import history, parser warning signal, preserved schedule context, and irreversible source-PDF cleanup controls.
+
+Recommended order:
+
+1. 037 Backend import history and source PDF cleanup API.
+2. 038 Settings current roster and import history UI.
+3. 039 Roster import history docs and QA checklist.
+
+Status: 037 through 039 are ready.
 
 ## Implementation Rule
 

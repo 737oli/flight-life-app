@@ -46,6 +46,13 @@ The next product increment adds a full roster agenda and richer stay-vs-home dec
 - GPT is an on-demand advisor only. It cannot override the deterministic backend recommendation.
 - Backend gathers traffic, weather, roster, preference, and decision facts. GPT interprets a compact structured context.
 
+The next roster-management increment should make Settings the place to trust and clean up roster imports:
+
+- Current roster means the latest successful import.
+- Import history is read-only audit/history, not rollback or old-roster preview.
+- Settings should show current import metadata, recent successful imports, parser warning signal, preserved-days context, and source PDF privacy state.
+- Source PDFs can be deleted irreversibly without deleting parsed roster data, import metadata, or manual decisions.
+
 ## Data Sources
 
 ### Planned Source Of Truth
@@ -112,6 +119,7 @@ Version 1 should use SQLite on the backend for:
 - preferences;
 - manual decision overrides;
 - short-lived AI advisor cache metadata and structured advisor results when the AI milestone is implemented.
+- import metadata including source PDF deletion status.
 
 Use SQLAlchemy and Alembic from the start so schema changes are controlled. Raw uploaded PDFs stay in ignored local runtime storage under `flight-life-app-server/rosters/`.
 

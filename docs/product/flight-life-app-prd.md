@@ -34,6 +34,7 @@ The next increment adds:
 - backend traffic context for stay-vs-home decisions;
 - backend weather context as secondary support;
 - an on-demand GPT advisor that interprets backend-owned facts without replacing the deterministic recommendation.
+- roster import history and privacy controls in Settings so the user can trust the current roster and delete retained source PDFs without losing parsed data.
 
 ## 3. Product Rules
 
@@ -109,6 +110,18 @@ Traffic should be calculated for the relevant planned decision window. Exact hom
 
 Weather v1 should use Open-Meteo as secondary context. The backend should summarize decision-relevant weather windows before passing facts into decision context or GPT.
 
+### Roster Import History And Privacy Controls
+
+Settings should clearly identify the current roster as the latest successful import. Import history is read-only audit/history only; it is not rollback, restore, or old-roster preview.
+
+The Current roster card should show source filename, import timestamp, roster period, parsed day/flight counts, inserted/updated/unchanged date counts, parser warning count, source PDF privacy state, and a route to the calendar.
+
+Recent imports should show successful imports only. Failed/rejected imports are not persisted in history for this milestone.
+
+Deleting a source PDF is irreversible. It deletes only the retained local source PDF, clears the stored path, marks a deletion timestamp, and keeps parsed roster data, import metadata, and manual decisions.
+
+The frontend may offer a local-only timestamp display preference for import history: local phone time by default, or UTC. The active mode must be clearly labeled.
+
 ## 4. User Stories
 
 ### Upload A Roster
@@ -146,6 +159,30 @@ Acceptance criteria:
 - Overlap dates are updated atomically.
 - Failed imports do not corrupt existing parsed schedule.
 - Manual decisions are preserved when the underlying duty remains substantially the same.
+
+### Trust The Current Roster Import
+
+As the app user, I want Settings to show the current roster import and recent import history so that I can verify what schedule baseline I am using.
+
+Acceptance criteria:
+
+- Current roster means the latest successful import.
+- Settings shows source filename, import timestamp, roster period, parsed counts, change counts, warning count, and source PDF privacy state.
+- The backend indicates when preserved roster days exist outside the current import period.
+- Recent import history is read-only and successful-import-only.
+- Import-history errors do not block backend checks, preferences, or new roster upload.
+
+### Delete Retained Source PDFs
+
+As the app user, I want to delete retained source PDFs after import so that private roster files do not linger locally once parsed data is available.
+
+Acceptance criteria:
+
+- The user can delete the source PDF for any import, including the current import.
+- A confirmation explains that parsed roster data remains.
+- Deletion is irreversible and has no undo.
+- The import card remains visible and shows `Source PDF deleted`.
+- Parsed schedule data and import metadata remain available after deletion.
 
 ### See Operational Data Near Departure
 
@@ -192,6 +229,10 @@ Acceptance criteria:
 - Tailscale is the v1 remote access path.
 - Cloudflare Tunnel is deferred until authentication/security are designed.
 - Raw PDFs are local ignored runtime data.
+- Import history is read-only audit/history, not roster rollback.
+- Current roster means latest successful import.
+- Source PDF deletion removes only the retained local PDF and preserves parsed roster data.
+- Import-history timestamp display is a frontend-only preference scoped to roster import history.
 - Tests must use sanitized synthetic fixtures; real PDFs are local manual QA only.
 
 ## 6. Testing Decisions
@@ -231,6 +272,8 @@ First test priorities:
 - General chatbot behavior.
 - Background AI analysis.
 - Permanent raw prompt or full AI transcript storage.
+- Roster rollback, restore, or old-import schedule preview.
+- Failed import durable history.
 
 ## 8. Definition Of Done
 

@@ -187,3 +187,19 @@ Status: Accepted
 Decision: Weather v1 uses Open-Meteo for decision-relevant forecast context around AMS, the home area, and next-duty windows. The backend summarizes weather before it is used by the advisor.
 
 Rationale: Weather can affect commute and recovery decisions, but it is secondary context. Open-Meteo keeps early development simple because it can be used without adding another secret.
+
+## ADR-024: Treat Import History As Read-Only Audit State
+
+Status: Accepted
+
+Decision: Roster import history is read-only audit/history. The current roster is the latest successful import. Import history should not support rollback, restore, or old-roster preview in this milestone.
+
+Rationale: The backend currently stores the merged current schedule, not full versioned roster snapshots. Import history should improve trust in the current roster without creating a larger version-control model.
+
+## ADR-025: Delete Source PDFs Without Deleting Parsed Roster Data
+
+Status: Accepted
+
+Decision: Source PDF deletion is irreversible and may apply to any import, including the current import. Deletion removes the local file, clears the stored path, records `stored_pdf_deleted_at`, and preserves parsed roster data, import metadata, and manual decisions.
+
+Rationale: Parsed roster data is the durable app state after import. The retained PDF is only local debug/source material and should be removable for privacy without damaging schedule history.
