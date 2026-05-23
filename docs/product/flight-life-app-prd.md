@@ -16,7 +16,7 @@ Flight Life App is a private single-user mobile app with a backend running on a 
 - Remote access: Tailscale VPN for v1.
 - Live operations: backend-only AF/KLM FlightStatus integration.
 
-The first implementation milestone is an end-to-end import and dashboard slice:
+The implemented baseline is an end-to-end import and dashboard slice:
 
 1. User opens the iPhone app.
 2. User goes to Settings.
@@ -28,7 +28,7 @@ The first implementation milestone is an end-to-end import and dashboard slice:
 8. Home shows every day in the next 7 days from backend schedule data.
 9. Frontend caches the last successful 7-day response as read-only fallback data.
 
-The next increment adds:
+Later completed increments added:
 
 - a full imported-roster mobile agenda;
 - backend traffic context for stay-vs-home decisions;
@@ -223,7 +223,7 @@ Acceptance criteria:
 - Open-Meteo is the first weather provider for secondary decision context.
 - GPT is on-demand advisor context only and cannot override deterministic backend recommendations.
 - AI advisor responses use a short-lived backend cache keyed by decision/context hash.
-- SQLite is planned backend persistence.
+- SQLite is backend persistence.
 - SQLAlchemy and Alembic should be used from the start.
 - Raspberry Pi plus Docker Compose is the v1 deployment target.
 - Tailscale is the v1 remote access path.
@@ -245,20 +245,18 @@ Testing should follow `docs/ai/testing-strategy.md`:
 - deterministic fixtures;
 - smallest relevant test set first, broader checks before finalizing.
 
-First test priorities:
+Current test priorities:
 
 - backend parser characterization with local real PDF for manual QA and synthetic committed fixtures for automation;
 - import validation and failed-import rollback;
 - date-scoped merge/upsert behavior;
 - schedule API output;
-- frontend schedule mapping and 7-day dashboard rendering once frontend test tooling is available;
-- empty/import states in Settings and Home.
+- frontend schedule mapping and dashboard behavior once frontend test tooling is available;
+- Settings import history, source PDF cleanup, and unavailable states once frontend test tooling is available.
 
-## 7. Out Of Scope For The First Milestone
+## 7. Still Out Of Scope Or Deferred
 
-- Full calendar/month view.
 - Month-grid calendar UI.
-- Roster history UI.
 - Editable parsed duties.
 - Advanced stay-vs-home scoring.
 - Revised walking time from live delays.
@@ -277,7 +275,7 @@ First test priorities:
 
 ## 8. Definition Of Done
 
-The first implementation milestone is done when:
+The implemented baseline is considered done when:
 
 - the app can upload a roster PDF from Settings;
 - the backend validates, parses, persists, and date-merges the import;

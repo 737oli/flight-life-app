@@ -52,7 +52,7 @@ Before changing shared project docs, read:
 - Home shows every day in the next 7 days, including compressed off days.
 - Calendar v1 is a mobile agenda for the full imported roster period, not a month grid.
 - Stay-vs-home decisions are only shown for AMS-ending flight days.
-- Settings owns backend connection status, roster upload/import, last import summary, and basic preferences.
+- Settings owns backend connection status, roster upload/import, current roster/import history, source PDF cleanup, and basic preferences.
 - Backend owns parsing, persistence, import merge rules, live API calls, traffic/weather provider calls, OpenAI calls, credentials, preferences, deterministic decision logic, and decision-advisor context.
 - Frontend owns mobile presentation, upload UI, settings UI, calendar/agenda UI, decision panes, and a read-only fallback cache of the last successful schedule response.
 
@@ -106,9 +106,10 @@ Backend:
 
 Testing:
 
-- No committed test suite exists yet.
 - Add deterministic behavior tests before changing parser, import, persistence, schedule contract, decision, or live-ops behavior.
 - Backend tests should use synthetic fixtures.
+- The backend has a committed pytest suite; run focused tests first, then full `python -m pytest` before finalizing backend changes.
+- The frontend currently relies on TypeScript and lint checks; add frontend behavior tests when frontend test tooling is introduced.
 - Real roster PDFs are allowed only for local manual QA.
 
 Docker and deployment:

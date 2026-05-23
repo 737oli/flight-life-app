@@ -1,6 +1,6 @@
 # Flight Life App Issue Drafts
 
-These files are GitHub-ready issue drafts for the next Flight Life App implementation work.
+These files are GitHub issue drafts and implementation records for Flight Life App work. Most listed issues are completed; issue 023 remains a manual Pi/Tailscale validation item.
 
 Choose the target repository before publishing:
 

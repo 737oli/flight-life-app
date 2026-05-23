@@ -2,7 +2,9 @@
 
 ## Project Issue Graph
 
-The next product increment is a roster import history and privacy-controls milestone: make Settings clearly show the current roster import, recent successful import history, parser warning signal, preserved schedule context, and source-PDF cleanup controls.
+The roster import history and privacy-controls milestone is complete. Settings now shows the current roster import, recent successful import history, parser warning signal, preserved schedule context, and source-PDF cleanup controls.
+
+All planned implementation issues 001 through 039 are done except issue 023, which remains a real-device/manual Tailscale validation item.
 
 Codex should implement only one issue at a time unless explicitly told otherwise.
 

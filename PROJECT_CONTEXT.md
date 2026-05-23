@@ -38,7 +38,7 @@ Flight Life App should make the next duty day easier to understand quickly:
 
 The home dashboard should show every day in the next 7 days, including compressed off days, so a missing day never looks like a parser gap.
 
-The next product increment adds a full roster agenda and richer stay-vs-home decision context:
+Implemented workflow beyond the first dashboard includes a full roster agenda and richer stay-vs-home decision context:
 
 - Calendar v1 is a mobile agenda, not a month grid.
 - The calendar agenda shows the full imported roster period and every date in order.
@@ -86,7 +86,7 @@ Traffic is calculated for the relevant planned decision window, not blindly for 
 
 Weather v1 should use Open-Meteo as secondary context. The backend fetches only decision-relevant windows and summarizes facts such as rain likely, strong wind, low visibility, normal conditions, or unavailable.
 
-## First Implementation Milestone
+## Implemented Baseline
 
 From a clean local setup, the user can:
 
@@ -99,7 +99,7 @@ From a clean local setup, the user can:
 
 The import must preserve existing parsed data outside the newly imported roster period. Overlapping dates are updated only when they are present in the new roster. Failed imports must not corrupt existing data.
 
-## Planned Architecture
+## Architecture
 
 - Frontend: Expo, React Native, Expo Router, TypeScript, npm.
 - Backend: Python, FastAPI, SQLAlchemy, Alembic, SQLite.
@@ -112,13 +112,13 @@ The backend owns parsing, persistence, import merge rules, live AF/KLM API calls
 
 ## Persistence Decisions
 
-Version 1 should use SQLite on the backend for:
+Version 1 uses SQLite on the backend for:
 
 - parsed roster records;
 - import metadata;
 - preferences;
 - manual decision overrides;
-- short-lived AI advisor cache metadata and structured advisor results when the AI milestone is implemented.
+- short-lived AI advisor cache metadata and structured advisor results.
 - import metadata including source PDF deletion status.
 
 Use SQLAlchemy and Alembic from the start so schema changes are controlled. Raw uploaded PDFs stay in ignored local runtime storage under `flight-life-app-server/rosters/`.
@@ -167,8 +167,6 @@ Never commit:
 Real roster PDFs may be used locally for parser development and manual QA, but committed automated tests must use sanitized synthetic fixtures that mimic the real structure without copying private data.
 
 ## Current Source Code Status
-
-The frontend currently contains a mobile dashboard shell with mock flight, duty, ground, taxi, rest, off-day, and operations data. It also contains a mock stay-vs-home decisions screen. Some tabs referenced by the layout are not yet implemented.
 
 The backend currently contains a FastAPI app, parser modules for extracting NetLine/Crew roster PDF information, a parser normalization boundary, SQLite persistence with SQLAlchemy/Alembic, a roster upload/import endpoint, date-scoped import merge behavior, current/recent import history APIs, source-PDF deletion, next-7-days and date-range schedule APIs, backend-owned preferences, a deterministic stay-vs-home decision engine, backend-only traffic context with TomTom, backend-only weather context with Open-Meteo summaries, a compact decision context builder, an on-demand OpenAI structured decision advisor endpoint with short-lived cache, a backend-only AF/KLM FlightStatus client, a 90-minute operations enrichment API, and a Docker Compose deployment shape for Raspberry Pi/Tailscale backend testing.
 
