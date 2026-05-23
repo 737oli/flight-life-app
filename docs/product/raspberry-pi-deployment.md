@@ -4,7 +4,7 @@
 
 Run the Flight Life App backend on a Raspberry Pi with Docker Compose, reachable from the iPhone app through Tailscale for private operational testing.
 
-This deploys the backend only. Expo/iPhone remains the primary frontend path, and Pi-hosted web is not part of the first milestone.
+This deploys the backend only. Expo/iPhone remains the primary frontend path, and Pi-hosted web is not part of the current mobile-first deployment path.
 
 ## Privacy Boundary
 
@@ -126,6 +126,6 @@ Then tap Check. Roster import and Home schedule fetches use that stored URL. The
 
 - Uploaded source PDFs remain in the `flight_life_rosters` Docker volume.
 - The durable app data is the SQLite database in `flight_life_runtime`.
-- API credentials for later AF/KLM integration must be stored in ignored backend env config, never in the frontend.
-- Traffic/OpenAI credentials and exact home coordinates are backend-only decision-context data and must never be stored in frontend code, screenshots, logs, or committed docs.
+- AF/KLM, traffic, weather, and OpenAI credentials must be stored in ignored backend env config, never in the frontend.
+- Exact home coordinates are backend-only decision-context data and must never be stored in frontend code, screenshots, logs, or committed docs.
 - Cloudflare Tunnel remains deferred until authentication/security is designed.

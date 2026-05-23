@@ -49,5 +49,5 @@ A good Codex task should be:
 - small enough to review in one sitting;
 - covered by focused tests where practical;
 - reversible if wrong;
-- independently useful or visibly closer to the first milestone;
+- independently useful or visibly closer to the active milestone;
 - free of private committed data.

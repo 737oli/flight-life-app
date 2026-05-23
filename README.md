@@ -2,12 +2,12 @@
 
 Mobile-first Expo app for a private personal flight-duty companion. The app uploads roster PDFs through Settings, reads the parsed backend schedule, keeps a read-only fallback cache for Home, and shows live operations annotations only through the backend.
 
-The primary target is iPhone with Expo Go or a development/internal build. Web is useful for development and emergency access, but Pi-hosted web is not part of the first milestone.
+The primary target is iPhone with Expo Go or a development/internal build. Web is useful for development and emergency access, but Pi-hosted web is not part of the current mobile-first deployment path.
 
 ## Current Scope
 
 - Home renders every day in the next 7 days from `/schedule/next-7-days`, including compressed off days and explicit missing-roster days.
-- Settings owns backend API URL, connection status, roster import, last import summary, and editable backend preferences.
+- Settings owns backend API URL, connection status, roster import, current roster/import history, source PDF cleanup, and editable backend preferences.
 - Operations data is displayed as annotations for the next relevant flight and in the flight detail panel.
 - The frontend never calls AF/KLM directly and never stores API credentials.
 - If the backend is unavailable, Home renders the last successful cached schedule response when available. Upload/import and live operations still require backend access.
@@ -77,6 +77,8 @@ Never commit:
 - parsed output from real rosters;
 - screenshots containing real roster data;
 - AF/KLM API credentials;
+- TomTom/OpenAI/Open-Meteo-related local secrets;
+- exact home coordinates or addresses;
 - `.env`, `.env.local`, or `.env.*` files.
 
 Frontend environment values must not contain secrets. API credentials belong only in backend-side ignored environment config.

@@ -2,7 +2,7 @@
 
 ## Project Purpose
 
-Flight Life App is a private, personal flight-duty companion for turning roster PDFs into a trustworthy operational dashboard. The first real product goal is to upload a roster PDF from the mobile app, parse it on the backend, persist the parsed schedule, and show the next 7 days in the iPhone app.
+Flight Life App is a private, personal flight-duty companion for turning roster PDFs into a trustworthy operational dashboard. The implemented baseline uploads a roster PDF from the mobile app, parses it on the backend, persists the parsed schedule, and shows the next 7 days in the iPhone app.
 
 The app is for one pilot/crew member first. It should be clean enough to evolve for another crew member later, but version 1 does not include accounts, multi-user support, public sharing, or a generic crew-market product.
 
