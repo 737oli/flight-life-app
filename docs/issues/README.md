@@ -1,14 +1,20 @@
 # Flight Life App Issue Drafts
 
-These files are GitHub issue drafts and implementation records for Flight Life App work. Most listed issues are completed; issue 023 remains a manual Pi/Tailscale validation item.
+These files are GitHub issue drafts and implementation records for Flight Life App work.
 
-Choose the target repository before publishing:
+Use [Current Status](../../CURRENT_STATUS.md) for current state and [Kanban](../product/flight-life-app-kanban.md) for active planning. Completed milestone context lives in [Milestones History](../product/milestones-history.md).
 
-- `737oli/flight-life-app-server` for backend and deployment work.
+## Publishing Targets
+
+- `737oli/flight-life-app-server` for backend, deployment, and canonical shared-docs work.
 - `737oli/flight-life-app` for frontend work.
-- A chosen planning location for cross-repo docs.
+- Cross-repo docs start in the backend repo, then sync into the frontend repo.
 
-## Drafts
+## Active Or Manual Validation
+
+- [023 - Tailscale Raspberry Pi smoke test](023-tailscale-pi-smoke-test.md) - needs manual validation.
+
+## Completed Drafts
 
 - [001 - Backend test harness and project hygiene](001-backend-test-harness.md)
 - [002 - Parser characterization with private PDF and synthetic fixtures](002-parser-characterization.md)
@@ -32,7 +38,6 @@ Choose the target repository before publishing:
 - [020 - Fix parser omission of first two flight legs per duty day](020-fix-missing-first-flight-legs.md)
 - [021 - Frontend tab route cleanup](021-frontend-tab-route-cleanup.md)
 - [022 - Expo SDK compatibility refresh](022-expo-sdk-compatibility-refresh.md)
-- [023 - Tailscale Raspberry Pi smoke test](023-tailscale-pi-smoke-test.md)
 - [024 - Operations data retention and departure superscript QA](024-operations-data-retention-and-departure-superscript.md)
 - [025 - Frontend stay-vs-home decision integration](025-frontend-stay-vs-home-decisions.md)
 - [026 - Home next decision summary](026-home-next-decision-summary.md)
@@ -43,7 +48,7 @@ Choose the target repository before publishing:
 - [031 - TomTom traffic provider foundation](031-tomtom-traffic-provider-foundation.md)
 - [032 - Decision context builder for advisor data](032-decision-context-builder.md)
 - [033 - OpenAI structured decision advisor endpoint](033-openai-structured-decision-advisor.md)
-- [034 - AI advisor panel in decision detail pane](034-ai-advisor-panel.md)
+- [034 - AI advisor panel](034-ai-advisor-panel.md)
 - [035 - Open-Meteo weather context for decisions](035-open-meteo-weather-context.md)
 - [036 - Document calendar and AI decision architecture](036-document-calendar-ai-decision-architecture.md)
 - [037 - Backend import history and source PDF cleanup API](037-backend-import-history-source-pdf-cleanup.md)

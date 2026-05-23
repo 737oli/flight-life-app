@@ -61,9 +61,21 @@ Codex should:
 - Weather context with mocked Open-Meteo responses.
 - AI advisor endpoint with mocked OpenAI responses.
 
+## Frontend Test Foundation
+
+The frontend uses Jest with `ts-jest` for deterministic TypeScript presenter tests:
+
+```bash
+cd flight-life-app
+npm run test
+npm run typecheck
+```
+
+The first committed tests cover backend DTO-to-render-model behavior for Home schedule cards and Settings import-history/current-roster cards. Component, device, screenshot, and end-to-end tests are still deferred.
+
 ## First Frontend Test Targets
 
-When frontend test tooling is added, prioritize:
+When extending frontend tests, prioritize:
 
 - backend DTO to dashboard render-model mapping;
 - Home empty/import-needed state;

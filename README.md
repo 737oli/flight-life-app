@@ -39,6 +39,8 @@ npm run ios      # iOS simulator
 npm run android  # Android emulator
 npm run web      # React Native Web on port 8090
 npm run lan      # Expo LAN mode on port 8090
+npm run test     # Jest/ts-jest presenter tests
+npm run typecheck # TypeScript check
 npm run lint     # Expo ESLint
 ```
 
@@ -123,7 +125,7 @@ scripts/       Project utility scripts
 - No accounts, sharing, cloud sync, or public backend exposure.
 - No background refresh or push notifications.
 - Live operations are limited to backend-enriched eligible flights.
-- Component test tooling is not set up yet; use deterministic helpers and lint until that exists.
+- Frontend automated tests currently cover deterministic presenter logic. Component, device, screenshot, and end-to-end tests are still deferred.
 
 ## Tech Stack
 

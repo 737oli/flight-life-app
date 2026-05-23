@@ -50,6 +50,12 @@ import {
   saveBackendBaseUrl,
   updatePreferences,
 } from "@/services/backendApi";
+import {
+  formatImportTimestamp,
+  formatRosterPeriod,
+  formatWarning,
+  TimestampMode,
+} from "@/services/importHistoryPresentation";
 
 type StatusDetails = {
   label: string;
@@ -65,8 +71,6 @@ type PreferenceDraft = {
   minimum_useful_home_minutes: string;
   material_change_threshold_minutes: string;
 };
-
-type TimestampMode = "local" | "utc";
 
 const IMPORT_TIMESTAMP_MODE_STORAGE_KEY = "flightLife.importTimestampMode";
 
@@ -998,45 +1002,6 @@ const parsePreferenceDraft = (draft: PreferenceDraft) => {
     ...numericFields,
   };
 };
-
-function formatImportTimestamp(value: string | null, mode: TimestampMode) {
-  const label = mode === "utc" ? "UTC" : "Local";
-  if (!value) {
-    return `Unknown ${label}`;
-  }
-
-  const parsedDate = new Date(value);
-  if (Number.isNaN(parsedDate.getTime())) {
-    return `Unknown ${label}`;
-  }
-
-  const options: Intl.DateTimeFormatOptions = {
-    day: "2-digit",
-    hour: "2-digit",
-    hour12: false,
-    minute: "2-digit",
-    month: "short",
-    year: "numeric",
-  };
-
-  if (mode === "utc") {
-    options.timeZone = "UTC";
-  }
-
-  return `${parsedDate.toLocaleString([], options)} ${label}`;
-}
-
-function formatRosterPeriod(importItem: RosterImportHistoryItem) {
-  if (!importItem.period_start || !importItem.period_end) {
-    return "Roster period unknown";
-  }
-
-  return `${importItem.period_start} to ${importItem.period_end}`;
-}
-
-function formatWarning(warning: string) {
-  return warning.replace(/_/g, " ");
-}
 
 function sourcePdfPillStyle(importItem: RosterImportHistoryItem) {
   if (importItem.source_pdf.state === "stored_locally") {

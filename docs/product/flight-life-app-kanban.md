@@ -1,224 +1,49 @@
 # Flight Life App Kanban
 
-## Project Issue Graph
+## Purpose
 
-The roster import history and privacy-controls milestone is complete. Settings now shows the current roster import, recent successful import history, parser warning signal, preserved schedule context, and source-PDF cleanup controls.
-
-All planned implementation issues 001 through 039 are done except issue 023, which remains a real-device/manual Tailscale validation item. The next planned work is a documentation operating model and frontend test foundation milestone.
+This kanban is the active planning surface. Completed milestone detail lives in [Milestones History](milestones-history.md), and current workspace state lives in [Current Status](../../CURRENT_STATUS.md).
 
 Codex should implement only one issue at a time unless explicitly told otherwise.
 
 ## Global Constraints
 
-- Do not commit real roster PDFs, parsed real roster output, runtime logs, screenshots containing private roster data, crew names, employee identifiers, or credentials.
+- Do not commit real roster PDFs, parsed real roster output, runtime logs, screenshots containing private roster data, crew names, employee identifiers, exact home coordinates, or credentials.
 - Use real roster PDFs only for local parser development and manual QA.
 - Use sanitized synthetic fixtures for committed automated tests.
 - The roster PDF is the planned source of truth.
 - Live AF/KLM data is backend-only enrichment and must not silently reorder, hide, or replace planned roster data.
 - Traffic, weather, and AI advisor data are decision context only and must not rewrite roster facts.
-- Exact home coordinates are backend-only local config/database data and must never be committed.
 - OpenAI calls are on-demand only and must not store raw prompts or full transcripts permanently.
 - Keep frontend and backend git state separate. The workspace root is not currently a git repository.
 - Preserve user changes.
 - Treat date, time, timezone, duty-period, rest-period, taxi, hotel-stay, and import merge logic as domain-sensitive.
 
-## Issue Table
+## Active And Ready Issues
 
 | Issue | Title | Type | Area | Status | Blocked by |
 | --- | --- | --- | --- | --- | --- |
-| 001 | Backend test harness and project hygiene | AFK | backend | Done | none |
-| 002 | Parser characterization with private PDF and synthetic fixtures | human-in-the-loop | backend | Done | 001 |
-| 003 | SQLite persistence foundation with SQLAlchemy and Alembic | AFK | backend | Done | 001 |
-| 004 | Roster upload endpoint with atomic parse validation | AFK | backend | Done | 002, 003 |
-| 005 | Date-scoped roster import merge and import summary | AFK | backend | Done | 004 |
-| 006 | Stable schedule DTO and next-7-days API | AFK | backend | Done | 005 |
-| 007 | Frontend backend configuration and connection status | AFK | frontend | Done | none |
-| 008 | Settings roster import UI | AFK | frontend | Done | none |
-| 009 | Home 7-day dashboard from backend data with fallback cache | AFK | frontend | Done | none |
-| 010 | Raspberry Pi Docker Compose backend deployment | AFK | backend, deployment | Done | none |
-| 011 | Backend preferences model and Settings integration | AFK | both | Done | none |
-| 012 | Deterministic stay-vs-home decision engine | AFK | backend | Done | none |
-| 013 | AF/KLM FlightStatus backend client | human-in-the-loop | backend | Done | none |
-| 014 | 90-minute operations enrichment API | AFK | backend | Done | none |
-| 015 | Frontend operations chips and detail panel | AFK | frontend | Done | none |
-| 016 | README and deployment documentation refresh | AFK | docs, both repos | Done | none |
-| 017 | Real roster parser QA and sanitized fixture capture | human-in-the-loop | backend | Done | 002 |
-| 018 | Improve flight leg extraction and day assignment | AFK | backend | Done | 017 |
-| 019 | Parser completeness validation and import summary refinement | AFK | backend | Done | 018 |
-| 020 | Fix parser omission of first two flight legs per duty day | human-in-the-loop | backend | Done | 019 |
-| 021 | Frontend tab route cleanup | AFK | frontend | Done | none |
-| 022 | Expo SDK compatibility refresh | AFK | frontend | Done | none |
 | 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Needs manual validation | 010 |
-| 024 | Operations data retention and departure superscript QA | AFK | frontend, backend | Done | none |
-| 025 | Frontend stay-vs-home decision integration | AFK | frontend | Done | 012 |
-| 026 | Home next decision summary | AFK | frontend | Done | 025, 027 |
-| 027 | Decision manual override action reliability | AFK | frontend | Done | 025 |
-| 028 | Home inline AMS decision placement | AFK | frontend | Done | 026, 027 |
-| 029 | Schedule date-range API | AFK | backend | Done | 006 |
-| 030 | Mobile calendar agenda tab | AFK | frontend | Done | 028, 029 |
-| 031 | TomTom traffic provider foundation | AFK | backend | Done | 012 |
-| 032 | Decision context builder for advisor data | AFK | backend | Done | 012, 031 |
-| 033 | OpenAI structured decision advisor endpoint | AFK | backend | Done | 032 |
-| 034 | AI advisor panel in decision detail pane | AFK | frontend | Done | 028, 033 |
-| 035 | Open-Meteo weather context for decisions | AFK | backend | Done | 032 |
-| 036 | Document calendar and AI decision architecture | AFK | docs, both repos | Done | none |
-| 037 | Backend import history and source PDF cleanup API | AFK | backend | Done | none |
-| 038 | Settings current roster and import history UI | AFK | frontend | Done | 037 |
-| 039 | Roster import history docs and QA checklist | AFK | docs, both repos | Done | 037, 038 |
-| 040 | Shared docs operating model refresh | AFK | docs, both repos | Ready | none |
-| 041 | Frontend behavior test foundation | AFK | frontend, docs | Ready | 040 |
 
-## Dependency Graph
+## Current Milestone
 
-- 001 creates the testing and hygiene base for backend work.
-- 002 characterizes current parser behavior before risky parser changes and needs the backend test harness first.
-- 003 creates durable local persistence and schema migrations.
-- 004 depends on parser characterization and persistence because upload must validate before storing app state.
-- 005 adds the core import behavior: date-scoped upsert, preservation outside imported period, and summary counts.
-- 006 exposes the stable schedule contract needed by the frontend.
-- 007 can proceed independently so the frontend can target Pi/Tailscale and local dev URLs.
-- 017 turns real-roster parser failures into sanitized repeatable fixtures and counts-only notes.
-- 018 improves flight-leg extraction and day assignment while preserving the parser adapter shape.
-- 019 makes parser completeness visible in import summaries and preserves schedule output for incomplete flight duties.
-- 020 fixes the newly observed systematic omission where the first two flights of each duty day appear to be missing.
-- 008 depends on frontend backend configuration, parser-completeness reporting, and the missing-first-legs parser fix.
-- 009 depends on the schedule API, frontend backend configuration, parser-completeness reporting, and the missing-first-legs parser fix.
-- 010 can start after the backend test harness exists because Pi/Tailscale deployment is an early enabler for operational-window testing. It should add the basic Compose shape first and evolve volumes as persistence lands.
-- 011 added backend-owned preferences and Settings controls.
-- 012 added the first deterministic stay-vs-home decision engine with manual overrides and needs-review states.
-- 013 added the backend-only AF/KLM FlightStatus client with mocked tests. Live credential validation remains local/manual.
-- 014 added the project-owned 90-minute operations contract around persisted roster flight legs.
-- 015 consumes that operations contract in the mobile UI.
-- 016 documents the actual deployable shape after Compose exists.
-- 021 cleans up Expo Router warnings found during first-milestone QA.
-- 022 addresses Expo SDK package compatibility warnings found during first-milestone QA.
-- 023 validates the Pi/Tailscale backend path after local Docker Compose is working.
-- 024 fixes post-flight operations annotation retention and investigates missing departure superscript rendering after the operations UI contract.
-- 025 connects the Decisions tab to the backend deterministic stay-vs-home decision API.
-- 026 surfaces the next actionable decision on Home after the Decisions tab uses real backend data and manual overrides are verified.
-- 027 fixes the observed Decisions tab manual override action failure before Home depends on that state.
-- 028 moves Home decision prompts into their AMS-ending duty day and keeps outstation-ending duties out of stay-vs-home prompting.
-- 029 adds a date-range schedule endpoint for the full roster agenda while keeping Home's next-7-days endpoint stable.
-- 030 renders the full imported roster period as a mobile agenda and reuses the AMS-ending decision marker rules from Home.
-- 031 adds backend-only TomTom traffic context for AMS-to-home and home-to-AMS stay-vs-home routes.
-- 032 builds the compact backend-owned decision context that GPT can interpret without seeing raw PDFs or full roster dumps.
-- 033 adds an on-demand OpenAI structured advisor endpoint with short-lived cache and disagreement handling.
-- 034 renders AI advisor output inside the existing decision detail pane after a user action.
-- 035 adds Open-Meteo weather summaries as secondary decision context.
-- 036 records the calendar, traffic, weather, and AI advisor architecture in shared docs.
-- 037 exposes the current roster import, recent successful import history, preserved-days signal, and irreversible source-PDF deletion without exposing file paths.
-- 038 renders the current roster card, recent import history, timestamp display preference, warning preview, and source-PDF deletion flow in Settings.
-- 039 documents the import-history behavior and creates the focused QA checklist after implementation.
-- 040 creates the current-status entry point, docs freshness checklist, API contract index, and active/history split for planning docs.
-- 041 introduces frontend behavior test tooling and first deterministic UI/DTO mapping tests.
+No active implementation milestone is selected.
 
-## First Milestone: Import And 7-Day Dashboard
+The most recent milestone, Documentation Operating Model And Test Foundation, is complete. Its historical detail lives in [Milestones History](milestones-history.md).
 
-Issues 001 through 010 plus parser hardening issues 017 through 020.
+## Next Planning Candidates
 
-Goal: from a clean local setup, the user can upload a roster PDF from Settings, see a trustworthy import summary, and view the next 7 days on Home from parsed backend data while preserving data outside the imported roster period.
+- Run `023` when the Raspberry Pi and iPhone/Tailscale setup is available.
+- Choose the next product milestone.
+- When adding or changing frontend DTO presentation behavior, add or update presenter tests before changing related UI screens.
 
-Recommended order:
+## Dependency Notes
 
-1. 001 Backend test harness and project hygiene.
-2. 007 Frontend backend configuration and connection status.
-3. 010 Raspberry Pi Docker Compose backend deployment.
-4. 002 Parser characterization with private PDF and synthetic fixtures.
-5. 003 SQLite persistence foundation with SQLAlchemy and Alembic.
-6. 004 Roster upload endpoint with atomic parse validation.
-7. 005 Date-scoped roster import merge and import summary.
-8. 006 Stable schedule DTO and next-7-days API.
-9. 017 Real roster parser QA and sanitized fixture capture.
-10. 018 Improve flight leg extraction and day assignment.
-11. 019 Parser completeness validation and import summary refinement.
-12. 020 Fix parser omission of first two flight legs per duty day.
-13. 008 Settings roster import UI.
-14. 009 Home 7-day dashboard from backend data with fallback cache.
+- `023` remains manual validation and should run when the Raspberry Pi and iPhone/Tailscale setup is available.
+- New backend DTO changes should update [API Contracts](api-contracts.md), backend tests, frontend API types, and frontend presenter tests.
 
-## Parser Hardening Mini-Milestone
+## Completed Work
 
-Issues 017 through 020.
+Completed milestone summaries and historical issue indexes live in [Milestones History](milestones-history.md).
 
-Goal: make the parser useful enough for Settings upload and Home backend rendering by reducing missed flight legs, documenting counts-only private QA, making remaining parser uncertainty explicit in import summaries, and fixing systematic first-leg omissions.
-
-## Second Milestone: Preferences And Decisions
-
-Issues 011 and 012.
-
-Goal: add backend-owned preferences and the first deterministic stay-vs-home recommendation with "needs review" handling.
-
-Status: 011 and 012 are done.
-
-## Third Milestone: Live Operations Window
-
-Issues 013 through 015.
-
-Goal: enrich only flights within 90 minutes using backend-owned AF/KLM FlightStatus integration and show compact operations data in the mobile app.
-
-Status: Done.
-
-## Fourth Milestone: Hardening And Documentation
-
-Issues 016 and 021 through 024.
-
-Goal: make the Pi/Tailscale setup repeatable, clean up development warnings, preserve post-flight operations context, and document remaining gaps before broader operational use.
-
-Status: 016, 021, 022, and 024 are done; 023 has a smoke-check helper and still needs real Pi/iPhone validation.
-
-## Fifth Milestone: Decision Experience
-
-Issues 025 through 028.
-
-Goal: move decision-making out of mock UI and into the daily workflow by showing backend-owned stay-vs-home recommendations in Decisions, making manual overrides reliable, and surfacing decision prompts in the correct AMS-ending Home duty day.
-
-Status: 025 through 028 are done.
-
-## Sixth Milestone: Calendar And AI Decision Context
-
-Issues 029 through 036.
-
-Goal: add a full imported-roster mobile agenda and prepare stay-vs-home decisions for richer external context without weakening source-of-truth boundaries.
-
-Recommended order:
-
-1. 036 Document calendar and AI decision architecture.
-2. 029 Schedule date-range API.
-3. 030 Mobile calendar agenda tab.
-4. 031 TomTom traffic provider foundation.
-5. 032 Decision context builder for advisor data.
-6. 033 OpenAI structured decision advisor endpoint.
-7. 034 AI advisor panel in decision detail pane.
-8. 035 Open-Meteo weather context for decisions.
-
-Status: 029 through 036 are done.
-
-## Seventh Milestone: Roster Import History And Privacy Controls
-
-Issues 037 through 039.
-
-Goal: make Settings a trustworthy roster-management surface by showing the latest successful import as the Current roster, recent successful import history, parser warning signal, preserved schedule context, and irreversible source-PDF cleanup controls.
-
-Recommended order:
-
-1. 037 Backend import history and source PDF cleanup API.
-2. 038 Settings current roster and import history UI.
-3. 039 Roster import history docs and QA checklist.
-
-Status: 037 through 039 are done.
-
-## Eighth Milestone: Documentation Operating Model And Test Foundation
-
-Issues 040 and 041.
-
-Goal: make project docs easier for Codex/Copilot to navigate and add the first frontend behavior-test feedback loop.
-
-Recommended order:
-
-1. 040 Shared docs operating model refresh.
-2. 041 Frontend behavior test foundation.
-
-Status: 040 and 041 are ready.
-
-## Implementation Rule
-
-Implement one issue at a time. Prefer vertical slices that produce a visible or testable outcome. If manual QA with a real roster PDF reveals parser gaps, create sanitized synthetic fixtures and follow-up issues rather than committing private data.
+Issue drafts and implementation records live in [Issue Drafts](../issues/).

@@ -251,8 +251,8 @@ Current test priorities:
 - import validation and failed-import rollback;
 - date-scoped merge/upsert behavior;
 - schedule API output;
-- frontend schedule mapping and dashboard behavior once frontend test tooling is available;
-- Settings import history, source PDF cleanup, and unavailable states once frontend test tooling is available.
+- frontend schedule mapping and dashboard behavior through deterministic presenter tests;
+- Settings import history, source PDF cleanup, and unavailable states through deterministic presenter tests first, with component tests added later when needed.
 
 ## 7. Still Out Of Scope Or Deferred
 

@@ -20,10 +20,15 @@ This folder is a parent workspace, not a git repository. It contains two separat
 Shared project docs are committed into both child repositories so GitHub Copilot and repo-local tools can reference them. The backend repo copy is the canonical source for shared docs:
 
 - `flight-life-app-server/AGENTS.md`
+- `flight-life-app-server/CURRENT_STATUS.md`
 - `flight-life-app-server/PROJECT_CONTEXT.md`
 - `flight-life-app-server/docs/`
 
 When shared docs change, edit the backend repo copy, run `flight-life-app-server/scripts/sync-shared-docs.sh`, then commit and push the resulting docs changes in both child repositories.
+
+## Current Status Entry Point
+
+Read [Current Status](CURRENT_STATUS.md) first when deciding what to work on next. It is intentionally shorter than the kanban and records the active milestone, manual validation items, local ports, known risks, and recommended next work.
 
 ## Product Direction
 
@@ -170,15 +175,18 @@ Real roster PDFs may be used locally for parser development and manual QA, but c
 
 The backend currently contains a FastAPI app, parser modules for extracting NetLine/Crew roster PDF information, a parser normalization boundary, SQLite persistence with SQLAlchemy/Alembic, a roster upload/import endpoint, date-scoped import merge behavior, current/recent import history APIs, source-PDF deletion, next-7-days and date-range schedule APIs, backend-owned preferences, a deterministic stay-vs-home decision engine, backend-only traffic context with TomTom, backend-only weather context with Open-Meteo summaries, a compact decision context builder, an on-demand OpenAI structured decision advisor endpoint with short-lived cache, a backend-only AF/KLM FlightStatus client, a 90-minute operations enrichment API, and a Docker Compose deployment shape for Raspberry Pi/Tailscale backend testing.
 
-The frontend currently contains a backend-driven Home dashboard, Settings roster import, current roster/import history display, source-PDF deletion flow, backend configuration, Decisions integration with manual overrides, an AI advisor panel inside decision surfaces, operations chips/detail panels, and a Calendar tab that renders the full imported roster period as a mobile agenda.
+The frontend currently contains a backend-driven Home dashboard, Settings roster import, current roster/import history display, source-PDF deletion flow, backend configuration, Decisions integration with manual overrides, an AI advisor panel inside decision surfaces, operations chips/detail panels, a Calendar tab that renders the full imported roster period as a mobile agenda, and Jest/ts-jest presenter tests for DTO-to-render-model behavior.
 
-The backend has committed pytest coverage for API smoke behavior, parser characterization, parser normalization, persistence setup, upload/import validation, date-scoped merge behavior, rollback behavior, schedule DTO output, preferences behavior, deterministic stay-vs-home decisions, mocked FlightStatus client normalization, operations enrichment eligibility/fallback behavior, traffic context, weather context, and OpenAI advisor structured-output/cache behavior. Frontend test tooling has not been added yet.
+The backend has committed pytest coverage for API smoke behavior, parser characterization, parser normalization, persistence setup, upload/import validation, date-scoped merge behavior, rollback behavior, schedule DTO output, preferences behavior, deterministic stay-vs-home decisions, mocked FlightStatus client normalization, operations enrichment eligibility/fallback behavior, traffic context, weather context, and OpenAI advisor structured-output/cache behavior. The frontend has initial deterministic presenter tests for Home schedule mapping and Settings import-history mapping.
 
 ## Current Planning Documents
 
+- [Current Status](CURRENT_STATUS.md)
 - [Product Requirements Document](docs/product/flight-life-app-prd.md)
 - [Architecture Decision Log](docs/product/decisions.md)
 - [Kanban Issue Plan](docs/product/flight-life-app-kanban.md)
+- [Milestones History](docs/product/milestones-history.md)
+- [API Contracts](docs/product/api-contracts.md)
 - [Issue Drafts](docs/issues/)
 
 ## Definition Of Done

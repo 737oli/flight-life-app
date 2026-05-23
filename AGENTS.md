@@ -17,6 +17,7 @@ The root folder is not currently a git repository. It contains two separate git 
 
 Before making non-trivial changes, read:
 
+- `CURRENT_STATUS.md`
 - `PROJECT_CONTEXT.md`
 - `docs/ai/coding-standards.md`
 - `docs/ai/testing-strategy.md`
@@ -38,10 +39,13 @@ Before changing shared project docs, read:
 
 ## Current Planning Documents
 
+- `CURRENT_STATUS.md`
 - `PROJECT_CONTEXT.md`
 - `docs/product/flight-life-app-prd.md`
 - `docs/product/decisions.md`
 - `docs/product/flight-life-app-kanban.md`
+- `docs/product/milestones-history.md`
+- `docs/product/api-contracts.md`
 - `docs/issues/`
 
 ## Product Rules
@@ -78,7 +82,7 @@ Real roster PDFs may be used locally for parser development and manual QA. Keep 
 - Treat `flight-life-app/` and `flight-life-app-server/` as separate repositories.
 - The workspace root is not a git repository.
 - Shared project docs are tracked in both child repositories so GitHub Copilot and other repo-local tools can reference them.
-- The canonical shared docs source is the backend repo copy: `flight-life-app-server/AGENTS.md`, `flight-life-app-server/PROJECT_CONTEXT.md`, and `flight-life-app-server/docs/`.
+- The canonical shared docs source is the backend repo copy: `flight-life-app-server/AGENTS.md`, `flight-life-app-server/CURRENT_STATUS.md`, `flight-life-app-server/PROJECT_CONTEXT.md`, and `flight-life-app-server/docs/`.
 - Do not hand-edit shared docs twice. Edit the backend repo copy, then run `flight-life-app-server/scripts/sync-shared-docs.sh` to copy shared docs into `flight-life-app/`.
 - After syncing shared docs, commit and push the shared-doc changes in both child repositories.
 - Check git status inside the relevant child repo before code edits.
@@ -96,6 +100,8 @@ Frontend:
 - Start on Android: `cd flight-life-app && npm run android`
 - Start web: `cd flight-life-app && npm run web`
 - Start LAN mode: `cd flight-life-app && npm run lan`
+- Test: `cd flight-life-app && npm run test`
+- Typecheck: `cd flight-life-app && npm run typecheck`
 - Lint: `cd flight-life-app && npm run lint`
 
 Backend:
@@ -106,10 +112,10 @@ Backend:
 
 Testing:
 
-- Add deterministic behavior tests before changing parser, import, persistence, schedule contract, decision, or live-ops behavior.
+- Add deterministic behavior tests before changing parser, import, persistence, schedule contract, decision, live-ops behavior, frontend DTO mapping, or import-history presentation.
 - Backend tests should use synthetic fixtures.
 - The backend has a committed pytest suite; run focused tests first, then full `python -m pytest` before finalizing backend changes.
-- The frontend currently relies on TypeScript and lint checks; add frontend behavior tests when frontend test tooling is introduced.
+- Frontend presenter tests use `npm run test`; TypeScript checks use `npm run typecheck`.
 - Real roster PDFs are allowed only for local manual QA.
 
 Docker and deployment:

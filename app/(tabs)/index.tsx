@@ -19,6 +19,10 @@ import {
   recommendationLabel,
 } from "@/services/decisionPresentation";
 import {
+  buildScheduleDayCardModel,
+  formatRosterTime,
+} from "@/services/schedulePresentation";
+import {
   CachedOperationSnapshot,
   formatSignedMinutes,
   getOperationAnnotation,
@@ -418,36 +422,32 @@ function ScheduleDayCard({
   onDecisionPress: (summary: DecisionSummary) => void;
   onFlightPress: (day: ScheduleDay, flight: ScheduleFlight) => void;
 }) {
-  const isOffDay = day.kind === "off_day";
-  const isMissing = day.kind === "missing_roster";
-  const isFlightDuty = day.kind === "flight_duty";
+  const dayModel = buildScheduleDayCardModel(day);
 
   return (
-    <View style={[styles.dayCard, isOffDay && styles.offDayCard]}>
+    <View style={[styles.dayCard, dayModel.isCompressedOffDay && styles.offDayCard]}>
       <View style={styles.dayHeader}>
         <View>
           <Text style={styles.dayDate}>
             {day.weekday} {formatShortDate(day.date)}
           </Text>
-          <Text style={styles.dayKind}>{labelForKind(day.kind)}</Text>
+          <Text style={styles.dayKind}>{dayModel.kindLabel}</Text>
         </View>
         {day.duty?.start && day.duty?.end && (
           <View style={styles.timePill}>
             <Clock color={Colors.light.secondary} size={14} />
-            <Text style={styles.timePillText}>
-              {formatRosterTime(day.duty.start)}-{formatRosterTime(day.duty.end)}
-            </Text>
+            <Text style={styles.timePillText}>{dayModel.dutyWindowLabel}</Text>
           </View>
         )}
       </View>
 
-      {isMissing ? (
+      {dayModel.isMissingRoster ? (
         <Text style={styles.mutedText}>No roster data for this date</Text>
-      ) : isOffDay ? (
+      ) : dayModel.isCompressedOffDay ? (
         <Text style={styles.mutedText}>Off</Text>
       ) : (
         <>
-          {isFlightDuty && day.flights.length > 0 ? (
+          {dayModel.isFlightDuty && day.flights.length > 0 ? (
             <View style={styles.flightList}>
               {day.flights.map((flight) => {
                 const flightLegId = flight.flight_leg_id;
@@ -1091,29 +1091,6 @@ const formatShortDate = (isoDate: string) =>
     month: "short",
     day: "numeric",
   });
-
-const formatRosterTime = (time: string | null | undefined) => {
-  if (!time) {
-    return "";
-  }
-  const padded = time.padStart(4, "0");
-  return `${padded.slice(0, 2)}:${padded.slice(2)}`;
-};
-
-const labelForKind = (kind: string) => {
-  switch (kind) {
-    case "flight_duty":
-      return "Flight duty";
-    case "off_day":
-      return "Off day";
-    case "other_duty":
-      return "Other duty";
-    case "missing_roster":
-      return "Missing roster";
-    default:
-      return kind.replace(/_/g, " ");
-  }
-};
 
 const decisionIcon = (choice: StayVsHomeDecision["recommendation"]) => {
   if (choice === "go_home") {
