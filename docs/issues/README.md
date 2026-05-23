@@ -49,6 +49,8 @@ Choose the target repository before publishing:
 - [037 - Backend import history and source PDF cleanup API](037-backend-import-history-source-pdf-cleanup.md)
 - [038 - Settings current roster and import history UI](038-settings-current-roster-import-history-ui.md)
 - [039 - Roster import history docs and QA checklist](039-roster-import-history-docs-qa.md)
+- [040 - Shared docs operating model refresh](040-shared-docs-operating-model.md)
+- [041 - Frontend behavior test foundation](041-frontend-behavior-test-foundation.md)
 
 ## QA References
 

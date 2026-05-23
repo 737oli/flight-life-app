@@ -4,7 +4,7 @@
 
 The roster import history and privacy-controls milestone is complete. Settings now shows the current roster import, recent successful import history, parser warning signal, preserved schedule context, and source-PDF cleanup controls.
 
-All planned implementation issues 001 through 039 are done except issue 023, which remains a real-device/manual Tailscale validation item.
+All planned implementation issues 001 through 039 are done except issue 023, which remains a real-device/manual Tailscale validation item. The next planned work is a documentation operating model and frontend test foundation milestone.
 
 Codex should implement only one issue at a time unless explicitly told otherwise.
 
@@ -65,6 +65,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 037 | Backend import history and source PDF cleanup API | AFK | backend | Done | none |
 | 038 | Settings current roster and import history UI | AFK | frontend | Done | 037 |
 | 039 | Roster import history docs and QA checklist | AFK | docs, both repos | Done | 037, 038 |
+| 040 | Shared docs operating model refresh | AFK | docs, both repos | Ready | none |
+| 041 | Frontend behavior test foundation | AFK | frontend, docs | Ready | 040 |
 
 ## Dependency Graph
 
@@ -107,6 +109,8 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 - 037 exposes the current roster import, recent successful import history, preserved-days signal, and irreversible source-PDF deletion without exposing file paths.
 - 038 renders the current roster card, recent import history, timestamp display preference, warning preview, and source-PDF deletion flow in Settings.
 - 039 documents the import-history behavior and creates the focused QA checklist after implementation.
+- 040 creates the current-status entry point, docs freshness checklist, API contract index, and active/history split for planning docs.
+- 041 introduces frontend behavior test tooling and first deterministic UI/DTO mapping tests.
 
 ## First Milestone: Import And 7-Day Dashboard
 
@@ -201,6 +205,19 @@ Recommended order:
 3. 039 Roster import history docs and QA checklist.
 
 Status: 037 through 039 are done.
+
+## Eighth Milestone: Documentation Operating Model And Test Foundation
+
+Issues 040 and 041.
+
+Goal: make project docs easier for Codex/Copilot to navigate and add the first frontend behavior-test feedback loop.
+
+Recommended order:
+
+1. 040 Shared docs operating model refresh.
+2. 041 Frontend behavior test foundation.
+
+Status: 040 and 041 are ready.
 
 ## Implementation Rule
 
