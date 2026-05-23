@@ -43,6 +43,44 @@ export type RosterImportResponse = {
   warnings: string[];
 };
 
+export type SourcePdfState = {
+  state: "stored_locally" | "deleted" | "not_stored" | string;
+  label: string;
+  can_delete: boolean;
+  deleted_at: string | null;
+};
+
+export type RosterImportHistoryItem = {
+  id: number;
+  source_filename: string;
+  created_at: string | null;
+  period_start: string | null;
+  period_end: string | null;
+  duty_days_parsed: number;
+  flight_legs_parsed: number;
+  inserted_dates: number;
+  updated_dates: number;
+  unchanged_dates: number;
+  parser_warning_count: number;
+  warning_preview: string[];
+  remaining_warning_count: number;
+  flight_duty_days_without_legs: number;
+  decisions_marked_needs_review: number;
+  source_pdf: SourcePdfState;
+};
+
+export type RosterImportHistoryResponse = {
+  status: "ok" | "empty" | string;
+  current_import: RosterImportHistoryItem | null;
+  imports: RosterImportHistoryItem[];
+  has_preserved_days_outside_current_period: boolean;
+};
+
+export type DeleteRosterImportSourcePdfResponse = {
+  status: "ok" | string;
+  import: RosterImportHistoryItem;
+};
+
 export type RosterImportErrorResponse = {
   status?: "rejected";
   errors?: string[];
@@ -356,6 +394,49 @@ export const importRosterPdf = async (
   }
 
   return payload as RosterImportResponse;
+};
+
+export const fetchRosterImportHistory = async (
+  options: { limit?: number; baseUrl?: string } = {}
+): Promise<RosterImportHistoryResponse> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(options.baseUrl || await getConfiguredBackendBaseUrl());
+  const params = new URLSearchParams();
+  params.set("limit", String(options.limit ?? 10));
+  const response = await fetch(`${normalizedBaseUrl}/rosters/imports?${params.toString()}`);
+
+  if (!response.ok) {
+    throw new BackendApiError(`Import history unavailable: HTTP ${response.status}`, {
+      status: response.status,
+      errors: [`HTTP ${response.status}`],
+    });
+  }
+
+  return (await response.json()) as RosterImportHistoryResponse;
+};
+
+export const deleteRosterImportSourcePdf = async (
+  importId: number,
+  baseUrl?: string
+): Promise<DeleteRosterImportSourcePdfResponse> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
+  const response = await fetch(`${normalizedBaseUrl}/rosters/imports/${importId}/source-pdf`, {
+    method: "DELETE",
+  });
+  const payload = await response.json();
+
+  if (!response.ok) {
+    const detail = payload?.detail as string | { errors?: string[] } | undefined;
+    const errors = typeof detail === "object" ? detail.errors ?? [] : [];
+    throw new BackendApiError(
+      errors[0] ?? (typeof detail === "string" ? detail : `HTTP ${response.status}`),
+      {
+        status: response.status,
+        errors: errors.length > 0 ? errors : [typeof detail === "string" ? detail : `HTTP ${response.status}`],
+      }
+    );
+  }
+
+  return payload as DeleteRosterImportSourcePdfResponse;
 };
 
 export const fetchPreferences = async (baseUrl?: string): Promise<FlightLifePreferences> => {

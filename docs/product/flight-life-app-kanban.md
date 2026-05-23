@@ -60,9 +60,9 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | 034 | AI advisor panel in decision detail pane | AFK | frontend | Done | 028, 033 |
 | 035 | Open-Meteo weather context for decisions | AFK | backend | Done | 032 |
 | 036 | Document calendar and AI decision architecture | AFK | docs, both repos | Done | none |
-| 037 | Backend import history and source PDF cleanup API | AFK | backend | Ready | none |
-| 038 | Settings current roster and import history UI | AFK | frontend | Ready | 037 |
-| 039 | Roster import history docs and QA checklist | AFK | docs, both repos | Ready | 037, 038 |
+| 037 | Backend import history and source PDF cleanup API | AFK | backend | Done | none |
+| 038 | Settings current roster and import history UI | AFK | frontend | Done | 037 |
+| 039 | Roster import history docs and QA checklist | AFK | docs, both repos | Done | 037, 038 |
 
 ## Dependency Graph
 
@@ -198,7 +198,7 @@ Recommended order:
 2. 038 Settings current roster and import history UI.
 3. 039 Roster import history docs and QA checklist.
 
-Status: 037 through 039 are ready.
+Status: 037 through 039 are done.
 
 ## Implementation Rule
 
