@@ -20,7 +20,9 @@ The ignored local roster PDF was used only for counts and parser-shape validatio
 
 - Before parser hardening: 28 duty days parsed, 3 flight legs parsed, 7 flight-duty days without legs, and at least one same-station route shape observed.
 - After parser hardening: 28 duty days parsed, 13 flight legs parsed, 2 flight-duty days without legs, and 0 same-station flight legs observed in the counts-only check.
-- After layout reliability follow-up: the same ignored local roster parsed 25 flight legs, 0 flight-duty days without legs, and 0 parser warnings in the counts-only check.
+- After layout reliability follow-up: the same ignored local roster parsed 24 flight legs, 0 flight-duty days without legs, 0 parser warnings, and 0 same-station flight legs in the counts-only check.
+- Batch QA against seven normal ignored IDP roster PDFs from April-May 2026 parsed 28 days each, 0 flight-duty days without legs, 0 parser warnings, and 0 same-station flight legs.
+- One supplied `duty-plan` PDF was rejected before import because its header period/date structure did not match the 28-day roster table shape.
 
 ## Known Limitations To Revisit
 
@@ -30,4 +32,5 @@ The ignored local roster PDF was used only for counts and parser-shape validatio
 - Aircraft code recognition covers Embraer-style `E##`/`E#A` tokens and three-digit numeric codes.
 - Header parse failure is permissive: it returns the raw line with empty structured fields instead of a parser warning object.
 - Some future roster layouts may still have no extracted legs. Import is allowed when the roster period and duty table are valid, but the import summary surfaces `flight_duty_days_without_legs` and `parser_warning_count`.
+- The parser prefers layout extraction over pdfminer text extraction when layout has at least as much flight-leg coverage, because column-order text streams can combine unrelated roster columns into false text-only legs.
 - Taxi derivation should still be treated as provisional and revisited with sanitized fixtures before later decision logic depends on it.

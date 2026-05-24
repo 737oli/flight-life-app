@@ -72,9 +72,9 @@ Outcome: the frontend lint baseline is clean, and the backend API client has det
 
 ### Eleventh Milestone: Roster Import Reliability
 
-Issues: `046` and `047`.
+Issues: `046` through `048`.
 
-Outcome: remaining missing flight legs from the local ignored roster were traced to layout parser token handling for alphanumeric aircraft codes and split flight numbers. Synthetic parser tests now cover those shapes, counts-only local QA shows the affected roster imports with zero flight-duty days without legs, and Settings source-PDF deletion now uses an in-app confirmation with API-client delete tests.
+Outcome: remaining missing flight legs from ignored local rosters were traced to layout parser token handling for alphanumeric aircraft codes and split flight numbers. A later batch QA pass across normal April-May 2026 IDP roster PDFs added a guard against text-extraction false positives, confirmed zero flight-duty days without legs, zero parser warnings, and zero same-station false positives, and confirmed structurally incompatible PDFs reject before import. Settings source-PDF deletion now uses an in-app confirmation with API-client delete tests.
 
 ## Historical Issue Index
 
@@ -128,6 +128,7 @@ Completed implementation issues:
 - `045` Frontend backend API client tests.
 - `046` Roster parser layout reliability.
 - `047` Settings source PDF delete action reliability.
+- `048` Real roster batch QA and text false positive guard.
 
 Manual validation issue:
 

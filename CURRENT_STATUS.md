@@ -16,8 +16,8 @@ No active implementation milestone is selected after completing the Roster Impor
 
 Most recent completed local issues:
 
-- `046` Roster parser layout reliability.
 - `047` Settings source PDF delete action reliability.
+- `048` Real roster batch QA and text false positive guard.
 
 ## Manual Validation Still Open
 
@@ -49,6 +49,7 @@ npm run typecheck
 - Frontend automated coverage currently includes deterministic presenter tests and backend API-client boundary tests; native/device automation remains out of scope.
 - Source-of-truth boundaries must remain explicit: roster data is planned baseline, live/traffic/weather/AI data is annotation or decision context only.
 - Parser reliability should continue to be checked with each new real roster release using counts-only local QA and sanitized regression fixtures for any new edge case.
+- The April-May 2026 private roster batch QA passed for normal IDP rosters; a structurally incompatible `duty-plan` PDF rejects before import.
 - Real roster PDFs, parsed private outputs, exact home coordinates, secrets, and screenshots with private data must remain uncommitted.
 
 ## Next Recommended Work
