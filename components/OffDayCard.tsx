@@ -23,21 +23,6 @@ export function OffDayCard({ event, onPress }: OffDayCardProps) {
     return 'Off Day';
   };
 
-  // Calculate duration in hours or days
-  const getDuration = () => {
-    const durationMs = event.endDate.getTime() - event.startDate.getTime();
-    const hours = Math.floor(durationMs / (1000 * 60 * 60));
-    const days = Math.floor(hours / 24);
-    
-    if (days > 1) {
-      return `${days} days`;
-    } else if (hours > 24) {
-      return `${Math.floor(hours / 24)} day`;
-    } else {
-      return `${hours}h`;
-    }
-  };
-
   return (
     <TouchableOpacity 
       style={styles.container} 

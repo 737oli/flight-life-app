@@ -81,7 +81,7 @@ export default function EventDetailModal({ visible, event, onClose }: EventDetai
 
     setLoadingOps(false);
     
-  }, [loadFlightOps]);
+  }, []);
 
   // Check if flight is departing within 3 hours
   const isDepartingSoon = (start: string | Date) => {

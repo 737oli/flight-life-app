@@ -29,7 +29,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 
 No active implementation milestone is selected.
 
-The most recent milestone, Operational Readiness Diagnostics, is complete. Its historical detail lives in [Milestones History](milestones-history.md).
+The most recent milestone, Frontend Maintenance And API Boundary Tests, is complete. Its historical detail lives in [Milestones History](milestones-history.md).
 
 ## Next Planning Candidates
 
@@ -37,6 +37,7 @@ The most recent milestone, Operational Readiness Diagnostics, is complete. Its h
 - Choose the next product milestone.
 - Use Settings operational readiness before manual provider checks.
 - When adding or changing frontend DTO presentation behavior, add or update presenter tests before changing related UI screens.
+- When changing frontend backend API calls, add or update API-client tests with mocked network/AsyncStorage behavior.
 
 ## Dependency Notes
 

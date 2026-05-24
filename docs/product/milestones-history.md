@@ -64,6 +64,12 @@ Issues: `042` and `043`.
 
 Outcome: the backend exposes privacy-safe operational provider readiness through `/system/readiness`, and Settings shows a compact provider readiness panel for AF/KLM, TomTom, Open-Meteo, and OpenAI without exposing secrets, coordinates, paths, or raw provider payloads.
 
+### Tenth Milestone: Frontend Maintenance And API Boundary Tests
+
+Issues: `044` and `045`.
+
+Outcome: the frontend lint baseline is clean, and the backend API client has deterministic tests for backend URL normalization, readiness success/error handling, and backend-unavailable health fallback behavior.
+
 ## Historical Issue Index
 
 Detailed issue drafts and implementation records live in `docs/issues/`.
@@ -112,6 +118,8 @@ Completed implementation issues:
 - `041` Frontend behavior test foundation.
 - `042` Backend operational readiness endpoint.
 - `043` Settings operational readiness panel.
+- `044` Frontend lint warning cleanup.
+- `045` Frontend backend API client tests.
 
 Manual validation issue:
 

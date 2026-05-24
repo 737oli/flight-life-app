@@ -12,12 +12,12 @@ The app has a working private single-user baseline:
 
 ## Active Milestone
 
-No active implementation milestone is selected after completing the Documentation Operating Model And Test Foundation milestone.
+No active implementation milestone is selected after completing the Frontend Maintenance And API Boundary Tests milestone.
 
 Most recent completed local issues:
 
-- `042` Backend operational readiness endpoint.
-- `043` Settings operational readiness panel.
+- `044` Frontend lint warning cleanup.
+- `045` Frontend backend API client tests.
 
 ## Manual Validation Still Open
 
@@ -46,7 +46,7 @@ npm run typecheck
 ## Current Risks
 
 - Pi/Tailscale path is designed and documented, but still needs real-device validation.
-- Frontend automated coverage currently starts with deterministic presenter tests; native/device automation remains out of scope.
+- Frontend automated coverage currently includes deterministic presenter tests and backend API-client boundary tests; native/device automation remains out of scope.
 - Source-of-truth boundaries must remain explicit: roster data is planned baseline, live/traffic/weather/AI data is annotation or decision context only.
 - Real roster PDFs, parsed private outputs, exact home coordinates, secrets, and screenshots with private data must remain uncommitted.
 

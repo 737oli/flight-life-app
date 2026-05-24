@@ -71,7 +71,7 @@ npm run test
 npm run typecheck
 ```
 
-The first committed tests cover backend DTO-to-render-model behavior for Home schedule cards and Settings import-history/current-roster cards. Component, device, screenshot, and end-to-end tests are still deferred.
+The first committed tests cover backend DTO-to-render-model behavior for Home schedule cards and Settings import-history/current-roster cards. Frontend API-client tests cover backend URL normalization, readiness success/error behavior, and backend-unavailable health fallback behavior. Component, device, screenshot, and end-to-end tests are still deferred.
 
 ## First Frontend Test Targets
 
@@ -83,6 +83,7 @@ When extending frontend tests, prioritize:
 - every-day-in-next-7-days rendering;
 - compressed off-day rendering;
 - Settings upload success/warning/error states;
+- backend API client URL normalization, typed errors, and offline fallback behavior;
 - operations chips and detail panel behavior.
 - full agenda rendering from the backend date-range schedule endpoint;
 - decision markers in the agenda;

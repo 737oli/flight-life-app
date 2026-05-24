@@ -58,6 +58,8 @@ Use [Current Status](../../CURRENT_STATUS.md) for current state and [Kanban](../
 - [041 - Frontend behavior test foundation](041-frontend-behavior-test-foundation.md)
 - [042 - Backend operational readiness endpoint](042-backend-operational-readiness-endpoint.md)
 - [043 - Settings operational readiness panel](043-settings-operational-readiness-panel.md)
+- [044 - Frontend lint warning cleanup](044-frontend-lint-warning-cleanup.md)
+- [045 - Frontend backend API client tests](045-frontend-backend-api-client-tests.md)
 
 ## QA References
 
