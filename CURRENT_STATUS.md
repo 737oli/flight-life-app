@@ -12,12 +12,12 @@ The app has a working private single-user baseline:
 
 ## Active Milestone
 
-No active implementation milestone is selected after completing the Frontend Maintenance And API Boundary Tests milestone.
+No active implementation milestone is selected after completing the Roster Import Reliability milestone.
 
 Most recent completed local issues:
 
-- `044` Frontend lint warning cleanup.
-- `045` Frontend backend API client tests.
+- `046` Roster parser layout reliability.
+- `047` Settings source PDF delete action reliability.
 
 ## Manual Validation Still Open
 
@@ -48,10 +48,11 @@ npm run typecheck
 - Pi/Tailscale path is designed and documented, but still needs real-device validation.
 - Frontend automated coverage currently includes deterministic presenter tests and backend API-client boundary tests; native/device automation remains out of scope.
 - Source-of-truth boundaries must remain explicit: roster data is planned baseline, live/traffic/weather/AI data is annotation or decision context only.
+- Parser reliability should continue to be checked with each new real roster release using counts-only local QA and sanitized regression fixtures for any new edge case.
 - Real roster PDFs, parsed private outputs, exact home coordinates, secrets, and screenshots with private data must remain uncommitted.
 
 ## Next Recommended Work
 
 1. Run issue `023` when the Raspberry Pi and iPhone/Tailscale setup is available.
-2. Choose the next product milestone.
-3. Use Settings operational readiness before manual provider or Pi/Tailscale testing.
+2. Re-test roster import from Settings with the next real roster PDF and confirm the source-PDF delete confirmation flow on the target device.
+3. Choose the next product milestone.

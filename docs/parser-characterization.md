@@ -20,13 +20,14 @@ The ignored local roster PDF was used only for counts and parser-shape validatio
 
 - Before parser hardening: 28 duty days parsed, 3 flight legs parsed, 7 flight-duty days without legs, and at least one same-station route shape observed.
 - After parser hardening: 28 duty days parsed, 13 flight legs parsed, 2 flight-duty days without legs, and 0 same-station flight legs observed in the counts-only check.
+- After layout reliability follow-up: the same ignored local roster parsed 25 flight legs, 0 flight-duty days without legs, and 0 parser warnings in the counts-only check.
 
 ## Known Limitations To Revisit
 
 - The duty table model stores weekday plus day-of-month, but not the resolved absolute roster date.
 - Duty table token recognition is currently narrow: `Off`, `Fld`, and `Sby`.
 - Flight number recognition is currently KLM-specific.
-- Aircraft code recognition is currently narrow: Embraer-style `E##` or three-digit numeric codes.
+- Aircraft code recognition covers Embraer-style `E##`/`E#A` tokens and three-digit numeric codes.
 - Header parse failure is permissive: it returns the raw line with empty structured fields instead of a parser warning object.
-- Some flight-duty days can still have no extracted legs. Import is allowed when the roster period and duty table are valid, but the import summary surfaces `flight_duty_days_without_legs` and `parser_warning_count`.
+- Some future roster layouts may still have no extracted legs. Import is allowed when the roster period and duty table are valid, but the import summary surfaces `flight_duty_days_without_legs` and `parser_warning_count`.
 - Taxi derivation should still be treated as provisional and revisited with sanitized fixtures before later decision logic depends on it.

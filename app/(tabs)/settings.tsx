@@ -21,7 +21,6 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -125,6 +124,7 @@ export default function SettingsScreen() {
   const [importHistoryError, setImportHistoryError] = useState<string | null>(null);
   const [expandedImportIds, setExpandedImportIds] = useState<Record<number, boolean>>({});
   const [deletingImportId, setDeletingImportId] = useState<number | null>(null);
+  const [pendingDeleteImport, setPendingDeleteImport] = useState<RosterImportHistoryItem | null>(null);
   const [timestampMode, setTimestampMode] = useState<TimestampMode>("local");
   const [systemReadiness, setSystemReadiness] = useState<SystemReadinessResponse | null>(null);
   const [systemReadinessLoading, setSystemReadinessLoading] = useState(false);
@@ -314,6 +314,7 @@ export default function SettingsScreen() {
       await deleteRosterImportSourcePdf(importId, normalizedUrl);
       setApiUrl(normalizedUrl);
       await loadImportHistoryForUrl(normalizedUrl);
+      setPendingDeleteImport(null);
     } catch (error) {
       setImportHistoryError(error instanceof Error ? error.message : "Source PDF deletion failed");
     } finally {
@@ -322,21 +323,21 @@ export default function SettingsScreen() {
   }, [apiUrl, loadImportHistoryForUrl]);
 
   const confirmDeleteSourcePdf = useCallback((importItem: RosterImportHistoryItem) => {
-    Alert.alert(
-      "Delete source PDF?",
-      "Parsed roster data will remain. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            void deleteSourcePdf(importItem.id);
-          },
-        },
-      ]
-    );
-  }, [deleteSourcePdf]);
+    setImportHistoryError(null);
+    setPendingDeleteImport(importItem);
+  }, []);
+
+  const cancelDeleteSourcePdf = useCallback(() => {
+    setPendingDeleteImport(null);
+  }, []);
+
+  const deletePendingSourcePdf = useCallback(() => {
+    if (!pendingDeleteImport) {
+      return;
+    }
+
+    void deleteSourcePdf(pendingDeleteImport.id);
+  }, [deleteSourcePdf, pendingDeleteImport]);
 
   const chooseAndImportRoster = useCallback(async () => {
     setImportError(null);
@@ -569,6 +570,15 @@ export default function SettingsScreen() {
           </View>
 
           <TimestampModeControl mode={timestampMode} onChange={updateTimestampMode} />
+
+          {pendingDeleteImport && (
+            <DeleteSourcePdfConfirmation
+              deleting={deletingImportId === pendingDeleteImport.id}
+              importItem={pendingDeleteImport}
+              onCancel={cancelDeleteSourcePdf}
+              onConfirm={deletePendingSourcePdf}
+            />
+          )}
 
           {importHistoryError && (
             <View style={[styles.notice, styles.warningNotice]}>
@@ -882,6 +892,47 @@ function ProviderReadinessRow({ provider }: { provider: ProviderReadinessModel }
           </Text>
         </View>
         <Text style={styles.resultMeta}>{provider.detailLabel}</Text>
+      </View>
+    </View>
+  );
+}
+
+function DeleteSourcePdfConfirmation({
+  deleting,
+  importItem,
+  onCancel,
+  onConfirm,
+}: {
+  deleting: boolean;
+  importItem: RosterImportHistoryItem;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <View style={[styles.notice, styles.deleteConfirmNotice]}>
+      <Trash2 color={Colors.light.danger} size={18} />
+      <View style={styles.resultTextGroup}>
+        <Text style={styles.resultMessage}>Delete source PDF?</Text>
+        <Text style={styles.resultMeta}>{importItem.source_filename}</Text>
+        <Text style={styles.warningText}>Parsed roster data will remain. This cannot be undone.</Text>
+        <View style={styles.deleteConfirmActions}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            disabled={deleting}
+            onPress={onCancel}
+            style={styles.confirmCancelButton}
+          >
+            <Text style={styles.confirmCancelText}>Cancel</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            disabled={deleting}
+            onPress={onConfirm}
+            style={[styles.confirmDeleteButton, deleting && styles.buttonDisabled]}
+          >
+            <Text style={styles.confirmDeleteButtonText}>{deleting ? "Deleting" : "Delete"}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
@@ -1385,6 +1436,45 @@ const styles = StyleSheet.create({
     backgroundColor: `${Colors.light.warning}12`,
     borderColor: `${Colors.light.warning}45`,
     borderWidth: 1,
+  },
+  deleteConfirmNotice: {
+    backgroundColor: `${Colors.light.danger}10`,
+    borderColor: `${Colors.light.danger}35`,
+    borderWidth: 1,
+    marginBottom: 14,
+  },
+  deleteConfirmActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+    marginTop: 10,
+  },
+  confirmCancelButton: {
+    alignItems: "center",
+    borderColor: Colors.light.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    minHeight: 40,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+  },
+  confirmCancelText: {
+    color: Colors.light.secondary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  confirmDeleteButton: {
+    alignItems: "center",
+    backgroundColor: Colors.light.danger,
+    borderRadius: 8,
+    minHeight: 40,
+    paddingHorizontal: 14,
+    justifyContent: "center",
+  },
+  confirmDeleteButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "800",
   },
   inlineRetryButton: {
     alignItems: "center",

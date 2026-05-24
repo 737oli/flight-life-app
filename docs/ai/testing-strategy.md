@@ -84,6 +84,7 @@ When extending frontend tests, prioritize:
 - compressed off-day rendering;
 - Settings upload success/warning/error states;
 - backend API client URL normalization, typed errors, and offline fallback behavior;
+- source-PDF deletion confirmation and API-client behavior;
 - operations chips and detail panel behavior.
 - full agenda rendering from the backend date-range schedule endpoint;
 - decision markers in the agenda;

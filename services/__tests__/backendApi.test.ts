@@ -2,6 +2,7 @@ import { describe, expect, it, jest, beforeEach } from "@jest/globals";
 
 import {
   BackendApiError,
+  deleteRosterImportSourcePdf,
   fetchBackendHealth,
   fetchSystemReadiness,
   normalizeBackendBaseUrl,
@@ -66,5 +67,39 @@ describe("backendApi", () => {
       baseUrl: "http://api.test",
       message: "Backend unavailable",
     });
+  });
+
+  it("deletes roster import source PDFs through the backend endpoint", async () => {
+    const payload = {
+      status: "ok",
+      import: {
+        id: 7,
+        source_filename: "synthetic-roster.pdf",
+        source_pdf: {
+          state: "deleted",
+          label: "Source PDF deleted",
+          can_delete: false,
+          deleted_at: "2026-05-24T10:15:00Z",
+        },
+      },
+    };
+    mockFetch.mockResolvedValueOnce(jsonResponse(payload));
+
+    const result = await deleteRosterImportSourcePdf(7, "http://api.test///");
+
+    expect(mockFetch).toHaveBeenCalledWith("http://api.test/rosters/imports/7/source-pdf", {
+      method: "DELETE",
+    });
+    expect(result).toBe(payload);
+  });
+
+  it("throws a typed error when source PDF deletion fails", async () => {
+    mockFetch.mockResolvedValueOnce(jsonResponse({ detail: "roster_import_not_found" }, { ok: false, status: 404 }));
+
+    await expect(deleteRosterImportSourcePdf(999, "http://api.test")).rejects.toMatchObject({
+      name: "BackendApiError",
+      status: 404,
+      errors: ["roster_import_not_found"],
+    } satisfies Partial<BackendApiError>);
   });
 });

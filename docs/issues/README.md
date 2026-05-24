@@ -60,6 +60,8 @@ Use [Current Status](../../CURRENT_STATUS.md) for current state and [Kanban](../
 - [043 - Settings operational readiness panel](043-settings-operational-readiness-panel.md)
 - [044 - Frontend lint warning cleanup](044-frontend-lint-warning-cleanup.md)
 - [045 - Frontend backend API client tests](045-frontend-backend-api-client-tests.md)
+- [046 - Roster parser layout reliability](046-roster-parser-layout-reliability.md)
+- [047 - Settings source PDF delete action reliability](047-settings-source-pdf-delete-action.md)
 
 ## QA References
 
