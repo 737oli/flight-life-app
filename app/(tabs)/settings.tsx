@@ -38,6 +38,7 @@ import {
   BackendHealthStatus,
   deleteRosterImportSourcePdf,
   fetchRosterImportHistory,
+  fetchSystemReadiness,
   RosterImportResponse,
   RosterImportHistoryItem,
   RosterImportHistoryResponse,
@@ -48,6 +49,7 @@ import {
   importRosterPdf,
   normalizeBackendBaseUrl,
   saveBackendBaseUrl,
+  SystemReadinessResponse,
   updatePreferences,
 } from "@/services/backendApi";
 import {
@@ -56,6 +58,10 @@ import {
   formatWarning,
   TimestampMode,
 } from "@/services/importHistoryPresentation";
+import {
+  buildSystemReadinessModel,
+  ProviderReadinessModel,
+} from "@/services/readinessPresentation";
 
 type StatusDetails = {
   label: string;
@@ -120,6 +126,9 @@ export default function SettingsScreen() {
   const [expandedImportIds, setExpandedImportIds] = useState<Record<number, boolean>>({});
   const [deletingImportId, setDeletingImportId] = useState<number | null>(null);
   const [timestampMode, setTimestampMode] = useState<TimestampMode>("local");
+  const [systemReadiness, setSystemReadiness] = useState<SystemReadinessResponse | null>(null);
+  const [systemReadinessLoading, setSystemReadinessLoading] = useState(false);
+  const [systemReadinessError, setSystemReadinessError] = useState<string | null>(null);
 
   const statusDetails = statusDetailsByStatus[status];
   const StatusIcon = statusDetails.icon;
@@ -161,6 +170,23 @@ export default function SettingsScreen() {
     }
   }, []);
 
+  const loadSystemReadinessForUrl = useCallback(async (baseUrl: string) => {
+    const normalizedUrl = normalizeBackendBaseUrl(baseUrl);
+    if (!normalizedUrl) {
+      return;
+    }
+
+    setSystemReadinessLoading(true);
+    setSystemReadinessError(null);
+    try {
+      setSystemReadiness(await fetchSystemReadiness(normalizedUrl));
+    } catch (error) {
+      setSystemReadinessError(error instanceof Error ? error.message : "Readiness unavailable");
+    } finally {
+      setSystemReadinessLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let mounted = true;
     getConfiguredBackendBaseUrl().then((configuredUrl) => {
@@ -170,6 +196,7 @@ export default function SettingsScreen() {
       setApiUrl(configuredUrl);
       void loadPreferencesForUrl(configuredUrl);
       void loadImportHistoryForUrl(configuredUrl);
+      void loadSystemReadinessForUrl(configuredUrl);
     });
     AsyncStorage.getItem(IMPORT_TIMESTAMP_MODE_STORAGE_KEY).then((storedMode) => {
       if (mounted && (storedMode === "local" || storedMode === "utc")) {
@@ -179,12 +206,13 @@ export default function SettingsScreen() {
     return () => {
       mounted = false;
     };
-  }, [loadImportHistoryForUrl, loadPreferencesForUrl]);
+  }, [loadImportHistoryForUrl, loadPreferencesForUrl, loadSystemReadinessForUrl]);
 
   useFocusEffect(
     useCallback(() => {
       void loadImportHistoryForUrl(apiUrl);
-    }, [apiUrl, loadImportHistoryForUrl])
+      void loadSystemReadinessForUrl(apiUrl);
+    }, [apiUrl, loadImportHistoryForUrl, loadSystemReadinessForUrl])
   );
 
   const checkedAtText = useMemo(() => {
@@ -220,8 +248,11 @@ export default function SettingsScreen() {
     if (result.ok) {
       void loadPreferencesForUrl(result.baseUrl);
       void loadImportHistoryForUrl(result.baseUrl);
+      void loadSystemReadinessForUrl(result.baseUrl);
+    } else {
+      setSystemReadiness(null);
     }
-  }, [apiUrl, loadImportHistoryForUrl, loadPreferencesForUrl]);
+  }, [apiUrl, loadImportHistoryForUrl, loadPreferencesForUrl, loadSystemReadinessForUrl]);
 
   const handleApiUrlChange = (value: string) => {
     setApiUrl(value);
@@ -512,6 +543,13 @@ export default function SettingsScreen() {
               </View>
             </View>
           )}
+
+          <SystemReadinessSection
+            error={systemReadinessError}
+            loading={systemReadinessLoading}
+            onRefresh={() => loadSystemReadinessForUrl(apiUrl)}
+            readiness={systemReadiness}
+          />
         </View>
 
         <View style={styles.panel}>
@@ -755,6 +793,97 @@ function SegmentButton({
     >
       <Text style={[styles.segmentButtonText, active && styles.segmentButtonTextActive]}>{label}</Text>
     </TouchableOpacity>
+  );
+}
+
+function SystemReadinessSection({
+  error,
+  loading,
+  onRefresh,
+  readiness,
+}: {
+  error: string | null;
+  loading: boolean;
+  onRefresh: () => void;
+  readiness: SystemReadinessResponse | null;
+}) {
+  const model = buildSystemReadinessModel(readiness);
+  const HeaderIcon = model ? (model.needsAttention ? AlertCircle : CheckCircle2) : RefreshCw;
+  const headerIconColor = model
+    ? model.needsAttention
+      ? Colors.light.warning
+      : Colors.light.success
+    : Colors.light.secondary;
+
+  return (
+    <View style={styles.readinessSection}>
+      <View style={styles.readinessHeader}>
+        <View style={styles.panelTitleGroup}>
+          <HeaderIcon color={headerIconColor} size={18} />
+          <Text style={styles.sectionTitle}>Operational readiness</Text>
+        </View>
+        <TouchableOpacity
+          accessibilityRole="button"
+          disabled={loading}
+          onPress={onRefresh}
+          style={styles.iconButton}
+        >
+          {loading ? (
+            <ActivityIndicator color={Colors.light.tint} size="small" />
+          ) : (
+            <RefreshCw color={Colors.light.tint} size={18} />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {error ? (
+        <Text style={styles.warningText}>{error}</Text>
+      ) : model ? (
+        <>
+          <Text style={styles.resultMeta}>
+            {model.titleLabel}
+            {model.generatedAtLabel ? ` · Checked ${model.generatedAtLabel}` : ""}
+          </Text>
+          <View style={styles.readinessList}>
+            {model.providers.map((provider) => (
+              <ProviderReadinessRow key={provider.id} provider={provider} />
+            ))}
+          </View>
+        </>
+      ) : (
+        <Text style={styles.resultMeta}>
+          {loading ? "Checking provider readiness" : "Provider readiness not checked yet"}
+        </Text>
+      )}
+    </View>
+  );
+}
+
+function ProviderReadinessRow({ provider }: { provider: ProviderReadinessModel }) {
+  const isReady = provider.tone === "success";
+
+  return (
+    <View style={styles.providerRow}>
+      {isReady ? (
+        <CheckCircle2 color={Colors.light.success} size={16} />
+      ) : (
+        <AlertCircle color={Colors.light.warning} size={16} />
+      )}
+      <View style={styles.resultTextGroup}>
+        <View style={styles.providerTitleRow}>
+          <Text style={styles.providerLabel}>{provider.label}</Text>
+          <Text
+            style={[
+              styles.providerStatus,
+              { color: isReady ? Colors.light.success : Colors.light.warning },
+            ]}
+          >
+            {provider.statusLabel}
+          </Text>
+        </View>
+        <Text style={styles.resultMeta}>{provider.detailLabel}</Text>
+      </View>
+    </View>
   );
 }
 
@@ -1193,6 +1322,51 @@ const styles = StyleSheet.create({
     color: Colors.light.secondary,
     fontSize: 13,
     marginTop: 2,
+  },
+  readinessSection: {
+    borderTopColor: Colors.light.border,
+    borderTopWidth: 1,
+    gap: 10,
+    marginTop: 16,
+    paddingTop: 14,
+  },
+  readinessHeader: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  readinessList: {
+    gap: 8,
+    marginTop: 2,
+  },
+  providerRow: {
+    alignItems: "flex-start",
+    backgroundColor: "#fff",
+    borderColor: Colors.light.border,
+    borderRadius: 8,
+    borderWidth: 1,
+    flexDirection: "row",
+    gap: 10,
+    padding: 10,
+  },
+  providerTitleRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    justifyContent: "space-between",
+  },
+  providerLabel: {
+    color: Colors.light.text,
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "800",
+    minWidth: 150,
+  },
+  providerStatus: {
+    fontSize: 12,
+    fontWeight: "800",
+    textTransform: "uppercase",
   },
   notice: {
     alignItems: "flex-start",

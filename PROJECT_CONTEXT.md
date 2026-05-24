@@ -51,12 +51,13 @@ Implemented workflow beyond the first dashboard includes a full roster agenda an
 - GPT is an on-demand advisor only. It cannot override the deterministic backend recommendation.
 - Backend gathers traffic, weather, roster, preference, and decision facts. GPT interprets a compact structured context.
 
-Settings now also owns roster-management trust and source-PDF cleanup:
+Settings now also owns roster-management trust, source-PDF cleanup, and provider readiness:
 
 - Current roster means the latest successful import.
 - Import history is read-only audit/history, not rollback or old-roster preview.
 - Settings shows current import metadata, recent successful imports, parser warning signal, preserved-days context, and source PDF privacy state.
 - Source PDFs can be deleted irreversibly without deleting parsed roster data, import metadata, or manual decisions.
+- Settings shows privacy-safe operational readiness for AF/KLM, TomTom, Open-Meteo, and OpenAI so missing optional configuration is visible before manual provider testing.
 
 ## Data Sources
 
@@ -173,9 +174,9 @@ Real roster PDFs may be used locally for parser development and manual QA, but c
 
 ## Current Source Code Status
 
-The backend currently contains a FastAPI app, parser modules for extracting NetLine/Crew roster PDF information, a parser normalization boundary, SQLite persistence with SQLAlchemy/Alembic, a roster upload/import endpoint, date-scoped import merge behavior, current/recent import history APIs, source-PDF deletion, next-7-days and date-range schedule APIs, backend-owned preferences, a deterministic stay-vs-home decision engine, backend-only traffic context with TomTom, backend-only weather context with Open-Meteo summaries, a compact decision context builder, an on-demand OpenAI structured decision advisor endpoint with short-lived cache, a backend-only AF/KLM FlightStatus client, a 90-minute operations enrichment API, and a Docker Compose deployment shape for Raspberry Pi/Tailscale backend testing.
+The backend currently contains a FastAPI app, parser modules for extracting NetLine/Crew roster PDF information, a parser normalization boundary, SQLite persistence with SQLAlchemy/Alembic, a roster upload/import endpoint, date-scoped import merge behavior, current/recent import history APIs, source-PDF deletion, next-7-days and date-range schedule APIs, backend-owned preferences, a deterministic stay-vs-home decision engine, backend-only traffic context with TomTom, backend-only weather context with Open-Meteo summaries, a compact decision context builder, an on-demand OpenAI structured decision advisor endpoint with short-lived cache, a privacy-safe operational readiness endpoint, a backend-only AF/KLM FlightStatus client, a 90-minute operations enrichment API, and a Docker Compose deployment shape for Raspberry Pi/Tailscale backend testing.
 
-The frontend currently contains a backend-driven Home dashboard, Settings roster import, current roster/import history display, source-PDF deletion flow, backend configuration, Decisions integration with manual overrides, an AI advisor panel inside decision surfaces, operations chips/detail panels, a Calendar tab that renders the full imported roster period as a mobile agenda, and Jest/ts-jest presenter tests for DTO-to-render-model behavior.
+The frontend currently contains a backend-driven Home dashboard, Settings roster import, current roster/import history display, source-PDF deletion flow, backend configuration, operational readiness display, Decisions integration with manual overrides, an AI advisor panel inside decision surfaces, operations chips/detail panels, a Calendar tab that renders the full imported roster period as a mobile agenda, and Jest/ts-jest presenter tests for DTO-to-render-model behavior.
 
 The backend has committed pytest coverage for API smoke behavior, parser characterization, parser normalization, persistence setup, upload/import validation, date-scoped merge behavior, rollback behavior, schedule DTO output, preferences behavior, deterministic stay-vs-home decisions, mocked FlightStatus client normalization, operations enrichment eligibility/fallback behavior, traffic context, weather context, and OpenAI advisor structured-output/cache behavior. The frontend has initial deterministic presenter tests for Home schedule mapping and Settings import-history mapping.
 

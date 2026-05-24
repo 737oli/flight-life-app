@@ -14,6 +14,26 @@ export type BackendHealthResult = {
   status?: number;
 };
 
+export type ProviderReadinessStatus = "ready" | "partial" | "not_configured" | string;
+
+export type ProviderReadiness = {
+  id: string;
+  label: string;
+  category: "live_operations" | "decision_context" | string;
+  status: ProviderReadinessStatus;
+  missing: string[];
+  notes: string[];
+  model?: string;
+};
+
+export type SystemReadinessResponse = {
+  status: "ok" | string;
+  readiness: "ready" | "attention" | string;
+  generated_at: string;
+  providers: ProviderReadiness[];
+  warnings: string[];
+};
+
 export type RosterPeriod = {
   start: string;
   end: string;
@@ -357,6 +377,20 @@ export const fetchBackendHealth = async (
   } finally {
     clearTimeout(timeout);
   }
+};
+
+export const fetchSystemReadiness = async (baseUrl?: string): Promise<SystemReadinessResponse> => {
+  const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
+  const response = await fetch(`${normalizedBaseUrl}/system/readiness`);
+
+  if (!response.ok) {
+    throw new BackendApiError(`Readiness unavailable: HTTP ${response.status}`, {
+      status: response.status,
+      errors: [`HTTP ${response.status}`],
+    });
+  }
+
+  return (await response.json()) as SystemReadinessResponse;
 };
 
 export const importRosterPdf = async (

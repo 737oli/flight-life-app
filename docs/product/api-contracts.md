@@ -27,6 +27,7 @@ http://127.0.0.1:8010
 | `/rosters/import` | `POST` | `flight_life/api.py`, import/parser services | Settings roster upload | Accepts one PDF file. Atomic import; failed core parsing keeps existing data unchanged. |
 | `/rosters/imports?limit=10` | `GET` | import history service | Settings current roster/import history | Successful imports only. Does not expose local filesystem paths. `current_import` is latest successful import. |
 | `/rosters/imports/{import_id}/source-pdf` | `DELETE` | import history service | Settings source-PDF cleanup | Deletes retained PDF only, clears stored path, records deletion timestamp, preserves parsed data and metadata. |
+| `/system/readiness` | `GET` | readiness service | Settings operational readiness | Reports provider readiness and missing input names without secrets, coordinates, file paths, or raw provider payloads. |
 | `/schedule/next-7-days` | `GET` | schedule service | Home, Calendar seed request, Decisions | Returns exactly 7 calendar days from `start_date` or today. Missing dates are explicit. |
 | `/schedule` | `GET` | schedule service | Calendar agenda | Requires `start_date` and `end_date`. Returns every requested date in order for the selected range. |
 | `/preferences` | `GET` | preferences service | Settings preferences | Backend-side preference source. Frontend may cache only for display. |

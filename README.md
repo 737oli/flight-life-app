@@ -7,7 +7,7 @@ The primary target is iPhone with Expo Go or a development/internal build. Web i
 ## Current Scope
 
 - Home renders every day in the next 7 days from `/schedule/next-7-days`, including compressed off days and explicit missing-roster days.
-- Settings owns backend API URL, connection status, roster import, current roster/import history, source PDF cleanup, and editable backend preferences.
+- Settings owns backend API URL, connection status, operational readiness, roster import, current roster/import history, source PDF cleanup, and editable backend preferences.
 - Operations data is displayed as annotations for the next relevant flight and in the flight detail panel.
 - The frontend never calls AF/KLM directly and never stores API credentials.
 - If the backend is unavailable, Home renders the last successful cached schedule response when available. Upload/import and live operations still require backend access.

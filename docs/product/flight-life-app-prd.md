@@ -35,6 +35,7 @@ Later completed increments added:
 - backend weather context as secondary support;
 - an on-demand GPT advisor that interprets backend-owned facts without replacing the deterministic recommendation.
 - roster import history and privacy controls in Settings so the user can trust the current roster and delete retained source PDFs without losing parsed data.
+- privacy-safe operational readiness diagnostics for optional live/provider configuration.
 
 ## 3. Product Rules
 
@@ -121,6 +122,17 @@ Recent imports should show successful imports only. Failed/rejected imports are 
 Deleting a source PDF is irreversible. It deletes only the retained local source PDF, clears the stored path, marks a deletion timestamp, and keeps parsed roster data, import metadata, and manual decisions.
 
 The frontend may offer a local-only timestamp display preference for import history: local phone time by default, or UTC. The active mode must be clearly labeled.
+
+### Operational Readiness Diagnostics
+
+Settings should show whether optional backend provider configuration is ready for manual operational testing.
+
+Acceptance criteria:
+
+- Backend readiness reports AF/KLM, TomTom, Open-Meteo, and OpenAI state.
+- Missing configuration is visible but non-blocking.
+- The endpoint and UI never expose API keys, exact home coordinates, filesystem paths, raw provider payloads, raw prompts, or private roster data.
+- Readiness does not perform live provider calls; it only reports local configuration state.
 
 ## 4. User Stories
 

@@ -56,6 +56,8 @@ Use [Current Status](../../CURRENT_STATUS.md) for current state and [Kanban](../
 - [039 - Roster import history docs and QA checklist](039-roster-import-history-docs-qa.md)
 - [040 - Shared docs operating model refresh](040-shared-docs-operating-model.md)
 - [041 - Frontend behavior test foundation](041-frontend-behavior-test-foundation.md)
+- [042 - Backend operational readiness endpoint](042-backend-operational-readiness-endpoint.md)
+- [043 - Settings operational readiness panel](043-settings-operational-readiness-panel.md)
 
 ## QA References
 

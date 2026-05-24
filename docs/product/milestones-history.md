@@ -58,6 +58,12 @@ Issues: `040` and `041`.
 
 Outcome: the docs now have a short current-status entry point, active planning is separated from completed milestone history, API endpoint ownership and frontend consumers are indexed, shared-docs freshness checks are documented, and the frontend has a Jest/ts-jest presenter-test foundation for DTO-to-render-model behavior.
 
+### Ninth Milestone: Operational Readiness Diagnostics
+
+Issues: `042` and `043`.
+
+Outcome: the backend exposes privacy-safe operational provider readiness through `/system/readiness`, and Settings shows a compact provider readiness panel for AF/KLM, TomTom, Open-Meteo, and OpenAI without exposing secrets, coordinates, paths, or raw provider payloads.
+
 ## Historical Issue Index
 
 Detailed issue drafts and implementation records live in `docs/issues/`.
@@ -104,6 +110,8 @@ Completed implementation issues:
 - `039` Roster import history docs and QA checklist.
 - `040` Shared docs operating model refresh.
 - `041` Frontend behavior test foundation.
+- `042` Backend operational readiness endpoint.
+- `043` Settings operational readiness panel.
 
 Manual validation issue:
 

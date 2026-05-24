@@ -1,13 +1,13 @@
 # Current Status: Flight Life App
 
-Last updated: 2026-05-23
+Last updated: 2026-05-24
 
 ## Current State
 
 The app has a working private single-user baseline:
 
-- Backend imports roster PDFs, parses and persists roster data, preserves dates outside the imported roster period, and exposes schedule, preferences, decisions, operations, AI advisor, and import-history APIs.
-- Frontend shows Home, Calendar, Decisions, Settings roster import, current roster/import history, source-PDF cleanup, operations panels, deterministic decision surfaces, and on-demand AI advisor context.
+- Backend imports roster PDFs, parses and persists roster data, preserves dates outside the imported roster period, and exposes schedule, preferences, decisions, operations, AI advisor, import-history, and operational-readiness APIs.
+- Frontend shows Home, Calendar, Decisions, Settings roster import, current roster/import history, source-PDF cleanup, provider readiness, operations panels, deterministic decision surfaces, and on-demand AI advisor context.
 - Shared docs are tracked in both child repositories, with the backend repo as the canonical source.
 
 ## Active Milestone
@@ -16,8 +16,8 @@ No active implementation milestone is selected after completing the Documentatio
 
 Most recent completed local issues:
 
-- `040` Shared docs operating model refresh.
-- `041` Frontend behavior test foundation.
+- `042` Backend operational readiness endpoint.
+- `043` Settings operational readiness panel.
 
 ## Manual Validation Still Open
 
@@ -54,4 +54,4 @@ npm run typecheck
 
 1. Run issue `023` when the Raspberry Pi and iPhone/Tailscale setup is available.
 2. Choose the next product milestone.
-3. Keep frontend contract changes covered by presenter tests before changing related UI screens.
+3. Use Settings operational readiness before manual provider or Pi/Tailscale testing.
