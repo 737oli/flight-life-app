@@ -57,10 +57,12 @@ import {
   formatWarning,
   TimestampMode,
 } from "@/services/importHistoryPresentation";
+import { clearOperationSnapshots } from "@/services/operationsSnapshotCache";
 import {
   buildSystemReadinessModel,
   ProviderReadinessModel,
 } from "@/services/readinessPresentation";
+import { clearScheduleCache } from "@/services/scheduleCache";
 
 type StatusDetails = {
   label: string;
@@ -126,6 +128,9 @@ export default function SettingsScreen() {
   const [deletingImportId, setDeletingImportId] = useState<number | null>(null);
   const [pendingDeleteImport, setPendingDeleteImport] = useState<RosterImportHistoryItem | null>(null);
   const [timestampMode, setTimestampMode] = useState<TimestampMode>("local");
+  const [localDataClearConfirming, setLocalDataClearConfirming] = useState(false);
+  const [localDataClearing, setLocalDataClearing] = useState(false);
+  const [localDataClearStatus, setLocalDataClearStatus] = useState<"cleared" | "error" | null>(null);
   const [systemReadiness, setSystemReadiness] = useState<SystemReadinessResponse | null>(null);
   const [systemReadinessLoading, setSystemReadinessLoading] = useState(false);
   const [systemReadinessError, setSystemReadinessError] = useState<string | null>(null);
@@ -297,6 +302,27 @@ export default function SettingsScreen() {
   const updateTimestampMode = useCallback((mode: TimestampMode) => {
     setTimestampMode(mode);
     void AsyncStorage.setItem(IMPORT_TIMESTAMP_MODE_STORAGE_KEY, mode);
+  }, []);
+
+  const clearLocalDeviceData = useCallback(async () => {
+    setLocalDataClearing(true);
+    setLocalDataClearStatus(null);
+    try {
+      await Promise.all([
+        clearScheduleCache(),
+        clearOperationSnapshots(),
+        AsyncStorage.removeItem(IMPORT_TIMESTAMP_MODE_STORAGE_KEY),
+      ]);
+      setTimestampMode("local");
+      setImportResult(null);
+      setImportError(null);
+      setLocalDataClearConfirming(false);
+      setLocalDataClearStatus("cleared");
+    } catch {
+      setLocalDataClearStatus("error");
+    } finally {
+      setLocalDataClearing(false);
+    }
   }, []);
 
   const toggleImportExpanded = useCallback((importId: number) => {
@@ -728,6 +754,93 @@ export default function SettingsScreen() {
               <Text style={styles.resultMessage}>No roster imported yet</Text>
               <Text style={styles.resultMeta}>Import a PDF to create the current roster baseline.</Text>
             </View>
+          )}
+        </View>
+
+        <View style={styles.panel}>
+          <View style={styles.panelHeader}>
+            <View style={styles.panelTitleGroup}>
+              <Trash2 color={Colors.light.danger} size={22} />
+              <Text style={styles.panelTitle}>Clear Local Data</Text>
+            </View>
+          </View>
+
+          <Text style={styles.resultMeta}>
+            Clears cached schedule data, last-known operations data, and the local import timestamp
+            display preference on this device. Backend roster data, source PDFs, decisions,
+            preferences, and API URL are not deleted.
+          </Text>
+
+          {localDataClearStatus && (
+            <View
+              style={[
+                styles.notice,
+                localDataClearStatus === "cleared" ? styles.successNotice : styles.errorNotice,
+              ]}
+            >
+              {localDataClearStatus === "cleared" ? (
+                <CheckCircle2 color={Colors.light.success} size={18} />
+              ) : (
+                <AlertCircle color={Colors.light.danger} size={18} />
+              )}
+              <Text style={styles.resultMessage}>
+                {localDataClearStatus === "cleared"
+                  ? "Local cached data cleared"
+                  : "Could not clear local cached data"}
+              </Text>
+            </View>
+          )}
+
+          {localDataClearConfirming ? (
+            <View style={[styles.notice, styles.deleteConfirmNotice]}>
+              <AlertCircle color={Colors.light.danger} size={18} />
+              <View style={styles.resultTextGroup}>
+                <Text style={styles.resultMessage}>Clear local cached data?</Text>
+                <Text style={styles.warningText}>
+                  Home may show an empty or offline state until it can fetch fresh data from the backend.
+                </Text>
+                <View style={styles.deleteConfirmActions}>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    disabled={localDataClearing}
+                    onPress={() => setLocalDataClearConfirming(false)}
+                    style={styles.confirmCancelButton}
+                  >
+                    <Text style={styles.confirmCancelText}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    accessibilityRole="button"
+                    disabled={localDataClearing}
+                    onPress={clearLocalDeviceData}
+                    style={[
+                      styles.confirmDeleteButton,
+                      localDataClearing && styles.buttonDisabled,
+                    ]}
+                  >
+                    <Text style={styles.confirmDeleteButtonText}>
+                      {localDataClearing ? "Clearing" : "Clear"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          ) : (
+            <TouchableOpacity
+              accessibilityRole="button"
+              disabled={localDataClearing}
+              onPress={() => {
+                setLocalDataClearStatus(null);
+                setLocalDataClearConfirming(true);
+              }}
+              style={[
+                styles.deleteButton,
+                styles.localDataClearButton,
+                localDataClearing && styles.buttonDisabled,
+              ]}
+            >
+              <Trash2 color={Colors.light.danger} size={16} />
+              <Text style={styles.deleteButtonText}>Clear Local Data</Text>
+            </TouchableOpacity>
           )}
         </View>
       </ScrollView>
@@ -1437,6 +1550,11 @@ const styles = StyleSheet.create({
     borderColor: `${Colors.light.warning}45`,
     borderWidth: 1,
   },
+  successNotice: {
+    backgroundColor: `${Colors.light.success}12`,
+    borderColor: `${Colors.light.success}40`,
+    borderWidth: 1,
+  },
   deleteConfirmNotice: {
     backgroundColor: `${Colors.light.danger}10`,
     borderColor: `${Colors.light.danger}35`,
@@ -1579,6 +1697,9 @@ const styles = StyleSheet.create({
     color: Colors.light.danger,
     fontSize: 14,
     fontWeight: "700",
+  },
+  localDataClearButton: {
+    marginTop: 14,
   },
   importSummary: {
     borderTopColor: Colors.light.border,

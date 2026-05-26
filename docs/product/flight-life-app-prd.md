@@ -83,6 +83,8 @@ Version 1 should use deterministic rules, not AI/ML scoring. Inputs include:
 
 The backend owns the decision engine and returns a recommendation plus reasoning. The frontend owns presentation, confirmation, overrides, and later preference editing.
 
+When TomTom is configured, stay-vs-home decision reasoning should show route-specific expected commute times for AMS-to-home and home-to-AMS. If TomTom is unavailable, missing coordinates, or missing a route, the decision must fall back to the configured commute assumption and keep the flow usable.
+
 Decision states should include "needs review" when inputs are missing or weak.
 
 AI advisor v1 is not an official decision engine. The backend rule result remains authoritative. GPT can add structured context only after the user taps an analysis action inside a decision detail pane. If GPT disagrees with the deterministic result, the app should show a disagreement or needs-review state instead of silently trusting GPT.
@@ -122,6 +124,8 @@ Recent imports should show successful imports only. Failed/rejected imports are 
 Deleting a source PDF is irreversible. It deletes only the retained local source PDF, clears the stored path, marks a deletion timestamp, and keeps parsed roster data, import metadata, and manual decisions.
 
 The frontend may offer a local-only timestamp display preference for import history: local phone time by default, or UTC. The active mode must be clearly labeled.
+
+Settings should also include a local data reset for stale frontend cache recovery. This action clears device-local cached schedule data, last-known operations snapshots, and local import-history display preferences only. It must not delete backend roster data, import metadata, source PDFs, manual decisions, backend preferences, or the configured API URL.
 
 ### Operational Readiness Diagnostics
 

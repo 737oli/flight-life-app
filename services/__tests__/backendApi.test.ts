@@ -4,8 +4,10 @@ import {
   BackendApiError,
   deleteRosterImportSourcePdf,
   fetchBackendHealth,
+  fetchStayVsHomeDecision,
   fetchSystemReadiness,
   normalizeBackendBaseUrl,
+  overrideStayVsHomeDecision,
 } from "@/services/backendApi";
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
@@ -101,5 +103,79 @@ describe("backendApi", () => {
       status: 404,
       errors: ["roster_import_not_found"],
     } satisfies Partial<BackendApiError>);
+  });
+
+  it("can request traffic-aware stay-vs-home decisions", async () => {
+    const payload = {
+      status: "ok",
+      decision: {
+        decision_key: "2026-05-21:stay-vs-home",
+        decision_date: "2026-05-21",
+        decision_type: "stay_vs_home",
+        state: "recommended",
+        recommendation: "go_home",
+        system_recommendation: "go_home",
+        manual_override: null,
+        missing_inputs: [],
+        reasoning: {
+          home_commute_source: "tomtom",
+        },
+      },
+    };
+    mockFetch.mockResolvedValueOnce(jsonResponse(payload));
+
+    const result = await fetchStayVsHomeDecision("2026-05-21", {
+      baseUrl: "http://api.test///",
+      includeTraffic: true,
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://api.test/decisions/stay-vs-home/2026-05-21?include_traffic=true"
+    );
+    expect(result).toBe(payload.decision);
+  });
+
+  it("can request traffic-aware decision override responses", async () => {
+    const payload = {
+      status: "ok",
+      decision: {
+        decision_key: "2026-05-21:stay-vs-home",
+        decision_date: "2026-05-21",
+        decision_type: "stay_vs_home",
+        state: "overridden",
+        recommendation: "stay_outstation",
+        system_recommendation: "go_home",
+        manual_override: {
+          choice: "stay_outstation",
+          status: "confirmed",
+        },
+        missing_inputs: [],
+        reasoning: {
+          home_commute_source: "tomtom",
+        },
+      },
+    };
+    mockFetch.mockResolvedValueOnce(jsonResponse(payload));
+
+    const result = await overrideStayVsHomeDecision(
+      "2026-05-21",
+      "stay_outstation",
+      {
+        baseUrl: "http://api.test///",
+        includeTraffic: true,
+      }
+    );
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://api.test/decisions/stay-vs-home/2026-05-21/override?include_traffic=true",
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ choice: "stay_outstation" }),
+      }
+    );
+    expect(result).toBe(payload.decision);
   });
 });

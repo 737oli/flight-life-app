@@ -32,7 +32,7 @@ http://127.0.0.1:8010
 | `/schedule` | `GET` | schedule service | Calendar agenda | Requires `start_date` and `end_date`. Returns every requested date in order for the selected range. |
 | `/preferences` | `GET` | preferences service | Settings preferences | Backend-side preference source. Frontend may cache only for display. |
 | `/preferences` | `PUT` | preferences service | Settings preferences | Validates editable local preferences. |
-| `/decisions/stay-vs-home/{decision_date}` | `GET` | decision service | Decisions, Home markers, Calendar markers | Deterministic backend recommendation. Only AMS-ending flight days should surface decision prompts in the frontend. |
+| `/decisions/stay-vs-home/{decision_date}` | `GET` | decision and traffic services | Decisions, Home markers, Calendar markers | Deterministic backend recommendation. Add `include_traffic=true` to include TomTom route-specific commute reasoning when configured, with preference fallback. Only AMS-ending flight days should surface decision prompts in the frontend. |
 | `/decisions/stay-vs-home/{decision_date}/override` | `PUT` | decision service | Decisions, decision panes | Saves manual choice for the current decision. Roster material changes can mark it needs review. |
 | `/decisions/stay-vs-home/{decision_date}/advisor` | `POST` | AI advisor/context services | AI advisor panel inside decision panes | On demand only. GPT interprets compact backend-owned facts and cannot override the deterministic result. |
 | `/operations/flights/{flight_leg_id}` | `GET` | operations service | Home operations chips, flight detail panel | Uses schedule `flight_leg_id`. Returns scheduled baseline plus live annotations inside the 90-minute window. |

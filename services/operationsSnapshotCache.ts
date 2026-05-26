@@ -95,6 +95,10 @@ export const loadOperationSnapshots = async (
   );
 };
 
+export const clearOperationSnapshots = async (): Promise<void> => {
+  await AsyncStorage.removeItem(OPERATIONS_SNAPSHOT_CACHE_KEY);
+};
+
 export const deriveDelayMinutes = (
   explicitDelay: number | null | undefined,
   scheduledTime: string | null | undefined,

@@ -76,6 +76,18 @@ Issues: `046` through `048`.
 
 Outcome: remaining missing flight legs from ignored local rosters were traced to layout parser token handling for alphanumeric aircraft codes and split flight numbers. A later batch QA pass across normal April-May 2026 IDP roster PDFs added a guard against text-extraction false positives, confirmed zero flight-duty days without legs, zero parser warnings, and zero same-station false positives, and confirmed structurally incompatible PDFs reject before import. Settings source-PDF deletion now uses an in-app confirmation with API-client delete tests.
 
+### Twelfth Milestone: Local Data Reset
+
+Issues: `049`.
+
+Outcome: Settings now includes a confirmed local-data reset for clearing stale cached schedule data, last-known operations snapshots, and the frontend-only import timestamp display preference without deleting backend roster data, source PDFs, decisions, preferences, or the API URL.
+
+### Thirteenth Milestone: TomTom Commute In Decisions
+
+Issues: `050`.
+
+Outcome: the standard stay-vs-home decision endpoint now includes backend-owned TomTom route-specific commute reasoning when available, keeps configured commute assumptions as fallback, and the frontend decision reasoning text shows TomTom commute minutes instead of the fixed `60 min each way` line when both route estimates are available.
+
 ## Historical Issue Index
 
 Detailed issue drafts and implementation records live in `docs/issues/`.
@@ -129,6 +141,8 @@ Completed implementation issues:
 - `046` Roster parser layout reliability.
 - `047` Settings source PDF delete action reliability.
 - `048` Real roster batch QA and text false positive guard.
+- `049` Settings local data reset.
+- `050` TomTom commute in Decisions.
 
 Manual validation issue:
 

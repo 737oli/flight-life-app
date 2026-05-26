@@ -152,9 +152,9 @@ Rationale: Backend ownership keeps credentials private, makes provider behavior 
 
 Status: Accepted
 
-Decision: Traffic v1 uses a backend-only TomTom provider for expected travel times on AMS-to-home and home-to-AMS stay-vs-home routes.
+Decision: Traffic v1 uses a backend-only TomTom provider for expected travel times on AMS-to-home and home-to-AMS stay-vs-home routes. When available, these route-specific expected times are included in the normal stay-vs-home decision reasoning and useful-home-time calculation. The configured commute preference remains the fallback when TomTom, coordinates, or a route estimate is unavailable.
 
-Rationale: Stay-vs-home decisions need realistic expected travel times. TomTom provides an official routing API with traffic-aware context and a suitable cost/risk profile for the first implementation.
+Rationale: Stay-vs-home decisions need realistic expected travel times. TomTom provides an official routing API with traffic-aware context and a suitable cost/risk profile for the first implementation. Keeping the preference fallback preserves usability during provider, VPN, or credential failures.
 
 ## ADR-020: Store Exact Home Coordinates Backend-Side Only
 
@@ -203,3 +203,11 @@ Status: Accepted
 Decision: Source PDF deletion is irreversible and may apply to any import, including the current import. Deletion removes the local file, clears the stored path, records `stored_pdf_deleted_at`, and preserves parsed roster data, import metadata, and manual decisions.
 
 Rationale: Parsed roster data is the durable app state after import. The retained PDF is only local debug/source material and should be removable for privacy without damaging schedule history.
+
+## ADR-026: Keep Settings Local Data Reset Frontend-Only
+
+Status: Accepted
+
+Decision: The Settings local data reset clears only device-local cached schedule data, last-known operations snapshots, and frontend-only import-history display preferences. It does not delete backend roster data, import metadata, source PDFs, manual decisions, backend preferences, or the configured API URL.
+
+Rationale: The frontend cache is a read-only fallback and can become stale after backend runtime data is intentionally cleared. Resetting that cache should recover the device without damaging the backend source of truth or disconnecting the app from the configured backend.

@@ -36,3 +36,7 @@ export const loadScheduleCache = async (): Promise<CachedSchedule | null> => {
     return null;
   }
 };
+
+export const clearScheduleCache = async (): Promise<void> => {
+  await AsyncStorage.removeItem(SCHEDULE_CACHE_KEY);
+};

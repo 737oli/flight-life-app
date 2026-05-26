@@ -75,7 +75,7 @@ export default function DecisionsScreen() {
       const decisions = await Promise.all(
         decisionDays.map(async (day) => ({
           day,
-          decision: await fetchStayVsHomeDecision(day.date),
+          decision: await fetchStayVsHomeDecision(day.date, { includeTraffic: true }),
         }))
       );
 
@@ -119,7 +119,11 @@ export default function DecisionsScreen() {
     });
 
     try {
-      const updatedDecision = await overrideStayVsHomeDecision(decision.decision_date, choice);
+      const updatedDecision = await overrideStayVsHomeDecision(
+        decision.decision_date,
+        choice,
+        { includeTraffic: true }
+      );
       setCards((currentCards) =>
         currentCards.map((card) =>
           card.decision.decision_key === updatedDecision.decision_key

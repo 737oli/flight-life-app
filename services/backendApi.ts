@@ -245,6 +245,11 @@ export type StayVsHomeReasoning = {
   current_duty_end?: string | null;
   time_between_duties_minutes?: number | null;
   home_commute_minutes_each_way?: number | null;
+  home_commute_source?: "preference" | "tomtom" | "tomtom_partial" | string | null;
+  home_commute_minutes_to_home?: number | null;
+  home_commute_minutes_to_airport?: number | null;
+  home_commute_round_trip_minutes?: number | null;
+  traffic_warnings?: string[] | null;
   minimum_useful_home_minutes?: number | null;
   useful_home_minutes?: number | null;
   hotel_available?: boolean | null;
@@ -573,12 +578,25 @@ export const fetchFlightOperations = async (
   return (await response.json()) as FlightOperationsResponse;
 };
 
+type DecisionRequestOptions = {
+  baseUrl?: string;
+  includeTraffic?: boolean;
+};
+
 export const fetchStayVsHomeDecision = async (
   decisionDate: string,
-  baseUrl?: string
+  options: DecisionRequestOptions | string = {}
 ): Promise<StayVsHomeDecision> => {
+  const baseUrl = typeof options === "string" ? options : options.baseUrl;
   const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
-  const response = await fetch(`${normalizedBaseUrl}/decisions/stay-vs-home/${decisionDate}`);
+  const params = new URLSearchParams();
+  if (typeof options !== "string" && options.includeTraffic) {
+    params.set("include_traffic", "true");
+  }
+  const queryString = params.toString();
+  const response = await fetch(
+    `${normalizedBaseUrl}/decisions/stay-vs-home/${decisionDate}${queryString ? `?${queryString}` : ""}`
+  );
 
   if (!response.ok) {
     throw new BackendApiError(`Decision unavailable: HTTP ${response.status}`, {
@@ -593,16 +611,25 @@ export const fetchStayVsHomeDecision = async (
 export const overrideStayVsHomeDecision = async (
   decisionDate: string,
   choice: StayVsHomeChoice,
-  baseUrl?: string
+  options: DecisionRequestOptions | string = {}
 ): Promise<StayVsHomeDecision> => {
+  const baseUrl = typeof options === "string" ? options : options.baseUrl;
   const normalizedBaseUrl = normalizeBackendBaseUrl(baseUrl || await getConfiguredBackendBaseUrl());
-  const response = await fetch(`${normalizedBaseUrl}/decisions/stay-vs-home/${decisionDate}/override`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ choice }),
-  });
+  const params = new URLSearchParams();
+  if (typeof options !== "string" && options.includeTraffic) {
+    params.set("include_traffic", "true");
+  }
+  const queryString = params.toString();
+  const response = await fetch(
+    `${normalizedBaseUrl}/decisions/stay-vs-home/${decisionDate}/override${queryString ? `?${queryString}` : ""}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ choice }),
+    }
+  );
   const payload = await response.json();
 
   if (!response.ok) {

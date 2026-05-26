@@ -6,18 +6,19 @@ Last updated: 2026-05-24
 
 The app has a working private single-user baseline:
 
-- Backend imports roster PDFs, parses and persists roster data, preserves dates outside the imported roster period, and exposes schedule, preferences, decisions, operations, AI advisor, import-history, and operational-readiness APIs.
-- Frontend shows Home, Calendar, Decisions, Settings roster import, current roster/import history, source-PDF cleanup, provider readiness, operations panels, deterministic decision surfaces, and on-demand AI advisor context.
+- Backend imports roster PDFs, parses and persists roster data, preserves dates outside the imported roster period, and exposes schedule, preferences, traffic-aware decisions, operations, AI advisor, import-history, and operational-readiness APIs.
+- Frontend shows Home, Calendar, Decisions, Settings roster import, current roster/import history, source-PDF cleanup, local data reset, provider readiness, operations panels, deterministic decision surfaces with TomTom commute reasoning when available, and on-demand AI advisor context.
 - Shared docs are tracked in both child repositories, with the backend repo as the canonical source.
 
 ## Active Milestone
 
-No active implementation milestone is selected after completing the Roster Import Reliability milestone.
+No active implementation milestone is selected after completing the TomTom Commute In Decisions slice.
 
 Most recent completed local issues:
 
-- `047` Settings source PDF delete action reliability.
 - `048` Real roster batch QA and text false positive guard.
+- `049` Settings local data reset.
+- `050` TomTom commute in Decisions.
 
 ## Manual Validation Still Open
 
@@ -55,5 +56,5 @@ npm run typecheck
 ## Next Recommended Work
 
 1. Run issue `023` when the Raspberry Pi and iPhone/Tailscale setup is available.
-2. Re-test roster import from Settings with the next real roster PDF and confirm the source-PDF delete confirmation flow on the target device.
+2. Re-test roster import from Settings with the next real roster PDF and confirm the source-PDF delete/local-data reset flows on the target device.
 3. Choose the next product milestone.

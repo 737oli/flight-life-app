@@ -55,8 +55,9 @@ export const decisionReasoningItems = (decision: StayVsHomeDecision) => {
   if (typeof reasoning.useful_home_minutes === "number") {
     items.push(`Useful time at home: ${formatMinutes(reasoning.useful_home_minutes)}`);
   }
-  if (typeof reasoning.home_commute_minutes_each_way === "number") {
-    items.push(`Commute assumption: ${reasoning.home_commute_minutes_each_way} min each way`);
+  const commuteItem = commuteReasoningItem(reasoning);
+  if (commuteItem) {
+    items.push(commuteItem);
   }
   if (typeof reasoning.hotel_available === "boolean") {
     items.push(reasoning.hotel_available ? "Hotel/rest available" : "Hotel/rest unknown");
@@ -69,6 +70,43 @@ export const decisionReasoningItems = (decision: StayVsHomeDecision) => {
   });
 
   return items;
+};
+
+const commuteReasoningItem = (reasoning: StayVsHomeDecision["reasoning"]) => {
+  const source = reasoning.home_commute_source;
+  const toHome = reasoning.home_commute_minutes_to_home;
+  const toAirport = reasoning.home_commute_minutes_to_airport;
+  const fallback = reasoning.home_commute_minutes_each_way;
+  const warnings = Array.isArray(reasoning.traffic_warnings) ? reasoning.traffic_warnings : [];
+
+  if (
+    (source === "tomtom" || source === "tomtom_partial") &&
+    typeof toHome === "number" &&
+    typeof toAirport === "number"
+  ) {
+    return `TomTom commute: ${formatCommuteMinutes(toHome)} home, ${formatCommuteMinutes(toAirport)} to AMS`;
+  }
+  if ((source === "tomtom" || source === "tomtom_partial") && typeof toHome === "number") {
+    return `TomTom commute home: ${formatCommuteMinutes(toHome)}`;
+  }
+  if ((source === "tomtom" || source === "tomtom_partial") && typeof toAirport === "number") {
+    return `TomTom commute to AMS: ${formatCommuteMinutes(toAirport)}`;
+  }
+  if (typeof fallback === "number") {
+    return warnings.length > 0
+      ? `Traffic unavailable; using commute assumption: ${fallback} min each way`
+      : `Commute assumption: ${fallback} min each way`;
+  }
+  return null;
+};
+
+const formatCommuteMinutes = (minutes: number) => {
+  if (minutes <= 60) {
+    return `${minutes} min`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainder = String(minutes % 60).padStart(2, "0");
+  return `${hours}h${remainder}`;
 };
 
 export const formatDisplayDate = (isoDate: string) =>
