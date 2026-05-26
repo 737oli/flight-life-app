@@ -65,6 +65,7 @@ Use [Current Status](../../CURRENT_STATUS.md) for current state and [Kanban](../
 - [048 - Real roster batch QA and text false positive guard](048-real-roster-batch-qa-text-false-positive-guard.md)
 - [049 - Settings local data reset](049-settings-local-data-reset.md)
 - [050 - TomTom commute in Decisions](050-tomtom-commute-in-decisions.md)
+- [051 - TomTom time-specific routing](051-tomtom-time-specific-routing.md)
 
 ## QA References
 

@@ -12,13 +12,14 @@ The app has a working private single-user baseline:
 
 ## Active Milestone
 
-No active implementation milestone is selected after completing the TomTom Commute In Decisions slice.
+No active implementation milestone is selected after completing the TomTom time-specific routing follow-up.
 
 Most recent completed local issues:
 
 - `048` Real roster batch QA and text false positive guard.
 - `049` Settings local data reset.
 - `050` TomTom commute in Decisions.
+- `051` TomTom time-specific routing.
 
 ## Manual Validation Still Open
 

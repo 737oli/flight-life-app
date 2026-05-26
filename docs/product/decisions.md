@@ -152,7 +152,7 @@ Rationale: Backend ownership keeps credentials private, makes provider behavior 
 
 Status: Accepted
 
-Decision: Traffic v1 uses a backend-only TomTom provider for expected travel times on AMS-to-home and home-to-AMS stay-vs-home routes. When available, these route-specific expected times are included in the normal stay-vs-home decision reasoning and useful-home-time calculation. The configured commute preference remains the fallback when TomTom, coordinates, or a route estimate is unavailable.
+Decision: Traffic v1 uses a backend-only TomTom provider for expected travel times on AMS-to-home and home-to-AMS stay-vs-home routes. AMS-to-home is requested with `departAt` at the current duty end. Home-to-AMS is requested with `arriveAt` at the next AMS-starting duty start. When available, these route-specific expected times are included in the normal stay-vs-home decision reasoning and useful-home-time calculation. The configured commute preference remains the fallback when TomTom, coordinates, or a route estimate is unavailable.
 
 Rationale: Stay-vs-home decisions need realistic expected travel times. TomTom provides an official routing API with traffic-aware context and a suitable cost/risk profile for the first implementation. Keeping the preference fallback preserves usability during provider, VPN, or credential failures.
 

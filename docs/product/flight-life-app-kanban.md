@@ -29,7 +29,7 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 
 No active implementation milestone is selected.
 
-The most recent milestone, TomTom Commute In Decisions, is complete. Its historical detail lives in [Milestones History](milestones-history.md).
+The most recent TomTom time-specific routing follow-up is complete. Its historical detail lives in [Milestones History](milestones-history.md).
 
 ## Next Planning Candidates
 

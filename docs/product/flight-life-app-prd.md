@@ -85,6 +85,8 @@ The backend owns the decision engine and returns a recommendation plus reasoning
 
 When TomTom is configured, stay-vs-home decision reasoning should show route-specific expected commute times for AMS-to-home and home-to-AMS. If TomTom is unavailable, missing coordinates, or missing a route, the decision must fall back to the configured commute assumption and keep the flow usable.
 
+AMS-to-home estimates should be requested for the planned duty-end departure time. Home-to-AMS estimates should be requested for arrival by the next AMS-starting duty start, not by deriving a departure time from the configured fallback commute assumption.
+
 Decision states should include "needs review" when inputs are missing or weak.
 
 AI advisor v1 is not an official decision engine. The backend rule result remains authoritative. GPT can add structured context only after the user taps an analysis action inside a decision detail pane. If GPT disagrees with the deterministic result, the app should show a disagreement or needs-review state instead of silently trusting GPT.

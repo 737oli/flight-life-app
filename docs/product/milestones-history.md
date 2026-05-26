@@ -88,6 +88,12 @@ Issues: `050`.
 
 Outcome: the standard stay-vs-home decision endpoint now includes backend-owned TomTom route-specific commute reasoning when available, keeps configured commute assumptions as fallback, and the frontend decision reasoning text shows TomTom commute minutes instead of the fixed `60 min each way` line when both route estimates are available.
 
+### Fourteenth Milestone: TomTom Time-Specific Routing
+
+Issues: `051`.
+
+Outcome: TomTom AMS-to-home commute estimates use `departAt` at the planned duty end, while home-to-AMS commute estimates use `arriveAt` at the next AMS-starting duty start. This keeps route estimates tied to the actual decision window instead of deriving the airport-bound query from the fallback commute assumption.
+
 ## Historical Issue Index
 
 Detailed issue drafts and implementation records live in `docs/issues/`.
@@ -143,6 +149,7 @@ Completed implementation issues:
 - `048` Real roster batch QA and text false positive guard.
 - `049` Settings local data reset.
 - `050` TomTom commute in Decisions.
+- `051` TomTom time-specific routing.
 
 Manual validation issue:
 
