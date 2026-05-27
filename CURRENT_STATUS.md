@@ -1,6 +1,6 @@
 # Current Status: Flight Life App
 
-Last updated: 2026-05-24
+Last updated: 2026-05-27
 
 ## Current State
 
@@ -20,6 +20,10 @@ Most recent completed local issues:
 - `049` Settings local data reset.
 - `050` TomTom commute in Decisions.
 - `051` TomTom time-specific routing.
+
+Ready implementation issue:
+
+- `052` Decisions full roster horizon.
 
 ## Manual Validation Still Open
 
@@ -57,5 +61,6 @@ npm run typecheck
 ## Next Recommended Work
 
 1. Run issue `023` when the Raspberry Pi and iPhone/Tailscale setup is available.
-2. Re-test roster import from Settings with the next real roster PDF and confirm the source-PDF delete/local-data reset flows on the target device.
-3. Choose the next product milestone.
+2. Implement issue `052` so the Decisions tab shows all current/future decisions in the imported roster period.
+3. Re-test roster import from Settings with the next real roster PDF and confirm the source-PDF delete/local-data reset flows on the target device.
+4. Choose the next product milestone.
