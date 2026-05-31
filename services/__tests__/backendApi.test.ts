@@ -4,6 +4,7 @@ import {
   BackendApiError,
   deleteRosterImportSourcePdf,
   fetchBackendHealth,
+  fetchScheduleRange,
   fetchStayVsHomeDecision,
   fetchSystemReadiness,
   normalizeBackendBaseUrl,
@@ -103,6 +104,29 @@ describe("backendApi", () => {
       status: 404,
       errors: ["roster_import_not_found"],
     } satisfies Partial<BackendApiError>);
+  });
+
+  it("fetches a date-range schedule from the normalized backend URL", async () => {
+    const payload = {
+      status: "ok",
+      generated_at: "2026-05-31T10:00:00Z",
+      start_date: "2026-05-31",
+      end_date: "2026-06-21",
+      last_import: null,
+      days: [],
+    };
+    mockFetch.mockResolvedValueOnce(jsonResponse(payload));
+
+    const result = await fetchScheduleRange({
+      baseUrl: "http://api.test///",
+      startDate: "2026-05-31",
+      endDate: "2026-06-21",
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "http://api.test/schedule?start_date=2026-05-31&end_date=2026-06-21"
+    );
+    expect(result).toBe(payload);
   });
 
   it("can request traffic-aware stay-vs-home decisions", async () => {

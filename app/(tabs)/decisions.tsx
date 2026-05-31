@@ -2,6 +2,7 @@ import Colors from "@/constants/Colors";
 import { AiAdvisorPanel } from "@/components/AiAdvisorPanel";
 import {
   fetchNextSevenDaysSchedule,
+  fetchScheduleRange,
   fetchStayVsHomeDecision,
   overrideStayVsHomeDecision,
   ScheduleDay,
@@ -12,9 +13,12 @@ import {
   choiceLabel,
   decisionReasoningItems,
   formatDisplayDate,
-  isHomeBaseDecisionCandidateDay,
   recommendationLabel,
 } from "@/services/decisionPresentation";
+import {
+  currentRosterDecisionRange,
+  upcomingHomeBaseDecisionCandidateDays,
+} from "@/services/decisionSchedule";
 import { router, useFocusEffect } from "expo-router";
 import {
   AlertCircle,
@@ -63,15 +67,18 @@ export default function DecisionsScreen() {
     }
 
     try {
-      const schedule = await fetchNextSevenDaysSchedule();
-      if (schedule.status === "empty") {
+      const seedSchedule = await fetchNextSevenDaysSchedule();
+      const rosterRange = currentRosterDecisionRange(seedSchedule);
+
+      if (!rosterRange) {
         setCards([]);
         setLoadState("empty");
         setErrorMessage(null);
         return;
       }
 
-      const decisionDays = schedule.days.filter((day) => isHomeBaseDecisionCandidateDay(day));
+      const schedule = await fetchScheduleRange(rosterRange);
+      const decisionDays = upcomingHomeBaseDecisionCandidateDays(schedule.days);
       const decisions = await Promise.all(
         decisionDays.map(async (day) => ({
           day,
@@ -145,7 +152,7 @@ export default function DecisionsScreen() {
 
   const headerSubtitle = useMemo(() => {
     if (loadState === "ready") {
-      return `${cards.length} decision${cards.length === 1 ? "" : "s"} in the next 7 days`;
+      return `${cards.length} upcoming decision${cards.length === 1 ? "" : "s"} in the current roster`;
     }
     return "Backend recommendations from your parsed roster";
   }, [cards.length, loadState]);
@@ -174,7 +181,7 @@ export default function DecisionsScreen() {
         ) : loadState === "empty" ? (
           <View style={styles.statePanel}>
             <FileUp color={Colors.light.tint} size={24} />
-            <Text style={styles.stateTitle}>No AMS-ending decision days found</Text>
+            <Text style={styles.stateTitle}>No upcoming AMS-ending decision days found</Text>
             <TouchableOpacity
               accessibilityRole="button"
               onPress={() => router.navigate("/settings" as never)}

@@ -2,7 +2,7 @@
 
 ## Status
 
-Ready.
+Completed.
 
 GitHub: https://github.com/737oli/flight-life-app/issues/20
 
@@ -54,3 +54,15 @@ Home should remain focused on the next 7 days. Calendar should remain a full ros
 
 - This issue should not change the backend deterministic decision rules.
 - If the frontend fan-out over all roster-period candidates becomes too slow, create a follow-up backend endpoint that returns a compact decision list for a date range.
+
+## Implementation Notes
+
+- Added `services/decisionSchedule.ts` to derive the current/future roster decision range from the current import metadata.
+- Updated the Decisions tab to seed from `/schedule/next-7-days`, fetch the current/future import period with `/schedule`, and then fetch traffic-aware stay-vs-home decisions for upcoming AMS-ending flight days.
+- Kept Home unchanged on the next-7-days horizon.
+- Updated Decisions copy so it refers to upcoming decisions in the current roster rather than the next 7 days.
+
+## Validation
+
+- `npm run test -- --runTestsByPath services/__tests__/decisionSchedule.test.ts services/__tests__/backendApi.test.ts services/__tests__/decisionPresentation.test.ts`
+- `npm run typecheck`

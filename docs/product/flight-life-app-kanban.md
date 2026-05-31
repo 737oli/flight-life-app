@@ -24,19 +24,18 @@ Codex should implement only one issue at a time unless explicitly told otherwise
 | Issue | Title | Type | Area | Status | Blocked by |
 | --- | --- | --- | --- | --- | --- |
 | 023 | Tailscale Raspberry Pi smoke test | human-in-the-loop | backend, deployment | Needs manual validation | 010 |
-| 052 | Decisions full roster horizon | vertical slice | frontend, decisions | Ready | 029, 025 |
 
 ## Current Milestone
 
 No active implementation milestone is selected.
 
-The most recent TomTom time-specific routing follow-up is complete. Its historical detail lives in [Milestones History](milestones-history.md).
+The most recent Decisions full roster horizon follow-up is complete. Its historical detail lives in [Milestones History](milestones-history.md).
 
 ## Next Planning Candidates
 
 - Run `023` when the Raspberry Pi and iPhone/Tailscale setup is available.
-- Implement `052` so the Decisions tab covers the full current roster period instead of Home's 7-day horizon.
 - Choose the next product milestone.
+- Add new ready issues before continuing implementation work.
 - Use Settings operational readiness before manual provider checks.
 - When adding or changing frontend DTO presentation behavior, add or update presenter tests before changing related UI screens.
 - When changing frontend backend API calls, add or update API-client tests with mocked network/AsyncStorage behavior.

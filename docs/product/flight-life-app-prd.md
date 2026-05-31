@@ -83,6 +83,8 @@ Version 1 should use deterministic rules, not AI/ML scoring. Inputs include:
 
 The backend owns the decision engine and returns a recommendation plus reasoning. The frontend owns presentation, confirmation, overrides, and later preference editing.
 
+The Decisions tab should show all current and future AMS-ending decision candidates in the imported roster period. Home remains limited to inline decision references inside the next 7 days.
+
 When TomTom is configured, stay-vs-home decision reasoning should show route-specific expected commute times for AMS-to-home and home-to-AMS. If TomTom is unavailable, missing coordinates, or missing a route, the decision must fall back to the configured commute assumption and keep the flow usable.
 
 AMS-to-home estimates should be requested for the planned duty-end departure time. Home-to-AMS estimates should be requested for arrival by the next AMS-starting duty start, not by deriving a departure time from the configured fallback commute assumption.
@@ -221,6 +223,7 @@ As the app user, I want the app to recommend whether I should stay at outstation
 Acceptance criteria:
 
 - Backend returns recommendation, reasoning, and confidence/review state.
+- Decisions shows current and future AMS-ending decision candidates across the imported roster period.
 - Missing or weak inputs produce "needs review" instead of fake certainty.
 - Manual user choice can override the recommendation for the current duty/decision.
 - If a later roster import materially changes the duty, the decision is marked as needing review.

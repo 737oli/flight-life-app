@@ -29,7 +29,7 @@ http://127.0.0.1:8010
 | `/rosters/imports/{import_id}/source-pdf` | `DELETE` | import history service | Settings source-PDF cleanup | Deletes retained PDF only, clears stored path, records deletion timestamp, preserves parsed data and metadata. |
 | `/system/readiness` | `GET` | readiness service | Settings operational readiness | Reports provider readiness and missing input names without secrets, coordinates, file paths, or raw provider payloads. |
 | `/schedule/next-7-days` | `GET` | schedule service | Home, Calendar seed request, Decisions | Returns exactly 7 calendar days from `start_date` or today. Missing dates are explicit. |
-| `/schedule` | `GET` | schedule service | Calendar agenda | Requires `start_date` and `end_date`. Returns every requested date in order for the selected range. |
+| `/schedule` | `GET` | schedule service | Calendar agenda, Decisions roster horizon | Requires `start_date` and `end_date`. Returns every requested date in order for the selected range. |
 | `/preferences` | `GET` | preferences service | Settings preferences | Backend-side preference source. Frontend may cache only for display. |
 | `/preferences` | `PUT` | preferences service | Settings preferences | Validates editable local preferences. |
 | `/decisions/stay-vs-home/{decision_date}` | `GET` | decision and traffic services | Decisions, Home markers, Calendar markers | Deterministic backend recommendation. Add `include_traffic=true` to include TomTom route-specific commute reasoning when configured, with AMS-to-home requested for duty-end departure time and home-to-AMS requested for next-duty arrival deadline. Falls back to preferences when needed. Only AMS-ending flight days should surface decision prompts in the frontend. |

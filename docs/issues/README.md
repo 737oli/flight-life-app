@@ -13,7 +13,6 @@ Use [Current Status](../../CURRENT_STATUS.md) for current state and [Kanban](../
 ## Active Or Manual Validation
 
 - [023 - Tailscale Raspberry Pi smoke test](023-tailscale-pi-smoke-test.md) - needs manual validation.
-- [052 - Decisions full roster horizon](052-decisions-full-roster-horizon.md) - ready.
 
 ## Completed Drafts
 
@@ -67,9 +66,6 @@ Use [Current Status](../../CURRENT_STATUS.md) for current state and [Kanban](../
 - [049 - Settings local data reset](049-settings-local-data-reset.md)
 - [050 - TomTom commute in Decisions](050-tomtom-commute-in-decisions.md)
 - [051 - TomTom time-specific routing](051-tomtom-time-specific-routing.md)
-
-## Ready Drafts
-
 - [052 - Decisions full roster horizon](052-decisions-full-roster-horizon.md)
 
 ## QA References

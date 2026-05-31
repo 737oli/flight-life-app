@@ -94,6 +94,12 @@ Issues: `051`.
 
 Outcome: TomTom AMS-to-home commute estimates use `departAt` at the planned duty end, while home-to-AMS commute estimates use `arriveAt` at the next AMS-starting duty start. This keeps route estimates tied to the actual decision window instead of deriving the airport-bound query from the fallback commute assumption.
 
+### Fifteenth Milestone: Decisions Full Roster Horizon
+
+Issues: `052`.
+
+Outcome: the Decisions tab now uses the current import metadata to fetch the current/future imported roster period through the date-range schedule endpoint, then shows all upcoming AMS-ending stay-vs-home decision candidates instead of only the next 7 days. Home remains on the 7-day horizon.
+
 ## Historical Issue Index
 
 Detailed issue drafts and implementation records live in `docs/issues/`.
@@ -150,6 +156,7 @@ Completed implementation issues:
 - `049` Settings local data reset.
 - `050` TomTom commute in Decisions.
 - `051` TomTom time-specific routing.
+- `052` Decisions full roster horizon.
 
 Manual validation issue:
 
